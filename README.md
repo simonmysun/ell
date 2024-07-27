@@ -9,6 +9,13 @@ A CLI interface for LLMs.
 - Bring your terminal context to the LLMs and ask questions
 - Chat with LLMs in your terminal
 
+## Requirements
+
+- bash
+- jq
+- curl
+- perl
+
 ## Install
 
 ```
