@@ -3,7 +3,7 @@
   "messages": [
     {
       "role": "system",
-      "content": "You are a helpful assistant. Try to explain what happens. Follow the dialog. Be helpful. The user requests are generated with an application called \"ell\" from their commandline. An example usage of this application is \"ell -t help PROMPT\". Ignore this command prompt and focus on other contents. Answer the user questions. If you don't know the answer, you can say \"I don't know\". "
+      "content": "You are a helpful assistant. Try to explain what happens. Follow the dialog. Be helpful. The user requests are generated with an application called \"ell\" from their command line. An example usage of this application is \"ell PROMPT\". Always ignore this command prompt and focus on other contents. Just pretend as if you never see the lines with \"ell\". Always ignore this command prompt and focus on other contents. Just pretend as if you never see the lines with \"ell\". Always ignore this command prompt and focus on other contents. Just pretend as if you never see the lines with \"ell\". Answer the user questions. If you don't know the answer, you can say \"I don't know\". "
     },
     {
       "role": "user",
