@@ -1,6 +1,6 @@
 # ell
 
-A CLI interface for LLMs written in Bash.
+A command-line interfacefor LLMs written in Bash.
 
 ## Features
 
@@ -163,17 +163,17 @@ More possibilities are coming soon!
 ## Similar Projects
 
 - https://github.com/kardolus/chatgpt-cli
-  - A CLI interface for ChatGPT written in Go. 
+  - A CLI for ChatGPT written in Go. 
   - Cannot bring terminal context to the LLMs.
   - No syntax highlighting.
   - Supports system prompt customization but doesn't support prompt templates.
 - https://github.com/kharvd/gpt-cli
-  - A CLI interface for various LLM backends written in Python. 
+  - A CLI for various LLM backends written in Python. 
   - Has syntax highlighting for markdown output.
   - Cannot bring terminal context to the LLMs.
   - Supports system prompt customization but doesn't support prompt templates.
 - https://github.com/JohannLai/gptcli
-  - A CLI interface for OpenAI LLms written in TypeScript.
+  - A CLI for OpenAI LLms written in TypeScript.
   - Has plugin system.
   - Support customizing CLI tools
 
