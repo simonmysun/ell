@@ -160,6 +160,23 @@ More possibilities are coming soon!
 - Unexpected exit of record mode may cause the history file to remain in `/tmp/`.
 - Password input is not recorded by `script`, so it is safe to type sudo or ssh passwords in terminal.
 
+## Similar Projects
+
+- https://github.com/kardolus/chatgpt-cli
+  - A CLI interface for ChatGPT written in Go. 
+  - Cannot bring terminal context to the LLMs.
+  - No syntax highlighting.
+  - Supports system prompt customization but doesn't support prompt templates.
+- https://github.com/kharvd/gpt-cli
+  - A CLI interface for various LLM backends written in Python. 
+  - Has syntax highlighting for markdown output.
+  - Cannot bring terminal context to the LLMs.
+  - Supports system prompt customization but doesn't support prompt templates.
+- https://github.com/JohannLai/gptcli
+  - A CLI interface for OpenAI LLms written in TypeScript.
+  - Has plugin system.
+  - Support customizing CLI tools
+
 ## Contributing
 
 Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request.
