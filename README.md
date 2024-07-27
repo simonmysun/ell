@@ -77,6 +77,17 @@ The following variables can be set in the command line arguments:
 - `-l, --log-level`: `ELL_LOG_LEVEL`
 - `-o, --option`: Other options. The format is `A=b` or `C=d,E=f`.
 
+For example, to use `gpt-4o-mini` from OpenAI, you need to set these variables:
+
+```
+ELL_API_STYLE=openai
+ELL_LLM_MODEL=gpt-4o-mini
+ELL_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ELL_API_URL=https://api.openai.com/v1/chat/completions
+```
+
+Currently, only OpenAI style API is supported. More API styles are coming soon.
+
 ## Usage
 ```
 Usage: ell [options] PROMPT
