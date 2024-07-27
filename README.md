@@ -1,6 +1,6 @@
 # ell
 
-A CLI interface for LLMs.
+A CLI interface for LLMs written in Bash.
 
 ## Features
 [video]
