@@ -20,10 +20,25 @@ BASE_DIR=$(dirname ${0});
 source "${BASE_DIR}/helpers/logging.sh";
 source "${BASE_DIR}/helpers/parse_arguments.sh";
 source "${BASE_DIR}/helpers/load_config.sh";
+source "${BASE_DIR}/llm_backends/generate_completion.sh";
 
 logging_debug "Starting ${0}";
 
 load_config;
 parse_arguments "${@}";
+
+if [[ ! -f "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json" ]]; then
+  logging_fatal "Template not found: ${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json";
+  exit 1;
+fi
+
+PAYLOAD=$(eval "cat <<EOF
+$(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
+EOF
+");
+
+logging_debug "PAYLOAD: ${PAYLOAD}";
+
+generate_completion "${PAYLOAD}";
 
 logging_debug "END OF ELL";
