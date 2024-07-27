@@ -1,0 +1,16 @@
+{
+  "model": "${ELL_LLM_MODEL}",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant. Try to explain what happens. Follow the dialog. Be helpful. The user requests are generated with an application called \"ell\" from their commandline. An example usage of this application is \"ell -t help PROMPT\". Ignore this command prompt and focus on other contents. Answer the user questions. If you don't know the answer, you can say \"I don't know\". "
+    },
+    {
+      "role": "user",
+      "content": "Context information from terminal: \n\n---\n\n${SHELL_CONTEXT}\n\n---\n\n${USER_PROMPT}"
+    }
+  ],
+  "temperature": ${ELL_LLM_TEMPERATURE},
+  "max_tokens": ${ELL_LLM_MAX_TOKENS},
+  "stream": ${ELL_API_STREAM}
+}
