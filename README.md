@@ -3,7 +3,9 @@
 A CLI interface for LLMs written in Bash.
 
 ## Features
-[video]
+
+![Demo](https://raw.githubusercontent.com/simonmysun/ell/main/docs/demo.gif)
+*Demo usage of ell*
 
 - Ask LLMs from your terminal
 - Bring your terminal context to the LLMs and ask questions
@@ -133,8 +135,8 @@ ell -m gpt-4o "What is the capital of France?"
 ```bash
 ell -r
 # do random stuff
-ell What is happening?
-ell and then?
+ell What does the error mean?
+ell How to fix it?
 ```
 
 ### Writing Templates
