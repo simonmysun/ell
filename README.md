@@ -105,13 +105,13 @@ For more information, see https://github.com/simonmysun/ell
 ell "What is the capital of France?"
 ```
 
-#### Use a template
+#### Specify a template
 
 ```bash
 ell -t default "What is the capital of France?"
 ```
 
-#### Use a different model
+#### Specify a model
 
 ```bash
 ell -m gpt-4o "What is the capital of France?"
@@ -122,7 +122,8 @@ ell -m gpt-4o "What is the capital of France?"
 ```bash
 ell -r
 # do random stuff
-ell "What is happening?"
+ell What is happening?
+ell and then?
 ```
 
 ### Writing Templates
