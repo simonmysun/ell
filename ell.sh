@@ -32,6 +32,17 @@ if [[ ! -f "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json" ]]; then
   exit 1;
 fi
 
+if [[ ! -z "${ELL_INPUT_FILE}" ]]; then
+  if [[ ! -f "${ELL_INPUT_FILE}" ]]; then
+    logging_fatal "Input file not found: ${ELL_INPUT_FILE}";
+    exit 1;
+  else
+    logging_debug "Reading input from file: ${ELL_INPUT_FILE}, overriding USER_PROMPT";
+    USER_PROMPT=$(cat ${ELL_INPUT_FILE} | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}');
+  fi
+fi
+
+
 PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF
