@@ -5,7 +5,8 @@ A CLI interface for LLMs written in Bash.
 ## Features
 
 ![Demo](https://raw.githubusercontent.com/simonmysun/ell/main/docs/demo.gif)
-*Demo usage of ell*
+
+*Demo usage of ell (GIF, 2.1MB)*
 
 - Ask LLMs from your terminal
 - Bring your terminal context to the LLMs and ask questions
