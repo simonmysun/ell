@@ -91,16 +91,18 @@ if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
   while true; do
     IFS= read -e -p "$ELL_PS1" USER_PROMPT;
     USER_PROMPT=$(echo $USER_PROMPT | piping "${post_input_hooks[@]}");
+    logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
+    if [[ -z "${ELL_TMP_SHELL_LOG}" ]]; then
+      logging_debug "ELL_TMP_SHELL_LOG not set";
     else
       logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
   SHELL_CONTEXT=$(tail -c 3000 ${ELL_TMP_SHELL_LOG} | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}');
-
+    fi
       PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF");
 
       echo $PAYLOAD | generate_completion | piping "${pre_output_hooks[@]}";
-    fi
   done
   logging_debug "Exiting interactive mode";
 else
