@@ -23,12 +23,24 @@ BASE_DIR=$(dirname ${0});
 source "${BASE_DIR}/helpers/logging.sh";
 source "${BASE_DIR}/helpers/parse_arguments.sh";
 source "${BASE_DIR}/helpers/load_config.sh";
+source "${BASE_DIR}/helpers/piping.sh";
 source "${BASE_DIR}/llm_backends/generate_completion.sh";
 
 logging_debug "Starting ${0}";
 
 load_config;
 parse_arguments "${@}";
+
+eval $(echo -ne "orig_"; declare -f generate_completion);
+generate_completion() {
+  pre_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_llm.sh | sort -k3 -t/);
+  logging_debug "Pre hooks: ${pre_hooks}";
+  post_hooks=$(ls ${BASE_DIR}/plugins/*/*_post_llm.sh | sort -k3 -t/);
+  logging_debug "Post hooks: ${post_hooks}";
+  piping "${pre_hooks[@]}" \
+  | orig_generate_completion \
+  | piping "${post_hooks[@]}";
+}
 
 if [[ "x${ELL_RECORD}" == "xtrue" && -z $ELL_TMP_SHELL_LOG ]]; then
   export ELL_TMP_SHELL_LOG=$(mktemp);
