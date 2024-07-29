@@ -33,13 +33,13 @@ parse_arguments "${@}";
 
 eval $(echo -ne "orig_"; declare -f generate_completion);
 generate_completion() {
-  pre_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_llm.sh | sort -k3 -t/);
-  logging_debug "Pre hooks: ${pre_hooks}";
-  post_hooks=$(ls ${BASE_DIR}/plugins/*/*_post_llm.sh | sort -k3 -t/);
-  logging_debug "Post hooks: ${post_hooks}";
-  piping "${pre_hooks[@]}" \
+  pre_llm_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_llm.sh 2>/dev/null | sort -k3 -t/);
+  logging_debug "Pre LLM hooks: ${pre_llm_hooks}";
+  post_llm_hooks=$(ls ${BASE_DIR}/plugins/*/*_post_llm.sh 2>/dev/null | sort -k3 -t/);
+  logging_debug "Post LLM hooks: ${post_llm_hooks}";
+  piping "${pre_llm_hooks[@]}" \
   | orig_generate_completion \
-  | piping "${post_hooks[@]}";
+  | piping "${post_llm_hooks[@]}";
 }
 
 if [[ "x${ELL_RECORD}" == "xtrue" && -z $ELL_TMP_SHELL_LOG ]]; then
