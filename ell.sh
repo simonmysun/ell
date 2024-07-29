@@ -9,6 +9,7 @@ ELL_VERSION="0.0.1";
 : "${ELL_TEMPLATE_PATH:=~/.ellrc.d/templates}";
 : "${ELL_TEMPLATE:=default}";
 : "${ELL_INPUT_FILE:=""}";
+: "${ELL_RECORD:="false"}";
 : "${ELL_API_STYLE:=openai}";
 : "${ELL_API_KEY:=""}";
 : "${ELL_API_URL:=""}";
@@ -62,13 +63,13 @@ else
   SHELL_CONTEXT=$(tail -c 3000 ${ELL_TMP_SHELL_LOG} | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}');
 fi
 
-PAYLOAD=$(eval "cat <<EOF
+  PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF
 ");
 
-logging_debug "PAYLOAD: ${PAYLOAD}";
+  logging_debug "PAYLOAD: ${PAYLOAD}";
 
-generate_completion "${PAYLOAD}";
+  generate_completion "${PAYLOAD}";
 
 logging_debug "END OF ELL";
