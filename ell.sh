@@ -86,8 +86,6 @@ EOF");
       while IFS= read -r -u 3 line; do
         if [[ ${LINE_NUM} -ge ${PAGE_SIZE} ]]; then
           read -n 1 -s -r -p "Press any key to continue";
-          # tput cuu1;
-          # tput el;
           tput el1;
           echo -ne "\r";
           LINE_NUM=0;
