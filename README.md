@@ -62,6 +62,7 @@ The following variables can be set in the configuration files, environment varia
 - `ELL_TEMPLATE`: The template to use. The default is `default`. The file extension is not needed.
 - `ELL_INPUT_FILE`: The input file to use. If specified, it will override the prompt given in command line arguments.
 - `ELL_RECORD`: This is used for controlling whether record mode is on. It should be set to `false` unless you want to disable recording.  
+- `ELL_INTERACTIVE`: Run ell in interactive mode. The default is `false`.
 - `ELL_API_STYLE`: The API style to use. The default is `openai`.
 - `ELL_API_KEY`: The API key to use.
 - `ELL_API_URL`: The API URL to use.
@@ -73,6 +74,7 @@ The following variables can be set in the command line arguments:
 - `-T, --template-path`: `ELL_TEMPLATE_PATH`
 - `-t, --template`: `ELL_TEMPLATE`
 - `-f, --input-file`: `ELL_INPUT_FILE`
+- `-i, --interactive`: `ELL_INTERACTIVE`;
 - `--api-style`: `ELL_API_STYLE`
 - `--api-key`: `ELL_API_KEY`
 - `--api-url`: `ELL_API_URL`
@@ -102,6 +104,7 @@ Usage: ell [options] PROMPT
   -t, --template: template filename without extension
   -f, --input-file: use file as input prompt
   -r, --record: enter record mode
+  -i, --interactive: enter interactive mode
   --api-style: api style
   --api-key: api key
   --api-url: api url
@@ -140,6 +143,14 @@ ell -r
 ell What does the error mean?
 ell How to fix it?
 ```
+
+#### Run in interactive mode
+
+```bash
+ell -i
+```
+
+if you were in record mode via `ell -r`, the context of the shell will be used.
 
 ### Writing Templates
 Currently, there are two variables that can be used in the templates, except the ones given by users:

@@ -9,6 +9,7 @@ print_usage() {
   echo "  -t, --template: template filename without extension";
   echo "  -f, --input-file: use file as input prompt";
   echo "  -r, --record: enter record mode";
+  echo "  -i, --interactive: enter interactive mode";
   echo "  --api-style: api style";
   echo "  --api-key: api key";
   echo "  --api-url: api url";
@@ -78,6 +79,11 @@ function parse_arguments() {
           exit 1;
         fi
         ELL_RECORD=true;
+        shift 1;
+        ;;
+      -i|--interactive)
+        logging_debug "\"-i\" present in args, setting ELL_INTERACTIVE to true";
+        ELL_INTERACTIVE=true;
         shift 1;
         ;;
       --api-style)

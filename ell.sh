@@ -10,10 +10,12 @@ ELL_VERSION="0.0.1";
 : "${ELL_TEMPLATE:=default}";
 : "${ELL_INPUT_FILE:=""}";
 : "${ELL_RECORD:="false"}";
+: "${ELL_INTERACTIVE:="false"}";
 : "${ELL_API_STYLE:=openai}";
 : "${ELL_API_KEY:=""}";
 : "${ELL_API_URL:=""}";
 : "${ELL_API_STREAM:="true"}";
+: "${ELL_PS1:="<user_prompt> \$ "}";
 : "${ELL_CONFIG:=""}";
 
 BASE_DIR=$(dirname ${0});
@@ -63,13 +65,46 @@ else
   SHELL_CONTEXT=$(tail -c 3000 ${ELL_TMP_SHELL_LOG} | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}');
 fi
 
+if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
+  logging_debug "Interactive mode enabled";
+  while true; do
+    IFS= read -e -p "$ELL_PS1" USER_PROMPT;
+    if [[ "x${USER_PROMPT}" == "x/exit" ]]; then
+      logging_debug "Exiting interactive mode";
+      break;
+    else
+      PAYLOAD=$(eval "cat <<EOF
+$(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
+EOF");
+
+      logging_debug "PAYLOAD: ${PAYLOAD}";
+      logging_debug "Terminal width: $(tput cols)";
+      logging_debug "Terminal height: $(tput lines)";
+      exec 3< <(generate_completion "${PAYLOAD}" | stdbuf -oL fold -w $(tput cols) -s);
+      LINE_NUM=0;
+      PAGE_SIZE=$(tput lines);
+      while IFS= read -r -u 3 line; do
+        if [[ ${LINE_NUM} -ge ${PAGE_SIZE} ]]; then
+          read -n 1 -s -r -p "Press any key to continue";
+          # tput cuu1;
+          # tput el;
+          tput el1;
+          echo -ne "\r";
+          LINE_NUM=0;
+        fi
+        echo $line;
+        LINE_NUM=$((LINE_NUM+1));
+      done
+    fi
+  done
+else
   PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
-EOF
-");
+EOF");
 
   logging_debug "PAYLOAD: ${PAYLOAD}";
 
   generate_completion "${PAYLOAD}";
+fi
 
 logging_debug "END OF ELL";
