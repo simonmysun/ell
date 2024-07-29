@@ -77,6 +77,9 @@ else
   SHELL_CONTEXT=$(tail -c 3000 ${ELL_TMP_SHELL_LOG} | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}');
 fi
 
+pre_output_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_output.sh 2>/dev/null | sort -k3 -t/);
+logging_debug "Pre output hooks: ${pre_output_hooks}";
+
 if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
   logging_debug "Interactive mode enabled";
   while true; do
@@ -88,23 +91,9 @@ if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
       PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF");
+      # logging_debug "PAYLOAD: ${PAYLOAD}";
 
-      logging_debug "PAYLOAD: ${PAYLOAD}";
-      logging_debug "Terminal width: $(tput cols)";
-      logging_debug "Terminal height: $(tput lines)";
-      exec 3< <(echo $PAYLOAD | generate_completion | stdbuf -o0 fold -w $(tput cols) -s);
-      LINE_NUM=0;
-      PAGE_SIZE=$(tput lines);
-      while IFS= read -r -u 3 line; do
-        if [[ ${LINE_NUM} -ge ${PAGE_SIZE} ]]; then
-          read -n 1 -s -r -p "Press any key to continue";
-          tput el1;
-          echo -ne "\r";
-          LINE_NUM=0;
-        fi
-        echo $line;
-        LINE_NUM=$((LINE_NUM+1));
-      done
+      echo $PAYLOAD | generate_completion | piping "${pre_output_hooks[@]}";
     fi
   done
 else
@@ -114,7 +103,7 @@ EOF");
 
   logging_debug "PAYLOAD: ${PAYLOAD}";
 
-  echo $PAYLOAD | generate_completion;
+  echo $PAYLOAD | generate_completion | piping "${pre_output_hooks[@]}";
 fi
 
 logging_debug "END OF ELL";
