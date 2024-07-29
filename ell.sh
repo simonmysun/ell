@@ -81,6 +81,8 @@ else
   SHELL_CONTEXT=$(tail -c 3000 ${ELL_TMP_SHELL_LOG} | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}');
 fi
 
+post_input_hooks=$(ls ${BASE_DIR}/plugins/*/*_post_input.sh 2>/dev/null | sort -k3 -t/);
+logging_debug "Post input hooks: ${post_input_hooks}";
 pre_output_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_output.sh 2>/dev/null | sort -k3 -t/);
 logging_debug "Pre output hooks: ${pre_output_hooks}";
 
@@ -88,9 +90,7 @@ if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
   logging_debug "Interactive mode enabled";
   while true; do
     IFS= read -e -p "$ELL_PS1" USER_PROMPT;
-    if [[ "x${USER_PROMPT}" == "x/exit" ]]; then
-      logging_debug "User exiting interactive mode";
-      break;
+    USER_PROMPT=$(echo $USER_PROMPT | piping "${post_input_hooks[@]}");
     else
       logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
   SHELL_CONTEXT=$(tail -c 3000 ${ELL_TMP_SHELL_LOG} | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}');
@@ -104,6 +104,8 @@ EOF");
   done
   logging_debug "Exiting interactive mode";
 else
+  USER_PROMPT=$(echo $USER_PROMPT | piping "${post_input_hooks[@]}");
+
   PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF");
