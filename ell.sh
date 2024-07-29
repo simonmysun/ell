@@ -80,7 +80,7 @@ EOF");
       logging_debug "PAYLOAD: ${PAYLOAD}";
       logging_debug "Terminal width: $(tput cols)";
       logging_debug "Terminal height: $(tput lines)";
-      exec 3< <(generate_completion "${PAYLOAD}" | stdbuf -oL fold -w $(tput cols) -s);
+      exec 3< <(echo $PAYLOAD | generate_completion | stdbuf -o0 fold -w $(tput cols) -s);
       LINE_NUM=0;
       PAGE_SIZE=$(tput lines);
       while IFS= read -r -u 3 line; do
@@ -102,7 +102,7 @@ EOF");
 
   logging_debug "PAYLOAD: ${PAYLOAD}";
 
-  generate_completion "${PAYLOAD}";
+  echo $PAYLOAD | generate_completion;
 fi
 
 logging_debug "END OF ELL";

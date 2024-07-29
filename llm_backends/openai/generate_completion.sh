@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
 function generate_completion() {
-  PAYLOAD=$1;
   if [[ x$ELL_API_STREAM == "xfalse" ]]; then
     logging_debug "Streaming disabled";
-    response=$(curl ${ELL_API_URL} \
+    response=$(cat - | curl ${ELL_API_URL} \
       --silent \
       --header "Content-Type: application/json" \
       --header "Authorization: Bearer ${ELL_API_KEY}" \
-      --data "${PAYLOAD}");
+      --data-binary @-);
     if [ $? -ne 0 ]; then
       logging_fatal "Failed to generate completion";
       logging_debug "Response: ${response}";
@@ -37,7 +36,7 @@ function generate_completion() {
       --silent \
       --header "Content-Type: application/json" \
       --header "Authorization: Bearer ${ELL_API_KEY}" \
-      --data "${PAYLOAD}" | {
+      --data-binary @- | {
       while read -r line; do
         if [[ "${line}" == "data: [DONE]" ]]; then
           break;
