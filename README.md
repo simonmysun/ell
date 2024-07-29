@@ -15,9 +15,9 @@ A command-line interface for LLMs written in Bash.
 ## Requirements
 
 - bash
-- jq
-- curl
-- perl
+- jq (For parsing JSON)
+- curl (For sending HTTPS requests)
+- perl (For PCRE. POSIX bash doesn't support look-ahead and look-behind regex. Not necessary if you don't use record mode)
 
 ## Install
 
@@ -150,7 +150,7 @@ ell How to fix it?
 ell -i
 ```
 
-if you were in record mode via `ell -r`, the context of the shell will be used.
+if you were in record mode via `ell -r`, the context of the shell will be used. The two modes can be combined: `ell -r -i`.
 
 ### Writing Templates
 Currently, there are two variables that can be used in the templates, except the ones given by users:

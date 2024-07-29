@@ -46,7 +46,11 @@ if [[ "x${ELL_RECORD}" == "xtrue" && -z $ELL_TMP_SHELL_LOG ]]; then
   export ELL_TMP_SHELL_LOG=$(mktemp);
   export ELL_RECORD=true;
   logging_info "Session being recorded to ${ELL_TMP_SHELL_LOG}";
-  script -q -f -c "bash -i" ${ELL_TMP_SHELL_LOG};
+  if [[ "x${ELL_INTERACTIVE}" == "xtrue" ]]; then
+    script -q -f -c "ell -i" ${ELL_TMP_SHELL_LOG};
+  else
+    script -q -f -c "bash -i" ${ELL_TMP_SHELL_LOG};
+  fi
   logging_debug "Removing ${ELL_TMP_SHELL_LOG}";
   rm -f ${ELL_TMP_SHELL_LOG};
   unset ELL_TMP_SHELL_LOG;
@@ -85,23 +89,24 @@ if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
   while true; do
     IFS= read -e -p "$ELL_PS1" USER_PROMPT;
     if [[ "x${USER_PROMPT}" == "x/exit" ]]; then
-      logging_debug "Exiting interactive mode";
+      logging_debug "User exiting interactive mode";
       break;
     else
+      logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
+  SHELL_CONTEXT=$(tail -c 3000 ${ELL_TMP_SHELL_LOG} | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}');
+
       PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF");
-      # logging_debug "PAYLOAD: ${PAYLOAD}";
 
       echo $PAYLOAD | generate_completion | piping "${pre_output_hooks[@]}";
     fi
   done
+  logging_debug "Exiting interactive mode";
 else
   PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF");
-
-  logging_debug "PAYLOAD: ${PAYLOAD}";
 
   echo $PAYLOAD | generate_completion | piping "${pre_output_hooks[@]}";
 fi
