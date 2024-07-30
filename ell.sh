@@ -18,6 +18,9 @@ ELL_VERSION="0.0.1";
 : "${ELL_PS1:="<user_prompt> \$ "}";
 : "${ELL_CONFIG:=""}";
 
+[[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
+export TO_TTY;
+
 BASE_DIR=$(dirname ${0});
 
 source "${BASE_DIR}/helpers/logging.sh";
