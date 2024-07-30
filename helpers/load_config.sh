@@ -2,7 +2,7 @@
 
 function load_config() {
   logging_debug "Storing current environment";
-  current_env=$(declare -p -x)
+  current_env=$(declare -p -x | sed -e 's/declare -x /export /');
   set -o allexport;
   if [[ -f ${HOME}/.ellrc ]]; then
     logging_debug "Loading config from ${HOME}/.ellrc (from \$HOME)";
@@ -25,9 +25,10 @@ function load_config() {
       exit 1;
     fi
   fi
-  set +o allexport;
   logging_debug "Restoring environment";
-  eval "$curenv"
+  logging_debug ${current_env};
+  eval ${current_env};
+  set +o allexport;
 }
 
 export -f load_config;
