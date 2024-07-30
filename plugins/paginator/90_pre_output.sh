@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ -t 1 ]]; then
+if [[ ${TO_TTY} == true ]]; then
   exec 3< <(cat - | stdbuf -o0 fold -w $(tput cols) -s);
 
   LINE_NUM=1;
