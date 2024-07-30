@@ -250,7 +250,7 @@ if [[ ${TO_TTY} == true ]]; then
         elif [[ "x${buffer}" =~ ^x\`$ ]]; then
           IN_CODE=true;
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}${STYLE_CODE}";
-          buffer="$";
+          buffer="";
         elif [[ "x${buffer}" =~ ^x][^]\(]$ ]]; then
           if [[ ${IN_LINK_TEXT} == true ]]; then
             IN_LINK_TEXT=false;
