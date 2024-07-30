@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 
 if [[ -t 1 ]]; then
-  logging_debug "Terminal width: $(tput cols)";
-  logging_debug "Terminal height: $(tput lines)";
-
   exec 3< <(cat - | stdbuf -o0 fold -w $(tput cols) -s);
 
   LINE_NUM=1;
