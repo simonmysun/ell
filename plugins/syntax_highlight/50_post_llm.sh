@@ -181,7 +181,7 @@ if [[ ${TO_TTY} == true ]]; then
         elif [[ "x${buffer}" == "x " ]]; then
           IN_URL=false;
           # logging_debug "disable URL mode";
-          echo -ne "${STYLE_RESET}${buffer}$(current_style)";
+          echo -ne "$(current_style)${buffer}";
           buffer="";
         elif [[ "x${buffer}" =~ ^x\*\*\*[^\*]$ || "x${buffer}" =~ ^x___[^_]$ ]]; then
           if [[ ${IN_BOLD} == true && ${IN_ITALIC} == true ]]; then
@@ -251,7 +251,7 @@ if [[ ${TO_TTY} == true ]]; then
           IN_CODE=true;
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}${STYLE_CODE}";
           buffer="";
-        elif [[ "x${buffer}" =~ ^x][^]\(]$ ]]; then
+        elif [[ "x${buffer}" =~ ^x][^\(]$ ]]; then
           if [[ ${IN_LINK_TEXT} == true ]]; then
             IN_LINK_TEXT=false;
             # logging_debug "Exit link text mode missing URL";
@@ -290,13 +290,13 @@ if [[ ${TO_TTY} == true ]]; then
         elif [[ "x${buffer}" =~ ^x\[$ ]]; then
           IN_LINK_TEXT=true;
           # logging_debug "Link text mode";
-          echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}${STYLE_LINK_TEXT}";
+          echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}$(current_style)";
           buffer="";
         elif [[ "x${buffer}" =~ ^x\)$ ]]; then
           if [[ ${IN_URL} == true ]]; then
             IN_URL=false;
             # logging_debug "Exit URL mode";
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}$(current_style)";
             buffer="";
           else
             # logging_debug "')' in the wild";
@@ -306,7 +306,7 @@ if [[ ${TO_TTY} == true ]]; then
           buffer="";
         elif [[ "x${buffer}" =~ ^x\!\[$ ]]; then
           # logging_debug "Image text mode";
-          echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}${STYLE_IMAGE_TEXT}";
+          echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}$(current_style)";
           buffer="";
           IN_IMAGE_TEXT=true;
         elif [[ "x${buffer}" =~ ^x((_)|(~)|(\*)|(\`)|(\!)|(]))+$ ]]; then
@@ -320,7 +320,7 @@ if [[ ${TO_TTY} == true ]]; then
     fi
     sleep 0;
   done
-  echo "${STYLE_RESET}";
+  echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}";
 else
   # logging_debug "Not a terminal";
   cat;
