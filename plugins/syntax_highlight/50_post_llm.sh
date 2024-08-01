@@ -105,7 +105,7 @@ if [[ ${TO_TTY} == true ]]; then
       else
         CURRENT_LINE="${CURRENT_LINE}${char}";
       fi
-      if [[ $START_OF_CONTENT != true ]]; then
+      if [[ ${START_OF_CONTENT} != true ]]; then
         # logging_debug "Block mode";
         # logging_debug "$(echo -ne "${buffer}" | hexdump -C | head -n -1)";
         if [[ "x${buffer}" == $'x ' ]]; then
@@ -160,7 +160,7 @@ if [[ ${TO_TTY} == true ]]; then
         # logging_debug "Code block mode";
         echo -ne "${buffer}";
         buffer="";
-      elif [[ $START_OF_CONTENT == true && $IN_CODE_BLOCK == false ]]; then
+      elif [[ ${START_OF_CONTENT} == true && ${IN_CODE_BLOCK} == false ]]; then
         # logging_debug "Content mode";
         # logging_debug "$(echo -ne "${buffer}" | hexdump -C | head -n -1)";
         if [[ ${IN_CODE} == true && ${IN_ESCAPE} == false ]]; then
