@@ -20,7 +20,7 @@ Specifying `ELL_CONFIG` in the file provided with the `-c` / `--config` option w
 
 The following variables can be set in the configuration files, environment variables:
 
-- `ELL_LOG_LEVEL`: The log level of the logger. The default is `3`.
+- `ELL_LOG_LEVEL`: The log level of the logger. The default is `2`. A log level of `0` will log everything. A log level of `3` will log token usage.
 - `ELL_CONFIG`: The configuration file to use. The default is `~/.ellrc`.
 - `ELL_LLM_MODEL`: The model to use. Default is `gpt-4o-mini`.
 - `ELL_LLM_TEMPERATURE`: The temperature of the model. The default is `0.6`.
@@ -39,18 +39,20 @@ The following variables can be set in the configuration files, environment varia
   - Styling related variables can be found in [Styling](docs/Styling.md).
 
 The following variables can be set in the command line arguments:
+  -h, --help: show this help
 
+- `-l, --log-level`: `ELL_LOG_LEVEL`
 - `-m, --model`: `ELL_LLM_MODEL`
 - `-T, --template-path`: `ELL_TEMPLATE_PATH`
 - `-t, --template`: `ELL_TEMPLATE`
 - `-f, --input-file`: `ELL_INPUT_FILE`
+- `-r, --record`: sets `ELL_RECORD` to true. This will ignore the prompt or input file unless combined with `-i, --interactive`
 - `-i, --interactive`: `ELL_INTERACTIVE`;
 - `--api-style`: `ELL_API_STYLE`
 - `--api-key`: `ELL_API_KEY`
 - `--api-url`: `ELL_API_URL`
 - `--api-disable-streaming`: sets `ELL_API_STREAM` to **false**
 - `-c, --config`: `ELL_CONFIG`
-- `-l, --log-level`: `ELL_LOG_LEVEL`
 - `-o, --option`: Other options. The format is `A=b` or `C=d,E=f`.
 
 Currently, only OpenAI style API is supported. More API styles are coming soon.
