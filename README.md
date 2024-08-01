@@ -42,7 +42,7 @@ This will clone the repository into `.ellrcd` in your home directory and add it 
 
 See [Configuration](docs/Configuration.md).
 
-Here's an example configuration to use `gpt-4o-mini` from OpenAI. You need to set these variables in your `~/.ellrc`:
+Here's an example configuration to use `gemini-pro` from Google. You need to set these variables in your `~/.ellrc`:
 
 ```ini
 ELL_API_STYLE=gemini
@@ -78,12 +78,6 @@ Specify a model and use a file as input:
 ell -m gpt-4o -f user_prompt.txt
 ```
 
-Specify a template:
-
-```bash
-ell -t default "What is the capital of France?"
-```
-
 Record terminal input and output and use as context:
 
 ```bash
@@ -100,6 +94,13 @@ ell -i
 ```
 
 If you were in record mode via `ell -r`, the context of the shell will be used. The two modes can be combined: `ell -r -i`.
+
+
+Specify a template and start in record mode and interactive mode:
+
+```bash
+ell -r -i -t example-app "start"
+```
 
 ## Writing Templates
 
