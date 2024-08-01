@@ -316,9 +316,9 @@ if [[ ${TO_TTY} == true ]]; then
           buffer="";
         elif [[ "x${buffer}" =~ ^x\!\[$ ]]; then
           # logging_debug "Image text mode";
+          IN_IMAGE_TEXT=true;
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}$(current_style)";
           buffer="";
-          IN_IMAGE_TEXT=true;
         elif [[ "x${buffer}" =~ ^x((_)|(~)|(\*)|(\`)|(\!)|(]))+$ ]]; then
           # logging_debug "Undetermined";
           :
