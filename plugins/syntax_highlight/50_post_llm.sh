@@ -179,9 +179,14 @@ if [[ ${TO_TTY} == true ]]; then
           echo -ne "${buffer}$(current_style)";
           buffer="";
         elif [[ "x${buffer}" == "x " ]]; then
-          IN_URL=false;
-          # logging_debug "disable URL mode";
-          echo -ne "$(current_style)${buffer}";
+          if [[ ${IN_URL} == true ]]; then
+            IN_URL=false;
+            IN_TITLE=true;
+            # logging_debug "disable URL mode";
+            echo -ne "$(current_style)${buffer}";
+          else
+            echo -ne "${buffer}";
+          fi
           buffer="";
         elif [[ "x${buffer}" =~ ^x\*\*\*[^\*]$ || "x${buffer}" =~ ^x___[^_]$ ]]; then
           if [[ ${IN_BOLD} == true && ${IN_ITALIC} == true ]]; then
@@ -293,9 +298,10 @@ if [[ ${TO_TTY} == true ]]; then
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}$(current_style)";
           buffer="";
         elif [[ "x${buffer}" =~ ^x\)$ ]]; then
-          if [[ ${IN_URL} == true ]]; then
+          if [[ ${IN_URL} == true || ${IN_TITLE} == true ]]; then
             IN_URL=false;
-            # logging_debug "Exit URL mode";
+            IN_TITLE=false;
+            # logging_debug "Exit URL or its title mode";
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}$(current_style)";
             buffer="";
           else
