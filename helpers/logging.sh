@@ -1,41 +1,49 @@
 #!/usr/bin/env bash
 
+LOG_STYLE_RESET="$(tput sgr0)";
+LOG_STYLE_PUNC="$(tput sgr0; tput dim)";
+LOG_STYLE_DEBUG="$(tput setaf 15; tput bold)";
+LOG_STYLE_INFO="$(tput setaf 9; tput bold)";
+LOG_STYLE_WARN="$(tput setaf 14; tput bold)";
+LOG_STYLE_ERROR="$(tput setaf 11; tput bold)";
+LOG_STYLE_FATAL="$(tput setaf 10; tput bold)";
+
 function logging_debug() {
   if [[ "${ELL_LOG_LEVEL}" -ge 5 ]]; then
-    echo "[[$(date +'%Y-%m-%d %H:%M:%S')]] $(basename "${0}") DEBUG: ${@}" >&2
+    echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_DEBUG}DEBUG${LOG_STYLE_RESET} ${@}" >&2;
   fi
 }
 
 function logging_warn() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
-    echo "[[$(date +'%Y-%m-%d %H:%M:%S')]] $(basename "${0}") WARN: ${@}" >&2
+    echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_WARN}WARN${LOG_STYLE_RESET} ${@}" >&2;
   fi
 }
 
 function logging_info() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
-    echo -n "[[$(date +'%Y-%m-%d %H:%M:%S')]] $(basename "${0}") " >&2
+    echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
   if [[ "${ELL_LOG_LEVEL}" -ge 3 ]]; then
-    echo "INFO: ${@}" >&2
+    echo "${LOG_STYLE_INFO}INFO${LOG_STYLE_RESET} ${@}" >&2;
   fi
 }
 
 function logging_error() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
-    echo -n "[[$(date +'%Y-%m-%d %H:%M:%S')]] $(basename "${0}") " >&2
+    echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
   if [[ "${ELL_LOG_LEVEL}" -ge 2 ]]; then
-    echo "ERROR: ${@}" >&2
+    echo "${LOG_STYLE_ERROR}ERROR${LOG_STYLE_RESET} ${@}" >&2;
   fi
 }
 
 function logging_fatal() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
-    echo -n "[[$(date +'%Y-%m-%d %H:%M:%S')]] $(basename "${0}") " >&2
+    echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
   if [[ "${ELL_LOG_LEVEL}" -ge 1 ]]; then
-    echo "FATAL: ${@}" >&2
+    echo "${LOG_STYLE_FATAL}FATAL${LOG_STYLE_RESET} ${@}" >&2;
   fi
 }
 
