@@ -30,6 +30,7 @@ load_config;
 : "${ELL_API_URL:=""}";
 : "${ELL_API_STREAM:="true"}";
 : "${ELL_PS1:="$(tput sgr0; tput dim)<$(tput sgr0)user_prompt$(tput dim)>$(tput sgr0) $(tput setaf 4; tput bold)\$$(tput sgr0) "}";
+: "${ELL_PS2:="$(tput sgr0; tput dim)<$(tput sgr0)llm_gen$(tput dim)>$(tput sgr0) "}";
 : "${ELL_CONFIG:=""}";
 
 parse_arguments "${@}";
@@ -93,8 +94,9 @@ logging_debug "Pre output hooks: ${pre_output_hooks}";
 if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
   logging_info "Interactive mode enabled. ^C to exit";
   while true; do
-    IFS= read -e -p "$ELL_PS1" USER_PROMPT;
-    USER_PROMPT=$(echo $USER_PROMPT | piping "${post_input_hooks[@]}");
+    echo -ne "${ELL_PS1}";
+    IFS= read -r USER_PROMPT;
+    USER_PROMPT=$(echo ${USER_PROMPT} | piping "${post_input_hooks[@]}");
     logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
     if [[ -z "${ELL_TMP_SHELL_LOG}" ]]; then
       logging_debug "ELL_TMP_SHELL_LOG not set";
@@ -105,7 +107,7 @@ if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
     PAYLOAD=$(eval "cat <<EOF
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF");
-
+    echo -ne "${ELL_PS2}";
     echo $PAYLOAD | generate_completion | piping "${pre_output_hooks[@]}";
   done
   logging_debug "Exiting interactive mode";
