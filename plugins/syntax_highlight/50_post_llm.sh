@@ -156,7 +156,11 @@ if [[ ${TO_TTY} == true ]]; then
           dirty=true;
         fi
       fi
-      if [[ $START_OF_CONTENT == true && $IN_CODE_BLOCK == false ]]; then
+      if [[ ${IN_CODE_BLOCK} == true ]]; then
+        # logging_debug "Code block mode";
+        echo -ne "${buffer}";
+        buffer="";
+      elif [[ $START_OF_CONTENT == true && $IN_CODE_BLOCK == false ]]; then
         # logging_debug "Content mode";
         # logging_debug "$(echo -ne "${buffer}" | hexdump -C | head -n -1)";
         if [[ ${IN_CODE} == true && ${IN_ESCAPE} == false ]]; then
