@@ -2,7 +2,7 @@
 
 ELL_VERSION="0.0.1";
 
-: "${ELL_LOG_LEVEL:=3}";
+: "${ELL_LOG_LEVEL:=2}";
 : "${ELL_LLM_MODEL:=gpt-4o-mini}";
 : "${ELL_LLM_TEMPERATURE:=0.6}";
 : "${ELL_LLM_MAX_TOKENS:=4096}";
