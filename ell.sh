@@ -2,6 +2,20 @@
 
 ELL_VERSION="0.0.1";
 
+BASE_DIR=$(dirname ${0});
+
+[[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
+export TO_TTY;
+
+source "${BASE_DIR}/helpers/logging.sh";
+source "${BASE_DIR}/helpers/parse_arguments.sh";
+source "${BASE_DIR}/helpers/load_config.sh";
+source "${BASE_DIR}/helpers/piping.sh";
+
+logging_debug "Starting ${0}";
+
+load_config;
+
 : "${ELL_LOG_LEVEL:=2}";
 : "${ELL_LLM_MODEL:=gpt-4o-mini}";
 : "${ELL_LLM_TEMPERATURE:=0.6}";
@@ -18,22 +32,9 @@ ELL_VERSION="0.0.1";
 : "${ELL_PS1:="$(tput sgr0; tput dim)<$(tput sgr0)user_prompt$(tput dim)>$(tput sgr0) $(tput setaf 4; tput bold)\$$(tput sgr0) "}";
 : "${ELL_CONFIG:=""}";
 
-[[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
-export TO_TTY;
-
-BASE_DIR=$(dirname ${0});
-
-source "${BASE_DIR}/helpers/logging.sh";
-source "${BASE_DIR}/helpers/parse_arguments.sh";
-source "${BASE_DIR}/helpers/load_config.sh";
-source "${BASE_DIR}/helpers/piping.sh";
-source "${BASE_DIR}/llm_backends/generate_completion.sh";
-
-logging_debug "Starting ${0}";
-
-load_config;
 parse_arguments "${@}";
 
+source "${BASE_DIR}/llm_backends/generate_completion.sh";
 eval $(echo -ne "orig_"; declare -f generate_completion);
 generate_completion() {
   pre_llm_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_llm.sh 2>/dev/null | sort -k3 -t/);
