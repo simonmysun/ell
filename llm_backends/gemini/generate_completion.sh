@@ -81,9 +81,6 @@ function generate_completion() {
       logging_debug "Buffer: ${BUFFER}";
       echo '';
       logging_info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
-      if true; then
-        :;
-      fi
     }
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
       logging_fatal "Failed to generate completion";

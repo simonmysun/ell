@@ -35,7 +35,7 @@ load_config;
 parse_arguments "${@}";
 
 source "${BASE_DIR}/llm_backends/generate_completion.sh";
-eval $(echo -ne "orig_"; declare -f generate_completion);
+eval "$(echo -ne "orig_"; declare -f generate_completion)";
 generate_completion() {
   pre_llm_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_llm.sh 2>/dev/null | sort -k3 -t/);
   logging_debug "Pre LLM hooks: ${pre_llm_hooks}";
