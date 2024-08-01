@@ -4,10 +4,10 @@ Templates are used to generate the payload sent to the language model. They are 
 
 Currently, there are two variables that can be used in the templates, except the ones given by users:
 
-- `$SHELL_CONTEXT`: The context of the shell. This only works when the shell is started with `ell -r`.
+- `$SHELL_CONTEXT`: The context of the shell. This only works when the shell is started with `-r` or `--record`.
 - `$USER_PROMPT`: The prompt text given by the user.
 
-More possibilities are coming soon!
+Here's an example template for openai style API:
 
 ```json
 {
@@ -19,11 +19,28 @@ More possibilities are coming soon!
     },
     {
       "role": "user",
-      "content": "${USER_PROMPT}"
+      "content": "${SHELL_CONTEXT}\n\n---\n\n${USER_PROMPT}"
     }
   ],
   "temperature": ${ELL_LLM_TEMPERATURE},
   "max_tokens": ${ELL_LLM_MAX_TOKENS},
   "stream": ${ELL_API_STREAM}
+}
+```
+
+Here's an example template for gemini style API:
+
+```json
+{
+  "contents": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "You are a helpful assistant. ${SHELL_CONTEXT}\n\n---\n\n${USER_PROMPT}"
+        }
+      ]
+    }
+  ]
 }
 ```
