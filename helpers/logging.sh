@@ -3,10 +3,10 @@
 LOG_STYLE_RESET="$(tput sgr0)";
 LOG_STYLE_PUNC="$(tput sgr0; tput dim)";
 LOG_STYLE_DEBUG="$(tput setaf 15; tput bold)";
-LOG_STYLE_INFO="$(tput setaf 9; tput bold)";
+LOG_STYLE_INFO="$(tput setaf 10; tput bold)";
 LOG_STYLE_WARN="$(tput setaf 14; tput bold)";
 LOG_STYLE_ERROR="$(tput setaf 11; tput bold)";
-LOG_STYLE_FATAL="$(tput setaf 10; tput bold)";
+LOG_STYLE_FATAL="$(tput setaf 9; tput bold)";
 
 function logging_debug() {
   if [[ "${ELL_LOG_LEVEL}" -ge 5 ]]; then
