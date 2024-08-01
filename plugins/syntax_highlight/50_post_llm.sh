@@ -19,21 +19,21 @@ if [[ ${TO_TTY} == true ]]; then
   IN_URL=false;
   IN_TITLE=false;
 
-  STYLE_RESET="$(tput sgr0)"
+  : "${STYLE_RESET:=$(tput sgr0)}";
+  : "${STYLE_HEADING:=$(tput setaf 12; tput bold)}";
+  : "${STYLE_LIST:=$(tput setaf 12)}";
+  : "${STYLE_CODE:=$(tput setaf 11)}";
+  : "${STYLE_CODE_BLOCK:=""}";
+  : "${STYLE_BLOCKQUOTE:=""}";
+  : "${STYLE_BOLD:=$(tput setaf 12; tput bold)}";
+  : "${STYLE_ITALIC:=$(tput sitm)}";
+  : "${STYLE_STRIKETHROUGH:="\e[9m"}"; # what is the cap-code of this?
+  : "${STYLE_LINK_TEXT:=$(tput setaf 14)}";
+  : "${STYLE_URL:=$(tput setaf 12; tput smul)}";
+  : "${STYLE_TITLE:=$(tput setaf 2; tput bold)}";
+  : "${STYLE_IMAGE_TEXT:=$(tput setaf 14)}";
+  : "${STYLE_PUNCTUATION:=$(tput dim)}";
 
-  STYLE_HEADING="$(tput setaf 12; tput bold)";
-  STYLE_LIST="$(tput setaf 12)";
-  STYLE_CODE="$(tput setaf 11)";
-  STYLE_CODE_BLOCK="";
-  STYLE_BLOCKQUOTE="";
-  STYLE_BOLD="$(tput setaf 12; tput bold)";
-  STYLE_ITALIC="$(tput sitm)";
-  STYLE_STRIKETHROUGH="\e[9m"; # what is the cap-code of this?
-  STYLE_LINK_TEXT="$(tput setaf 14)";
-  STYLE_URL="$(tput setaf 12; tput smul)";
-  STYLE_TITLE="$(tput setaf 2; tput bold)";
-  STYLE_IMAGE_TEXT="$(tput setaf 14)";
-  STYLE_PUNCTUATION="$(tput dim)";
   CURRENT_LINE="";
 
   function current_style() {
