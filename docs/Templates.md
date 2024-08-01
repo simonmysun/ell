@@ -44,3 +44,5 @@ Here's an example template for gemini style API:
   ]
 }
 ```
+
+An example of an interactive LLM application can be found in `templates/ctf-gemini.json` and `templates/ctf-openai.json`.

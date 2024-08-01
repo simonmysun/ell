@@ -4,9 +4,9 @@ A command-line interface for LLMs written in Bash.
 
 ## Features
 
-![Demo](https://raw.githubusercontent.com/simonmysun/ell/main/docs/demo.gif)
+![Basic usage of ell](https://raw.githubusercontent.com/simonmysun/ell/main/docs/demo-basic.svg)
 
-*Demo usage of ell (GIF, 2.1MB)*
+*Basic usage of ell*
 
 - Ask LLMs from your terminal
 - Pipe friendly
@@ -107,6 +107,10 @@ or
 ell -r -i -t ctf-openai
 ```
 depends on which API you are using.
+
+![Example application](https://raw.githubusercontent.com/simonmysun/ell/main/docs/demo-ctf.svg)
+
+*Example application*
 
 ## Writing Templates
 
