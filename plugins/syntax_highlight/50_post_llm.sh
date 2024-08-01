@@ -27,7 +27,7 @@ if [[ ${TO_TTY} == true ]]; then
   : "${STYLE_BLOCKQUOTE:=""}";
   : "${STYLE_BOLD:=$(tput setaf 12; tput bold)}";
   : "${STYLE_ITALIC:=$(tput sitm)}";
-  : "${STYLE_STRIKETHROUGH:="\e[9m"}"; # what is the cap-code of this?
+  : "${STYLE_STRIKETHROUGH:=\e[9m}"; # what is the cap-code of this?
   : "${STYLE_LINK_TEXT:=$(tput setaf 14)}";
   : "${STYLE_URL:=$(tput setaf 12; tput smul)}";
   : "${STYLE_TITLE:=$(tput setaf 2; tput bold)}";
