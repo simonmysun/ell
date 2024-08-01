@@ -43,11 +43,11 @@ This will clone the repository into `.ellrcd` in your home directory and add it 
 
 See [Configuration](docs/Configuration.md).
 
-Here's an example configuration to use `gemini-pro` from Google. You need to set these variables in your `~/.ellrc`:
+Here's an example configuration to use `gemini-1.5-flash` from Google. You need to set these variables in your `~/.ellrc`:
 
 ```ini
 ELL_API_STYLE=gemini
-ELL_LLM_MODEL=gemini-pro
+ELL_LLM_MODEL=gemini-1.5-flash
 ELL_TEMPLATE=default-gemini
 ELL_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ELL_API_URL=https://generativelanguage.googleapis.com/v1beta/models/
