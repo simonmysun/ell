@@ -139,13 +139,14 @@ if [[ ${TO_TTY} == true ]]; then
           # START_OF_CONTENT=true;
         elif [[ "x${buffer}" =~ ^x\`\`\`$ ]]; then
           if [[ ${IN_CODE_BLOCK} == true ]]; then
-            # logging_debug "Code block off";
+            # logging_debug "Code block mode off";
             IN_CODE_BLOCK=false;
           else
-            # logging_debug "Code block mode";
+            # logging_debug "Code block mode on";
             IN_CODE_BLOCK=true;
           fi
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}";
+          START_OF_CONTENT=true;
           buffer="";
         elif [[ "x${buffer}" =~ ^x((#+)|([[:digit:]]+\.?)|((\*|\-|\+){1,})|(\`\`?)|((\_|\-|\+)+))$ ]]; then
           # logging_debug "Undetermined";
@@ -156,7 +157,7 @@ if [[ ${TO_TTY} == true ]]; then
           dirty=true;
         fi
       fi
-      if [[ ${IN_CODE_BLOCK} == true ]]; then
+      if [[ ${IN_CODE_BLOCK} == true && ! "x${buffer}" =~ ^x\`\`?$ ]]; then
         # logging_debug "Code block mode";
         echo -ne "${buffer}";
         buffer="";
