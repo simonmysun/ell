@@ -108,7 +108,7 @@ if [[ x${ELL_INTERACTIVE} == "xtrue" ]]; then
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF");
     echo -ne "${ELL_PS2}";
-    echo $PAYLOAD | generate_completion | piping "${pre_output_hooks[@]}";
+    echo ${PAYLOAD} | generate_completion | piping "${pre_output_hooks[@]}";
   done
   logging_debug "Exiting interactive mode";
 else
@@ -118,7 +118,7 @@ else
 $(<${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json)
 EOF");
 
-  echo $PAYLOAD | generate_completion | piping "${pre_output_hooks[@]}";
+  echo ${PAYLOAD} | generate_completion | piping "${pre_output_hooks[@]}";
 fi
 
 logging_debug "END OF ELL";
