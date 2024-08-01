@@ -49,7 +49,7 @@ ELL_API_STYLE=gemini
 ELL_LLM_MODEL=gemini-pro
 ELL_TEMPLATE=default-gemini
 ELL_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-ELL_API_URL=https://generativelanguage.googleapis.com/v1/models/
+ELL_API_URL=https://generativelanguage.googleapis.com/v1beta/models/
 ```
 
 Here's an example configuration to use `gpt-4o-mini` from OpenAI. 
