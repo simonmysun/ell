@@ -100,8 +100,13 @@ If you were in record mode via `ell -r`, the context of the shell will be used. 
 Specify a template and start in record mode and interactive mode:
 
 ```bash
-ell -r -i -t example-app "start"
+ell -r -i -t ctf-gemini
 ```
+or
+```bash
+ell -r -i -t ctf-openai
+```
+depends on which API you are using.
 
 ## Writing Templates
 
