@@ -26,7 +26,6 @@ function load_config() {
     fi
   fi
   logging_debug "Restoring environment";
-  logging_debug ${current_env};
   eval ${current_env};
   set +o allexport;
 }
