@@ -15,7 +15,7 @@ ELL_VERSION="0.0.1";
 : "${ELL_API_KEY:=""}";
 : "${ELL_API_URL:=""}";
 : "${ELL_API_STREAM:="true"}";
-: "${ELL_PS1:="<user_prompt> \$ "}";
+: "${ELL_PS1:="$(tput sgr0; tput dim)<$(tput sgr0)user_prompt$(tput dim)>$(tput sgr0) $(tput setaf 4; tput bold)\$$(tput sgr0) "}";
 : "${ELL_CONFIG:=""}";
 
 [[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
