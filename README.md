@@ -45,8 +45,19 @@ See [Configuration](docs/Configuration.md).
 Here's an example configuration to use `gpt-4o-mini` from OpenAI. You need to set these variables in your `~/.ellrc`:
 
 ```ini
+ELL_API_STYLE=gemini
+ELL_LLM_MODEL=gemini-pro
+ELL_TEMPLATE=default-gemini
+ELL_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ELL_API_URL=https://generativelanguage.googleapis.com/v1/models/
+```
+
+Here's an example configuration to use `gpt-4o-mini` from OpenAI. 
+
+```ini
 ELL_API_STYLE=openai
 ELL_LLM_MODEL=gpt-4o-mini
+ELL_TEMPLATE=default-openai
 ELL_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ELL_API_URL=https://api.openai.com/v1/chat/completions
 ```
