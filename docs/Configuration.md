@@ -46,8 +46,8 @@ The following variables can be set in the command line arguments:
 - `-T, --template-path`: `ELL_TEMPLATE_PATH`
 - `-t, --template`: `ELL_TEMPLATE`
 - `-f, --input-file`: `ELL_INPUT_FILE`
-- `-r, --record`: sets `ELL_RECORD` to true. This will ignore the prompt or input file unless combined with `-i, --interactive`
-- `-i, --interactive`: `ELL_INTERACTIVE`;
+- `-r, --record`: sets `ELL_RECORD` to true. This will ignore the prompt input or the file input.
+- `-i, --interactive`: `ELL_INTERACTIVE`.  This will ignore the prompt input or the file input.
 - `--api-style`: `ELL_API_STYLE`
 - `--api-key`: `ELL_API_KEY`
 - `--api-url`: `ELL_API_URL`
