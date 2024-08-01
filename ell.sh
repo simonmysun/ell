@@ -50,7 +50,7 @@ if [[ "x${ELL_RECORD}" == "xtrue" && -z $ELL_TMP_SHELL_LOG ]]; then
   export ELL_RECORD=true;
   logging_info "Session being recorded to ${ELL_TMP_SHELL_LOG}";
   if [[ "x${ELL_INTERACTIVE}" == "xtrue" ]]; then
-    script -q -f -c "ell -i" ${ELL_TMP_SHELL_LOG};
+    script -q -f -c "ell -i ${USER_PROMPT}" ${ELL_TMP_SHELL_LOG};
   else
     script -q -f -c "bash -i" ${ELL_TMP_SHELL_LOG};
   fi
