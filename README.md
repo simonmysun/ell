@@ -139,7 +139,7 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 
 
 - **Q**: What is the difference between ell and other similar projects?
-- **A**: ell is written in almost pure Bash, which makes it very lightweight and easy to install. It is also very easy to extend and modify. It is pipe friendly, which means it is designed to be used in combination with other tools.
+- **A**: ell is written in almost pure Bash, which makes it very lightweight and easy to install. It is also very easy to extend and modify. It is pipe-friendly, which means it is designed to be used in combination with other tools. 
 
 ## Similar Projects
 
