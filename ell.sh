@@ -20,7 +20,7 @@ load_config;
 : "${ELL_LLM_MODEL:=gpt-4o-mini}";
 : "${ELL_LLM_TEMPERATURE:=0.6}";
 : "${ELL_LLM_MAX_TOKENS:=4096}";
-: "${ELL_TEMPLATE_PATH:=~/.ellrc.d/templates/}";
+: "${ELL_TEMPLATE_PATH:="${HOME}/.ellrc.d/templates/"}";
 : "${ELL_TEMPLATE:=default-openai}";
 : "${ELL_INPUT_FILE:=""}";
 : "${ELL_RECORD:="false"}";
