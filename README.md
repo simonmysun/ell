@@ -26,14 +26,14 @@ To use ell, you need the following:
 ## Install
 
 ```
-git clone https://github.com/simonmysun/ell.git ~/.ellrc.d
+git clone --depth 1 https://github.com/simonmysun/ell.git ~/.ellrc.d
 echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
 ```
 
 or
 
 ```
-git clone git@github.com:simonmysun/ell.git ~/.ellrc.d
+git clone --depth 1 git@github.com:simonmysun/ell.git ~/.ellrc.d
 echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
 ```
 
