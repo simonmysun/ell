@@ -70,7 +70,7 @@ if [[ ! -f "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json" ]]; then
 fi
 
 if [[ ! -z "${ELL_INPUT_FILE}" ]]; then
-  if [[ ! -f "${ELL_INPUT_FILE}" ]]; then
+  if [[ "${ELL_INPUT_FILE}" != "-" && ! -f "${ELL_INPUT_FILE}" ]]; then
     logging_fatal "Input file not found: ${ELL_INPUT_FILE}";
     exit 1;
   else
