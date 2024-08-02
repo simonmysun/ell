@@ -4,7 +4,7 @@ A command-line interface for LLMs written in Bash.
 
 ## Features
 
-![Basic usage of ell](https://raw.githubusercontent.com/simonmysun/ell/main/docs/demo-basic.svg)
+<video src="https://github.com/user-attachments/assets/1355ad08-6fbf-4c0b-9ba6-2542fcb39acf"></video>
 
 *Basic usage of ell*
 
@@ -108,7 +108,7 @@ ell -r -i -t ctf-openai
 ```
 depends on which API you are using.
 
-![Example application](https://raw.githubusercontent.com/simonmysun/ell/main/docs/demo-ctf.svg)
+<video src="https://github.com/user-attachments/assets/d122702a-5e48-45dc-8d22-f8a803bb3ff1"></video>
 
 *Example application*
 
