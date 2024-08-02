@@ -126,7 +126,7 @@ See [Plugins](docs/Plugins.md).
 
 ## Risks to consider
 
-See [Risks Consideration](docs/Risks.md).
+See [Risks Consideration](docs/Risk_Consideration.md).
 
 ## FAQ
 
