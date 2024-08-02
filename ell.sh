@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ELL_VERSION="0.0.1";
+ELL_VERSION="0.1.0";
 
 BASE_DIR=$(dirname ${0});
 
