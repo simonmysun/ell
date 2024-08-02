@@ -27,7 +27,7 @@ The following variables can be set in the configuration files, environment varia
 - `ELL_LLM_MAX_TOKENS`: The maximum number of tokens to generate. The default is `4096`.
 - `ELL_TEMPLATE_PATH`: The path to the templates. The default is `~/.ellrc.d/templates`.
 - `ELL_TEMPLATE`: The template to use. The default is `default`. The file extension is not needed.
-- `ELL_INPUT_FILE`: The input file to use. If specified, it will override the prompt given in command line arguments.
+- `ELL_INPUT_FILE`: The input file to use. If specified, it will override the prompt given in command line arguments. Setting this to `-` will let ell always read from stdin. 
 - `ELL_RECORD`: This is used for controlling whether record mode is on. It should be set to `false` unless you want to disable recording.  
 - `ELL_INTERACTIVE`: Run ell in interactive mode. The default is `false`.
 - `ELL_API_STYLE`: The API style to use. The default is `openai`.

@@ -79,6 +79,18 @@ Specify a model and use a file as input:
 ell -m gpt-4o -f user_prompt.txt
 ```
 
+reading from stdin is also supported:
+
+```bash
+cat somecode.py | ell -f -
+```
+
+If you prefer add another piece of prompt instantly instead of adding it in the template:
+
+```bash
+(cat somecode.py; echo "Explain this code") | ell -f -
+```
+
 Record terminal input and output and use as context:
 
 ```bash
