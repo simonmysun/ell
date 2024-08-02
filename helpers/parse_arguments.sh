@@ -27,7 +27,7 @@ print_version() {
 
 function parse_arguments() {
   if [[ ${#} -eq 0 ]]; then
-    if [[ "${ELL_RECORD}" == "true" ]]; then
+    if [[ ${ELL_RECORD} == true ]]; then
       logging_debug "Record mode enabled. Context is used.";
     else
       logging_debug "No arguments provided, printing usage";

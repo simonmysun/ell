@@ -6,9 +6,9 @@ piping() {
     stdbuf -o0 cat;
   else
     # logging_debug "Piping: ${@}";
-    pipes=$(printf " | %s" "${@}");
-    pipes=${pipes:3};
-    bash -c "$pipes";
+    pipes="$(printf " | %s" "${@}")";
+    pipes="${pipes:3}";
+    bash -c "${pipes}";
   fi
 }
 

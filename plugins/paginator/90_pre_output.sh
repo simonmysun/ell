@@ -3,14 +3,14 @@
 get_current_column() {
   # https://stackoverflow.com/questions/2575037/how-to-get-the-cursor-position-in-bash
   exec < /dev/tty
-  oldstty=$(stty -g)
+  oldstty="$(stty -g)"
   stty raw -echo min 0
   # on my system, the following line can be replaced by the line below it
   echo -en "\033[6n" > /dev/tty
   # tput u7 > /dev/tty    # when TERM=xterm (and relatives)
   IFS=';' read -r -d R -a pos
-  stty $oldstty
-  echo $((${pos[1]} - 1))
+  stty "${oldstty}"
+  echo "$((${pos[1]} - 1))"
 }
 
 if [[ ${TO_TTY} == true ]]; then
