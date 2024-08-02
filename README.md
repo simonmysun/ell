@@ -26,18 +26,18 @@ To use ell, you need the following:
 ## Install
 
 ```
-git clone https://github.com/simonmysun/ell.git ~/.ellrcd
-echo 'export PATH="${HOME}/.ellrcd:${PATH}"' >> ~/.bashrc
+git clone https://github.com/simonmysun/ell.git ~/.ellrc.d
+echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
 ```
 
 or
 
 ```
-git clone git@github.com:simonmysun/ell.git ~/.ellrcd
-echo 'export PATH="${HOME}/.ellrcd:${PATH}"' >> ~/.bashrc
+git clone git@github.com:simonmysun/ell.git ~/.ellrc.d
+echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
 ```
 
-This will clone the repository into `.ellrcd` in your home directory and add it to your PATH. 
+This will clone the repository into `.ellrc.d` in your home directory and add it to your PATH. 
 
 ## Configuration
 
@@ -146,6 +146,7 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 - https://github.com/kardolus/chatgpt-cli - A CLI for ChatGPT written in Go. 
 - https://github.com/kharvd/gpt-cli A CLI for various LLM backends written in Python. 
 - https://github.com/JohannLai/gptcli A CLI for OpenAI LLms written in TypeScript.
+- https://github.com/x-cmd/x-cmd 
 
 ## Contributing
 
