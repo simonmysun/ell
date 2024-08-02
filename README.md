@@ -26,14 +26,14 @@ To use ell, you need the following:
 ## Install
 
 ```
-git clone https://github.com/simonmysun/ell.git ~/.ellrc.d
+git clone --depth 1 https://github.com/simonmysun/ell.git ~/.ellrc.d
 echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
 ```
 
 or
 
 ```
-git clone git@github.com:simonmysun/ell.git ~/.ellrc.d
+git clone --depth 1 git@github.com:simonmysun/ell.git ~/.ellrc.d
 echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
 ```
 
@@ -116,6 +116,8 @@ depends on which API you are using.
 
 See [Templates](docs/Templates.md).
 
+Note that the use of the plugin support of LLM providers in ell is made with templates.
+
 ## Styling
 
 See [Styling](docs/Styling.md).
@@ -123,6 +125,8 @@ See [Styling](docs/Styling.md).
 ## Plugins
 
 See [Plugins](docs/Plugins.md).
+
+The term "Plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers is not included here. Please refer to [Templates](docs/Templates.md).
 
 ## Risks to consider
 
@@ -139,14 +143,20 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 
 
 - **Q**: What is the difference between ell and other similar projects?
-- **A**: ell is written in almost pure Bash, which makes it very lightweight and easy to install. It is also very easy to extend and modify. It is pipe friendly, which means it is designed to be used in combination with other tools.
+- **A**: ell is written in almost pure Bash, which makes it very lightweight and easy to install. It is also very easy to extend and modify. It is pipe-friendly, which means it is designed to be used in combination with other tools. 
 
 ## Similar Projects
 
 - https://github.com/kardolus/chatgpt-cli - A CLI for ChatGPT written in Go. 
 - https://github.com/kharvd/gpt-cli A CLI for various LLM backends written in Python. 
-- https://github.com/JohannLai/gptcli A CLI for OpenAI LLms written in TypeScript.
-- https://github.com/x-cmd/x-cmd A powerful collection of tools which includes a CLI for LLM APIs.
+- https://github.com/JohannLai/gptcli A CLI for OpenAI LLMs written in TypeScript.
+- https://github.com/x-cmd/x-cmd A huge collection of various tools which includes a CLI for LLM APIs. The project is written in POSIX bash and awk.
+- https://github.com/llimllib/gpt-bash-cli A CLI for OpenAI API that saves the requests and responses into a database. It also uses the system keyring to store the API key, which is a lot more secure. This project is also written in bash.
+- https://github.com/charmbracelet/mods A CLI tool to talk to LLMs written in Go. It has rich features in conversation management.
+- https://github.com/hiquest/nicechat A CLI chat interface for OpenAI models, written in Node.js. 
+- https://github.com/closedloop-technologies/autocomplete-sh A CLI for LLM which uses completion to interact with users. It also acquires several history operations to provide better suggestions, also written in bash.
+- https://github.com/plandex-ai/plandex A CLI tool to develop AI-integrated workflow, written in Go.
+- https://github.com/simonw/llm A CLI tool for in-depth manipulation of LLMs, written in Python.
 
 ## Contributing
 
