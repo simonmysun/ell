@@ -146,7 +146,7 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 - https://github.com/kardolus/chatgpt-cli - A CLI for ChatGPT written in Go. 
 - https://github.com/kharvd/gpt-cli A CLI for various LLM backends written in Python. 
 - https://github.com/JohannLai/gptcli A CLI for OpenAI LLms written in TypeScript.
-- https://github.com/x-cmd/x-cmd 
+- https://github.com/x-cmd/x-cmd A powerful collection of tools which includes a CLI for LLM APIs.
 
 ## Contributing
 
