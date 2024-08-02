@@ -1,5 +1,7 @@
 # Plugins
 
+The term "plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers are not included here. Please refer to [Templates](docs/Templates.md).
+
 Ell supports plugins to extend its functionality through a hook system. Currently, the following hooks are available:
 
 - `post_input`: Called after the user prompt is received.

@@ -116,6 +116,8 @@ depends on which API you are using.
 
 See [Templates](docs/Templates.md).
 
+Note that the use of the plugin support of LLM providers in ell is made with templates.
+
 ## Styling
 
 See [Styling](docs/Styling.md).
@@ -123,6 +125,8 @@ See [Styling](docs/Styling.md).
 ## Plugins
 
 See [Plugins](docs/Plugins.md).
+
+The term "Plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers is not included here. Please refer to [Templates](docs/Templates.md).
 
 ## Risks to consider
 
