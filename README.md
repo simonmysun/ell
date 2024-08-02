@@ -145,8 +145,14 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 
 - https://github.com/kardolus/chatgpt-cli - A CLI for ChatGPT written in Go. 
 - https://github.com/kharvd/gpt-cli A CLI for various LLM backends written in Python. 
-- https://github.com/JohannLai/gptcli A CLI for OpenAI LLms written in TypeScript.
-- https://github.com/x-cmd/x-cmd A powerful collection of tools which includes a CLI for LLM APIs.
+- https://github.com/JohannLai/gptcli A CLI for OpenAI LLMs written in TypeScript.
+- https://github.com/x-cmd/x-cmd A huge collection of various tools which includes a CLI for LLM APIs. The project is written in POSIX bash and awk.
+- https://github.com/llimllib/gpt-bash-cli A CLI for OpenAI API that saves the requests and responses into a database. It also uses the system keyring to store the API key, which is a lot more secure. This project is also written in bash.
+- https://github.com/charmbracelet/mods A CLI tool to talk to LLMs written in Go. It has rich features in conversation management.
+- https://github.com/hiquest/nicechat A CLI chat interface for OpenAI models, written in Node.js. 
+- https://github.com/closedloop-technologies/autocomplete-sh A CLI for LLM which uses completion to interact with users. It also acquires several history operations to provide better suggestions, also written in bash.
+- https://github.com/plandex-ai/plandex A CLI tool to develop AI-integrated workflow, written in Go.
+- https://github.com/simonw/llm A CLI tool for in-depth manipulation of LLMs, written in Python.
 
 ## Contributing
 
