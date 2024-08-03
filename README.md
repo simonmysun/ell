@@ -169,6 +169,7 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 - https://github.com/closedloop-technologies/autocomplete-sh A CLI for LLM which uses completion to interact with users. It also acquires several history operations to provide better suggestions, also written in bash.
 - https://github.com/plandex-ai/plandex A CLI tool to develop AI-integrated workflow, written in Go.
 - https://github.com/simonw/llm A CLI tool for in-depth manipulation of LLMs, written in Python.
+- https://github.com/sigoden/aichat A CLI tool talks to various LLM providers, written in Rust.
 
 ## Contributing
 
