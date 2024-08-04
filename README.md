@@ -106,8 +106,7 @@ Run in interactive mode:
 ell -i
 ```
 
-If you were in record mode via `ell -r`, the context of the shell will be used. The two modes can be combined: `ell -r -i`.
-
+In interactive mode, record mode is automatically enabled to allow you chat with context.
 
 Specify a template and start in record mode and interactive mode:
 

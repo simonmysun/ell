@@ -7,16 +7,17 @@ print_usage() {
   echo "  -m, --model: model name";
   echo "  -T, --template-path: path to search for templates";
   echo "  -t, --template: template filename without extension";
-  echo "  -f, --input-file: use file as input prompt";
+  echo "  -f, --input-file: use file as input prompt, use - for stdin";
   echo "  -r, --record: enter record mode";
   echo "  -i, --interactive: enter interactive mode";
+  echo "  -o, --output: output to file";
   echo "  --api-style: api style";
   echo "  --api-key: api key";
   echo "  --api-url: api url";
   echo "  --api-disable-streaming: disable api response streaming";
   echo "  -c, --config: config file";
   echo "  -l, --log-level: log level";
-  echo "  -o, --option: other options, e.g. -o A=b -o C=d,E=f";
+  echo "  -O, --option: other options, e.g. -o A=b -o C=d,E=f";
   echo "  PROMPT: prompt to input";
   echo "For more information, see https://github.com/simonmysun/ell";
 }
@@ -81,6 +82,11 @@ function parse_arguments() {
         ELL_RECORD=true;
         shift 1;
         ;;
+      -o|--output-file)
+        logging_debug "\"-o\" present in args, setting ELL_OUTPUT_FILE to ${2}";
+        ELL_OUTPUT_FILE="${2}";
+        shift 2;
+        ;;
       -i|--interactive)
         logging_debug "\"-i\" present in args, setting ELL_INTERACTIVE to true";
         ELL_INTERACTIVE=true;
@@ -111,7 +117,7 @@ function parse_arguments() {
         ELL_CONFIG="${2}";
         shift 2;
         ;;
-      -o|--option)
+      -O|--option)
         # -o A=b -o C=d,E=f
         logging_debug "\"-o\" present in args";
         other_options="${2}";
