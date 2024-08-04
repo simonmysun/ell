@@ -4,10 +4,6 @@ ELL_VERSION="0.1.0";
 
 BASE_DIR=$(dirname ${0});
 
-# logging_debug "Checking if we are outputting to a TTY or not";
-[[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
-export TO_TTY;
-
 # logging_debug "Importing helper functions";
 source "${BASE_DIR}/helpers/logging.sh";
 source "${BASE_DIR}/helpers/parse_arguments.sh";
@@ -34,6 +30,7 @@ load_config;
 : "${ELL_INPUT_FILE:=""}";
 : "${ELL_RECORD:="false"}";
 : "${ELL_INTERACTIVE:="false"}";
+: "${ELL_OUTPUT_FILE:="-"}";
 : "${ELL_API_STYLE:=openai}";
 : "${ELL_API_KEY:=""}";
 : "${ELL_API_URL:=""}";
@@ -45,6 +42,18 @@ load_config;
 parse_arguments "${@}";
 
 source "${BASE_DIR}/llm_backends/generate_completion.sh";
+
+# Deciding where to output
+if [[ ${ELL_OUTPUT_FILE} != "-" ]]; then
+  if [[ ${ELL_RECORD} != true && ${ELL_INTERACTIVE} != true ]]; then
+    logging_debug "Outputting to file: ${ELL_OUTPUT_FILE}";
+    exec 1>${ELL_OUTPUT_FILE};
+  fi
+fi
+
+# logging_debug "Checking if we are outputting to a TTY or not";
+[[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
+export TO_TTY;
 
 # Logging_debug "Decorating the generate_completion to apply hooks before and after";
 eval "$(echo -ne "orig_"; declare -f generate_completion)";
@@ -59,8 +68,12 @@ generate_completion() {
 }
 
 # Logging_debug "Checking if we are going to enter record mode";
-if [[ ${ELL_RECORD} == true && -z "${ELL_TMP_SHELL_LOG}" ]]; then
-  export ELL_TMP_SHELL_LOG=$(mktemp);
+if [[ ${ELL_RECORD} == true || ${ELL_INTERACTIVE} == true ]] && [[ "x${ELL_TMP_SHELL_LOG}" != "x-" && ! -f "${ELL_TMP_SHELL_LOG}" ]]; then
+  if [[ "x${ELL_OUTPUT_FILE}" != "x-" ]]; then
+    export ELL_TMP_SHELL_LOG=${ELL_OUTPUT_FILE}
+  else
+    export ELL_TMP_SHELL_LOG=$(mktemp);
+  fi
   export ELL_RECORD=true;
   logging_info "Session being recorded to ${ELL_TMP_SHELL_LOG}";
   if [[ ${ELL_INTERACTIVE} == true ]]; then
@@ -69,7 +82,9 @@ if [[ ${ELL_RECORD} == true && -z "${ELL_TMP_SHELL_LOG}" ]]; then
     script -q -f -c "bash -i" "${ELL_TMP_SHELL_LOG}";
   fi
   logging_debug "Removing ${ELL_TMP_SHELL_LOG}";
-  rm -f "${ELL_TMP_SHELL_LOG}";
+  if [[ ${ELL_OUTPUT_FILE} == "-" ]]; then
+    rm -f "${ELL_TMP_SHELL_LOG}";
+  fi
   unset ELL_TMP_SHELL_LOG;
   unset ELL_RECORD;
   logging_info "Record mode exited";

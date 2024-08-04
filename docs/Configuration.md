@@ -29,6 +29,7 @@ The following variables can be set in the configuration files, environment varia
 - `ELL_TEMPLATE`: The template to use. The default is `default`. The file extension is not needed.
 - `ELL_INPUT_FILE`: The input file to use. If specified, it will override the prompt given in command line arguments. Setting this to `-` will let ell always read from stdin. 
 - `ELL_RECORD`: This is used for controlling whether record mode is on. It should be set to `false` unless you want to disable recording.  
+- `ELL_OUTPUT_FILE`: The output file to use. If specified, it will redirect stdout to the file. The default is `-`. When in interactive mode and record mode, the terminal history is written to stdout.
 - `ELL_INTERACTIVE`: Run ell in interactive mode. The default is `false`.
 - `ELL_API_STYLE`: The API style to use. The default is `openai`.
 - `ELL_API_KEY`: The API key to use.
@@ -48,11 +49,12 @@ The following variables can be set in the command line arguments:
 - `-f, --input-file`: `ELL_INPUT_FILE`
 - `-r, --record`: sets `ELL_RECORD` to true. This will ignore the prompt input or the file input.
 - `-i, --interactive`: `ELL_INTERACTIVE`.  This will ignore the prompt input or the file input.
+- `-o, --output-file`: `ELL_OUTPUT_FILE`
 - `--api-style`: `ELL_API_STYLE`
 - `--api-key`: `ELL_API_KEY`
 - `--api-url`: `ELL_API_URL`
 - `--api-disable-streaming`: sets `ELL_API_STREAM` to **false**
 - `-c, --config`: `ELL_CONFIG`
-- `-o, --option`: Other options. The format is `A=b` or `C=d,E=f`.
+- `-O, --option`: Other options. The format is `A=b` or `C=d,E=f`.
 
 Currently, only OpenAI and Gemini style API is supported. More API styles are coming soon.
