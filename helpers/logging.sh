@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# logging functions
+# the logs are written to stderr so that they don't interfere with pipes
+
 [[ ${TO_TTY} == true ]] && LOG_STYLE_RESET="$(tput sgr0)" || LOG_STYLE_RESET="";
 [[ ${TO_TTY} == true ]] && LOG_STYLE_PUNC="$(tput sgr0; tput dim)" || LOG_STYLE_PUNC="";
 [[ ${TO_TTY} == true ]] && LOG_STYLE_DEBUG="$(tput setaf 15; tput bold)" || LOG_STYLE_DEBUG="";

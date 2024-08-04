@@ -4,15 +4,24 @@ ELL_VERSION="0.1.0";
 
 BASE_DIR=$(dirname ${0});
 
+# logging_debug "Checking if we are outputting to a TTY or not";
 [[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
 export TO_TTY;
 
+# logging_debug "Importing helper functions";
 source "${BASE_DIR}/helpers/logging.sh";
 source "${BASE_DIR}/helpers/parse_arguments.sh";
 source "${BASE_DIR}/helpers/load_config.sh";
 source "${BASE_DIR}/helpers/piping.sh";
 
 logging_debug "Starting ${0}";
+
+# logging_debug Loading configuration;
+# This will load the configuration in order:
+# 1. from configuration files
+# 2. from default values in the script
+# 3. from environment variables
+# 4. from command line arguments
 
 load_config;
 
@@ -36,6 +45,8 @@ load_config;
 parse_arguments "${@}";
 
 source "${BASE_DIR}/llm_backends/generate_completion.sh";
+
+# Logging_debug "Decorating the generate_completion to apply hooks before and after";
 eval "$(echo -ne "orig_"; declare -f generate_completion)";
 generate_completion() {
   pre_llm_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_llm.sh 2>/dev/null | sort -k3 -t/);
@@ -47,6 +58,7 @@ generate_completion() {
   | piping "${post_llm_hooks[@]}";
 }
 
+# Logging_debug "Checking if we are going to enter record mode";
 if [[ ${ELL_RECORD} == true && -z "${ELL_TMP_SHELL_LOG}" ]]; then
   export ELL_TMP_SHELL_LOG=$(mktemp);
   export ELL_RECORD=true;
@@ -64,11 +76,13 @@ if [[ ${ELL_RECORD} == true && -z "${ELL_TMP_SHELL_LOG}" ]]; then
   exit 0;
 fi
 
+# Logging_debug "Checking if the template is available";
 if [[ ! -f "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json" ]]; then
   logging_fatal "Template not found: ${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json";
   exit 1;
 fi
 
+# Logging_debug "Checking if we are going to read from a file";
 if [[ ! -z "${ELL_INPUT_FILE}" ]]; then
   if [[ "x${ELL_INPUT_FILE}" != "x-" && ! -f "${ELL_INPUT_FILE}" ]]; then
     logging_fatal "Input file not found: ${ELL_INPUT_FILE}";
@@ -79,6 +93,7 @@ if [[ ! -z "${ELL_INPUT_FILE}" ]]; then
   fi
 fi
 
+# Logging_debug "Checking if we are using terminal output as context";
 if [[ -z "${ELL_TMP_SHELL_LOG}" ]]; then
   logging_debug "ELL_TMP_SHELL_LOG not set";
 else
@@ -86,11 +101,13 @@ else
   SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
 fi
 
+# Logging_debug "Loading the post_input and pre_output hooks";
 post_input_hooks=$(ls ${BASE_DIR}/plugins/*/*_post_input.sh 2>/dev/null | sort -k3 -t/);
 logging_debug "Post input hooks: ${post_input_hooks}";
 pre_output_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_output.sh 2>/dev/null | sort -k3 -t/);
 logging_debug "Pre output hooks: ${pre_output_hooks}";
 
+# Logging_debug "Checking if we are going to enter interactive mode";
 if [[ ${ELL_INTERACTIVE} == true ]]; then
   logging_info "Interactive mode enabled. ^C to exit";
   while true; do
@@ -101,7 +118,6 @@ if [[ ${ELL_INTERACTIVE} == true ]]; then
     if [[ -z "${ELL_TMP_SHELL_LOG}" ]]; then
       logging_debug "ELL_TMP_SHELL_LOG not set";
     else
-      logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
       SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
     fi
     PAYLOAD="$(eval "cat <<EOF

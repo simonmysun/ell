@@ -8,11 +8,13 @@ function generate_completion() {
       --header "Content-Type: application/json" \
       --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @-);
+    # Check if curl was successful
     if [ $? -ne 0 ]; then
       logging_fatal "Failed to generate completion";
       logging_debug "Response: ${response}";
       exit 1;
     else
+      # check if finishReason is present
       if (echo "${response}" | jq -e '.candidates[0].finishReason' > /dev/null); then
         if [[ "x$(echo "${response}" | jq -r '.candidates[0].finishReason')" != "xSTOP" ]]; then
           logging_error "Unexpected finish reason: $(echo "${response}" | jq -r '.choices[0].finish_reason')";
@@ -40,6 +42,7 @@ function generate_completion() {
       --header "Content-Type: application/json" \
       --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @- | {
+      # gemni API v1beta sends a large JSON array as chunks. Here we skip the first '[' and expect the in coming chunks to be valid JSON objects until the last line;
       read -N 1;
       PART_FINISHED=false;
       BUFFER="";
@@ -56,6 +59,7 @@ function generate_completion() {
           BUFFER="${line}";
         else
           BUFFER="${BUFFER}${line}";
+          # trying to parse the buffer as JSON
           if jq -e . >/dev/null 2>&1 <<<"${BUFFER}"; then
             json_chunk=$(echo "${line}" | cut -c 6-);
             if (echo "${BUFFER}" | jq -e -r '.candidates[0].content.parts[0].text' > /dev/null); then
@@ -68,6 +72,7 @@ function generate_completion() {
                 break;
               fi
             fi
+            # check if usageMetadata is present, gemini API v1beta sends usageMetadata in every chunk
             if (echo "${BUFFER}" | jq -e -r '.usageMetadata' > /dev/null); then
               prompt_tokens=$(echo "${BUFFER}" | jq -j -r '.usageMetadata.promptTokenCount');
               completion_tokens=$(echo "${BUFFER}" | jq -j -r '.usageMetadata.candidatesTokenCount');
