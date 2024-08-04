@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Configuration loader. 
+# Will not overwrite existing variables.
+# Will read from $HOME/.ellrc, $PWD/.ellrc, and $ELL_CONFIG
+
 function load_config() {
   logging_debug "Storing current environment";
   current_env=$(declare -p -x | sed -e 's/declare -x /export /');

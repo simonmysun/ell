@@ -8,11 +8,13 @@ function generate_completion() {
       --header "Content-Type: application/json" \
       --header "Authorization: Bearer ${ELL_API_KEY}" \
       --data-binary @-);
+    # Check if curl was successful
     if [ $? -ne 0 ]; then
       logging_fatal "Failed to generate completion";
       logging_debug "Response: ${response}";
       exit 1;
     else
+      # check if finish_reason is present
       if (echo "${response}" | jq -e '.choices[0].finish_reason' > /dev/null); then
         if [[ $(echo "${response}" | jq -r '.choices[0].finish_reason') != "stop" ]]; then
           logging_error "Unexpected finish reason: $(echo "${response}" | jq -r '.choices[0].finish_reason')";
@@ -39,8 +41,10 @@ function generate_completion() {
       --data-binary @- | {
       while read -r line; do
         if [[ "x${line}" == "xdata: [DONE]" ]]; then
+          # End of stream
           break;
         elif [[ "x${line}" == "xdata: {"* ]]; then
+          # Data chunk received
           json_chunk=$(echo "${line}" | cut -c 6-);
           if (echo "${json_chunk}" | jq -e -r '.choices[0].delta.content' > /dev/null); then
             echo "${json_chunk}" | jq -j -r '.choices[0].delta.content';
@@ -52,6 +56,7 @@ function generate_completion() {
               fi
               break;
             elif (echo "${json_chunk}" | jq -e -r '.usage' > /dev/null); then
+              # Data chunk contains usage information (This is usually the last chunk)
               prompt_tokens=$(echo "${json_chunk}" | jq -j -r '.usage.prompt_tokens');
               completion_tokens=$(echo "${json_chunk}" | jq -j -r '.usage.completion_tokens');
               total_tokens=$(echo "${json_chunk}" | jq -j -r '.usage.total_tokens');
@@ -60,6 +65,7 @@ function generate_completion() {
             fi
           fi
         elif [[ -z "${line}" ]]; then
+          # Empty line, skip
           continue;
         else
           logging_debug "Unexpected line: ${line}";
@@ -67,6 +73,7 @@ function generate_completion() {
         fi
       done
     }
+    # Check if curl was successful
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
       logging_fatal "Failed to generate completion: ${PIPESTATUS[0]}";
       exit 1;

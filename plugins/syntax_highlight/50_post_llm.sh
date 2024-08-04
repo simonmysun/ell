@@ -4,6 +4,9 @@
 
 
 if [[ ${TO_TTY} == true ]]; then
+  # logging_debug "Terminal detected. Applying syntax highlighting";
+
+  # Initialize the state machine
   START_OF_LINE=true;
   START_OF_CONTENT=false;
   IN_HEADING=false;
@@ -19,6 +22,7 @@ if [[ ${TO_TTY} == true ]]; then
   IN_URL=false;
   IN_TITLE=false;
 
+  # Applying defalut styling escape sequences if they are not set
   : "${STYLE_RESET:=$(tput sgr0)}";
   : "${STYLE_HEADING:=$(tput setaf 12; tput bold)}";
   : "${STYLE_LIST:=$(tput setaf 12)}";
@@ -37,6 +41,7 @@ if [[ ${TO_TTY} == true ]]; then
   CURRENT_LINE="";
 
   function current_style() {
+    # Set the style based on the current state of the syntax highlighting.
     echo -ne "${STYLE_RESET}";
     if [[ ${IN_LINK_TEXT} == true ]]; then
       echo -ne "${STYLE_LINK_TEXT}";
@@ -59,11 +64,15 @@ if [[ ${TO_TTY} == true ]]; then
     fi
   }
 
+  # Input are read into $buffer character by character
+  # The state machine is updated when the buffer matches certain patterns
+  # if the buffer is not completely consumed, it is marked as dirty and will be processed in the next iteration
   buffer="";
   dirty=false;
 
   while true; do
     if [[ ${dirty} == true ]]; then
+      # Skip next read if the buffer is dirty
       dirty=false;
     else
       IFS= read -r -N 1 char;
@@ -75,6 +84,7 @@ if [[ ${TO_TTY} == true ]]; then
       buffer="${buffer}${char}";
     fi
     if [[ "x${char}" == $'x\n' ]]; then
+      # logging_debug "End of line, reseting state";
       START_OF_LINE=true;
       START_OF_CONTENT=false;
       IN_HEADING=false;
@@ -329,11 +339,14 @@ if [[ ${TO_TTY} == true ]]; then
         fi
       fi
     fi
+    # This is a trick to flush the buffer. 
+    # Performance is not a concern because the LLM is the bottleneck.
+    # Another benefit is that this will make the output more animated.
     sleep 0;
   done
   echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}";
 else
   # logging_debug "Not a terminal";
-  cat;
+  cat -;
 fi
 
