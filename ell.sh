@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+if [ "${BASH_VERSINFO:-0}" -ge 4 ]; then
+  if [ "${BASH_VERSINFO:-0}" -eq 4 ] && [ "${BASH_VERSINFO[1]:-0}" -lt 2 ]; then
+    echo "Bash version 4.2 or higher is required to run this script";
+    exit 69;
+  fi
+else
+  echo "Bash version 4.2 or higher is required to run this script";
+  exit 69;
+fi
+
 ELL_VERSION="0.1.0";
 
 BASE_DIR=$(dirname ${0});
