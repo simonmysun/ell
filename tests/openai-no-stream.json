@@ -1,0 +1,23 @@
+{
+  "id": "chatcmpl-9x1ovch0yTCquHRPEr5HQETE6I169",
+  "object": "chat.completion",
+  "created": 1723855377,
+  "model": "gpt-4o-mini",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Markdown is a lightweight markup language with plain text formatting syntax. Here are some common Markdown syntax elements:\n\n1. **Headings**: Use `#` for headings. The number of `#` symbols indicates the level of the heading.\n   - `# Heading 1`\n   - `## Heading 2`\n   - `### Heading 3`\n\n2. **Emphasis**:\n   - Italics: Use single asterisks or underscores. \n     - `*italic*` or `_italic_`\n   - Bold: Use double asterisks or underscores.\n     - `**bold**` or `__bold__`\n   - Strikethrough: Use double tildes.\n     - `~~strikethrough~~`\n\n3. **Lists**:\n   - Unordered lists: Use asterisks, plus signs, or minus signs.\n     - `* Item 1`\n     - `- Item 2`\n   - Ordered lists: Use numbers followed by a period.\n     - `1. Item 1`\n     - `2. Item 2`\n\n4. **Links**: \n   - `[link text](URL)`\n     - Example: `[Google](https://www.google.com)`\n\n5. **Images**: Similar to links, but with an exclamation mark in front.\n   - `![alt text](image URL)`\n\n6. **Blockquotes**: Use the greater-than symbol.\n   - `> This is a blockquote.`\n\n7. **Code**:\n   - Inline code: Use backticks.\n     - `` `code` ``\n   - Code blocks: Use triple backticks or indent with four spaces.\n     - ```\n       code block\n       ```\n\n8. **Horizontal lines**: Use three or more dashes, asterisks, or underscores.\n   - `---` or `***` or `___`\n\nThese elements can be combined to create rich text documents using Markdown."
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 173,
+    "completion_tokens": 405,
+    "total_tokens": 578
+  },
+  "system_fingerprint": "fp_276aa25277"
+}

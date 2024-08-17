@@ -1,0 +1,39 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "## A Comprehensive Markdown Guide\n\nThis document aims to showcase the breadth and depth of Markdown's capabilities, demonstrating its versatility for structuring and formatting text.\n\n### Headings\n\nMarkdown uses the \"#\" symbol to define headings. The number of \"#\" symbols indicates the heading level, with \"###\" being a subheading under \"##\".\n\n# Main Heading\n\n## Subheading 1\n\n### Subheading 2\n\n#### Subheading 3\n\n##### Subheading 4\n\n###### Subheading 5\n\n### Text Formatting\n\nMarkdown allows for basic text formatting like **bold**, *italics*, and ~~strikethrough~~. \n\n**Bold text** is created by surrounding the text with double asterisks (**) or underscores (_).\n\n*Italic text* is created by surrounding the text with a single asterisk (*) or underscore (_).\n\n~~Strikethrough text~~ is created by surrounding the text with two tildes (~).\n\n### Lists\n\nMarkdown supports both unordered and ordered lists.\n\n#### Unordered Lists\n\nUnordered lists are created using hyphens (-), asterisks (*), or plus signs (+). Each list item starts with a marker followed by a space.\n\n- Item 1\n- Item 2\n- Item 3\n\n* Item 1\n* Item 2\n* Item 3\n\n+ Item 1\n+ Item 2\n+ Item 3\n\n#### Ordered Lists\n\nOrdered lists are created using numbers followed by periods (.). Each list item starts with a number, a period, and a space.\n\n1. Item 1\n2. Item 2\n3. Item 3\n\n### Links\n\nLinks in Markdown are created using square brackets for the text of the link and parentheses for the URL.\n\n[Link Text](https://www.example.com)\n\n### Images\n\nImages are included in Markdown using an exclamation mark (!), followed by square brackets for the alt text and parentheses for the image source.\n\n![Image Alt Text](https://www.example.com/image.jpg)\n\n### Code Blocks\n\nCode blocks can be formatted using backticks (`) for inline code or triple backticks (```) for multiline code blocks.\n\nThis is some `inline code`.\n\n```\nThis is a multiline code block.\nIt can span multiple lines.\n```\n\n### Blockquotes\n\nBlockquotes are used to quote text from other sources. They are created by starting a line with a greater than symbol (\u003e).\n\n\u003e This is a blockquote.\n\u003e It can span multiple lines.\n\n### Horizontal Rules\n\nHorizontal rules are used to separate sections of text. They are created by typing three hyphens (---), asterisks (***), or underscores (___) on a line by themselves.\n\n---\n\n***\n\n___\n\n### Tables\n\nMarkdown supports basic tables. They are created using pipes (|) to separate columns and hyphens (-) to define the header row.\n\n| Column 1 | Column 2 |\n|---|---|\n| Row 1, Cell 1 | Row 1, Cell 2 |\n| Row 2, Cell 1 | Row 2, Cell 2 |\n\n### Escaping Characters\n\nTo include characters that are normally used for Markdown formatting, you can escape them with a backslash (\\).\n\nThis is an example of\\* escaped text\\*\n\n### Conclusion\n\nMarkdown provides a lightweight and flexible syntax for formatting text. It is widely used for writing documentation, blog posts, and other content. This document provides a comprehensive overview of Markdown's capabilities, showcasing its versatility for structuring and formatting text. \n"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0,
+      "safetyRatings": [
+        {
+          "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          "probability": "NEGLIGIBLE"
+        },
+        {
+          "category": "HARM_CATEGORY_HATE_SPEECH",
+          "probability": "NEGLIGIBLE"
+        },
+        {
+          "category": "HARM_CATEGORY_HARASSMENT",
+          "probability": "NEGLIGIBLE"
+        },
+        {
+          "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+          "probability": "NEGLIGIBLE"
+        }
+      ]
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 175,
+    "candidatesTokenCount": 733,
+    "totalTokenCount": 908
+  }
+}
