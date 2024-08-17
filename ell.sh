@@ -11,7 +11,7 @@ else
   exit 69;
 fi
 
-ELL_VERSION="0.1.0";
+ELL_VERSION="0.1.1";
 
 BASE_DIR=$(dirname ${0});
 
