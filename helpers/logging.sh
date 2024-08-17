@@ -11,19 +11,19 @@
 [[ ${TO_TTY} == true ]] && LOG_STYLE_ERROR="$(echo -ne "\e[93m\e[1m")" || LOG_STYLE_ERROR="";
 [[ ${TO_TTY} == true ]] && LOG_STYLE_FATAL="$(echo -ne "\e[91m\e[1m")" || LOG_STYLE_FATAL="";
 
-function logging_debug() {
+function logging::debug() {
   if [[ "${ELL_LOG_LEVEL}" -ge 5 ]]; then
     echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_DEBUG}DEBUG${LOG_STYLE_RESET} ${@}" >&2;
   fi
 }
 
-function logging_warn() {
+function logging::warn() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
     echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_WARN}WARN${LOG_STYLE_RESET} ${@}" >&2;
   fi
 }
 
-function logging_info() {
+function logging::info() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
@@ -32,7 +32,7 @@ function logging_info() {
   fi
 }
 
-function logging_error() {
+function logging::error() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
@@ -41,7 +41,7 @@ function logging_error() {
   fi
 }
 
-function logging_fatal() {
+function logging::fatal() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
@@ -50,4 +50,4 @@ function logging_fatal() {
   fi
 }
 
-export -f logging_debug logging_info logging_warn logging_error logging_fatal;
+export -f logging::debug logging::info logging::warn logging::error logging::fatal;
