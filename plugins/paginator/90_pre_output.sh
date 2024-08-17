@@ -13,7 +13,7 @@ get_current_column() {
 }
 
 if [[ ${TO_TTY} == true ]]; then
-  # logging_debug "Terminal detected";
+  # logging::debug "Terminal detected";
   CURR_COL=$(get_current_column);
   BUFFER="";
   # Remaining characters in the of the first line is reduced by $CURR_COL
@@ -21,7 +21,7 @@ if [[ ${TO_TTY} == true ]]; then
   LINE_NUM=1;
   while IFS= read -r -N 1 char; do
     if [[ "x${char}" == $'x\e' ]]; then
-      # logging_debug "Consuming escape sequence";
+      # logging::debug "Consuming escape sequence";
       esc_seq="${char}";
       read -r -N 1 char;
       esc_seq+="${char}";
@@ -61,7 +61,7 @@ if [[ ${TO_TTY} == true ]]; then
     fi
   done
 else
-  logging_debug "Not a terminal";
+  logging::debug "Not a terminal";
   cat -;
 fi
 
