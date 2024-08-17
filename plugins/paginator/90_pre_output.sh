@@ -5,7 +5,7 @@ get_current_column() {
   exec < /dev/tty
   oldstty="$(stty -g)"
   stty raw -echo min 0
-  echo -en "\033[6n" > /dev/tty
+  echo -ne "\e[6n" > /dev/tty
   # tput u7 > /dev/tty    # when TERM=xterm (and relatives)
   IFS=';' read -r -d R -a pos
   stty "${oldstty}"
@@ -15,8 +15,6 @@ get_current_column() {
 if [[ ${TO_TTY} == true ]]; then
   # logging_debug "Terminal detected";
   CURR_COL=$(get_current_column);
-  COLUMNS=$(tput cols);
-  PAGE_SIZE=$(tput lines);
   BUFFER="";
   # Remaining characters in the of the first line is reduced by $CURR_COL
   LENGTH=$((COLUMNS - CURR_COL));
@@ -56,7 +54,7 @@ if [[ ${TO_TTY} == true ]]; then
       if [[ ${LINE_NUM} -eq ${PAGE_SIZE} ]]; then
         read -n 1 -s -r -p "Press any key to continue" < /dev/tty;
         # clear the line and move the cursor to the beginning
-        tput el1;
+        echo -ne "\e[1K"
         echo -ne "\r";
         LINE_NUM=1;
       fi

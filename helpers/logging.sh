@@ -3,13 +3,13 @@
 # logging functions
 # the logs are written to stderr so that they don't interfere with pipes
 
-[[ ${TO_TTY} == true ]] && LOG_STYLE_RESET="$(tput sgr0)" || LOG_STYLE_RESET="";
-[[ ${TO_TTY} == true ]] && LOG_STYLE_PUNC="$(tput sgr0; tput dim)" || LOG_STYLE_PUNC="";
-[[ ${TO_TTY} == true ]] && LOG_STYLE_DEBUG="$(tput setaf 15; tput bold)" || LOG_STYLE_DEBUG="";
-[[ ${TO_TTY} == true ]] && LOG_STYLE_INFO="$(tput setaf 10; tput bold)" || LOG_STYLE_INFO="";
-[[ ${TO_TTY} == true ]] && LOG_STYLE_WARN="$(tput setaf 14; tput bold)" || LOG_STYLE_WARN="";
-[[ ${TO_TTY} == true ]] && LOG_STYLE_ERROR="$(tput setaf 11; tput bold)" || LOG_STYLE_ERROR="";
-[[ ${TO_TTY} == true ]] && LOG_STYLE_FATAL="$(tput setaf 9; tput bold)" || LOG_STYLE_FATAL="";
+[[ ${TO_TTY} == true ]] && LOG_STYLE_RESET="$(echo -ne "\e[0m")" || LOG_STYLE_RESET="";
+[[ ${TO_TTY} == true ]] && LOG_STYLE_PUNC="$(echo -ne "\e[0m\e[2m")" || LOG_STYLE_PUNC="";
+[[ ${TO_TTY} == true ]] && LOG_STYLE_DEBUG="$(echo -ne "\e[97m\e[1m")" || LOG_STYLE_DEBUG="";
+[[ ${TO_TTY} == true ]] && LOG_STYLE_INFO="$(echo -ne "\e[92m\e[1m")" || LOG_STYLE_INFO="";
+[[ ${TO_TTY} == true ]] && LOG_STYLE_WARN="$(echo -ne "\e[96m\e[1m")" || LOG_STYLE_WARN="";
+[[ ${TO_TTY} == true ]] && LOG_STYLE_ERROR="$(echo -ne "\e[93m\e[1m")" || LOG_STYLE_ERROR="";
+[[ ${TO_TTY} == true ]] && LOG_STYLE_FATAL="$(echo -ne "\e[91m\e[1m")" || LOG_STYLE_FATAL="";
 
 function logging_debug() {
   if [[ "${ELL_LOG_LEVEL}" -ge 5 ]]; then
