@@ -18,10 +18,11 @@ A command-line interface for LLMs written in Bash.
 
 To use ell, you need the following:
 
-- bash version 4.1 or later
+- bash-4.1 or later and coreutils / OS X utilities
 - jq (For parsing JSON)
 - curl (For sending HTTPS requests)
-- perl (For PCRE. POSIX bash doesn't support look-ahead and look-behind regex. Not necessary if you don't use record mode)
+- perl (Not necessary if you don't use record mode. For PCRE. POSIX bash doesn't support look-ahead and look-behind regex)
+- util-linux (Not necessary if you don't use record mode. For script command to record terminal input and output)
 
 ## Install
 
