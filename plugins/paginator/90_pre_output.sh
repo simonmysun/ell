@@ -43,7 +43,7 @@ if [[ ${TO_TTY} == true ]]; then
     if [[ "x${char}" == $'x\n' ]]; then
       LENGTH=${COLUMNS};
       NEWLINE=true;
-    elif (( $LENGTH == 0 )); then
+    elif (( ${LENGTH} == 0 )); then
       echo;
       LENGTH=${COLUMNS};
       NEWLINE=true;
