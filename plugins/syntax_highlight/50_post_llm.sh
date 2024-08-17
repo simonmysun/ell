@@ -23,20 +23,20 @@ if [[ ${TO_TTY} == true ]]; then
   IN_TITLE=false;
 
   # Applying defalut styling escape sequences if they are not set
-  : "${STYLE_RESET:=$(tput sgr0)}";
-  : "${STYLE_HEADING:=$(tput setaf 12; tput bold)}";
-  : "${STYLE_LIST:=$(tput setaf 12)}";
-  : "${STYLE_CODE:=$(tput setaf 11)}";
+  : "${STYLE_RESET:=$(echo -ne "\e[0m")}";
+  : "${STYLE_HEADING:=$(echo -ne "\e[94m\e[1m")}";
+  : "${STYLE_LIST:=$(echo -ne "\e[94m")}";
+  : "${STYLE_CODE:=$(echo -ne "\e[93m")}";
   : "${STYLE_CODE_BLOCK:=""}";
   : "${STYLE_BLOCKQUOTE:=""}";
-  : "${STYLE_BOLD:=$(tput setaf 12; tput bold)}";
-  : "${STYLE_ITALIC:=$(tput sitm)}";
-  : "${STYLE_STRIKETHROUGH:=\e[9m}"; # what is the cap-code of this?
-  : "${STYLE_LINK_TEXT:=$(tput setaf 14)}";
-  : "${STYLE_URL:=$(tput setaf 12; tput smul)}";
-  : "${STYLE_TITLE:=$(tput setaf 2; tput bold)}";
-  : "${STYLE_IMAGE_TEXT:=$(tput setaf 14)}";
-  : "${STYLE_PUNCTUATION:=$(tput dim)}";
+  : "${STYLE_BOLD:=$(echo -ne "\e[94m\e[1m")}";
+  : "${STYLE_ITALIC:=$(echo -ne "\e[3m")}";
+  : "${STYLE_STRIKETHROUGH:==$(echo -ne "\e[9m")}";
+  : "${STYLE_LINK_TEXT:=$(echo -ne "\e[96m")}";
+  : "${STYLE_URL:=$(echo -ne "\e[94m\e[4m")}";
+  : "${STYLE_TITLE:=$(echo -ne "\e[32m\e[1m")}";
+  : "${STYLE_IMAGE_TEXT:=$(echo -ne "\e[96m")}";
+  : "${STYLE_PUNCTUATION:=$(echo -ne "\e[2m")}";
 
   CURRENT_LINE="";
 

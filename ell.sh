@@ -46,8 +46,8 @@ load_config;
 : "${ELL_API_KEY:=""}";
 : "${ELL_API_URL:=""}";
 : "${ELL_API_STREAM:="true"}";
-: "${ELL_PS1:="$(tput sgr0; tput dim)<$(tput sgr0)user_prompt$(tput dim)>$(tput sgr0) $(tput setaf 4; tput bold)\$$(tput sgr0) "}";
-: "${ELL_PS2:="$(tput sgr0; tput dim)<$(tput sgr0)llm_gen$(tput dim)>$(tput sgr0) "}";
+: "${ELL_PS1:="$(echo -ne "\e[0m\e[2m")<$(echo -ne "\e[0m")user_prompt$(echo -ne "\e[2m")>$(echo -ne "\e[0m") $(echo -ne "\e[34m\e[1m")\$$(echo -ne "\e[0m") "}";
+: "${ELL_PS2:="$(echo -ne "\e[0m\e[2m")<$(echo -ne "\e[0m")llm_gen$(echo -ne "\e[2m")>$(echo -ne "\e[0m") "}";
 : "${ELL_CONFIG:=""}";
 
 parse_arguments "${@}";
@@ -67,6 +67,15 @@ if [[ -z "${TO_TTY}" ]]; then
   [[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
 fi
 export TO_TTY;
+read PAGE_SIZE COLUMNS < <(stty size);
+if [[ -z "${PAGE_SIZE}" ]]; then
+  PAGE_SIZE=24;
+fi
+if [[ -z "${COLUMNS}" ]]; then
+  COLUMNS=80;
+fi
+export PAGE_SIZE;
+export COLUMNS;
 
 # Logging_debug "Decorating the generate_completion to apply hooks before and after";
 eval "$(echo -ne "orig_"; declare -f generate_completion)";
