@@ -16,6 +16,8 @@ The configuration files are read and applied in the following order:
 
 Specifying `ELL_CONFIG` in the file provided with the `-c` / `--config` option will not work since looking for the config file is not recursive.
 
+If you are running ell in a relatively hostile environment, it is recommended to load the environment variables from an encrypted file. This can be done by using a third-party tool. (related: #18)
+
 ## Configurable variables
 
 The following variables can be set in the configuration files, environment variables:
