@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# ${BASH_VERSINFO:-0} is tested first because the BASH_VERSINFO array was introduced in bash-2.0-beta1. I have tested bash-2.05a.0(1)-release and the code below works.
 if [ "${BASH_VERSINFO:-0}" -ge 4 ]; then
   if [ "${BASH_VERSINFO:-0}" -eq 4 ] && [ "${BASH_VERSINFO[1]:-0}" -lt 2 ]; then
     echo "Bash version 4.2 or higher is required to run this script";
