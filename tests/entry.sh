@@ -9,6 +9,9 @@ echo "Running tests...";
 echo "Running test: logging.sh";
 bash logging.sh;
 
+echo "Running test: piping.sh";
+bash piping.sh;
+
 echo "Running test: templating.sh";
 bash templating.sh;
 
