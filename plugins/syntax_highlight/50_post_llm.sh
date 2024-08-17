@@ -125,19 +125,19 @@ if [[ ${TO_TTY} == true ]]; then
           continue;
         elif [[ "x${buffer}" =~ ^x#+[[:space:]]$ ]]; then
           # logging_debug "Heading mode";
-          echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}${STYLE_RESET}${STYLE_HEADING}";
+          echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}${STYLE_RESET}${STYLE_HEADING}";
           buffer="${buffer: -1}";
           IN_HEADING=true;
           START_OF_CONTENT=true;
         elif [[ "x${buffer}" =~ ^x[[:digit:]]+\.[[:space:]]$ ]]; then
           # logging_debug "Ordered list";
-          echo -ne "${STYLE_RESET}${STYLE_LIST}${buffer::-1}${STYLE_RESET}";
+          echo -ne "${STYLE_RESET}${STYLE_LIST}${buffer::${#buffer}-1}${STYLE_RESET}";
           buffer="${buffer: -1}";
           IN_LIST=true;
           START_OF_CONTENT=true;
         elif [[ "x${buffer}" =~ ^x(\*|\-|\+)[[:space:]]$ ]]; then
           # logging_debug "Unordered list";
-          echo -ne "${STYLE_RESET}${STYLE_LIST}${buffer::-1}${STYLE_RESET}";
+          echo -ne "${STYLE_RESET}${STYLE_LIST}${buffer::${#buffer}-1}${STYLE_RESET}";
           buffer="${buffer: -1}";
           IN_LIST=true;
           START_OF_CONTENT=true;
@@ -209,25 +209,25 @@ if [[ ${TO_TTY} == true ]]; then
             # logging_debug "Italic off";
             IN_BOLD=false;
             IN_ITALIC=false;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           elif [[ ${IN_BOLD} == true ]]; then
             # logging_debug "Bold off";
             # logging_debug "Italic on";
             IN_BOLD=false;
             IN_ITALIC=true;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           elif [[ ${IN_ITALIC} == true ]]; then
             # logging_debug "Bold on";
             # logging_debug "Italic off";
             IN_BOLD=true;
             IN_ITALIC=false;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           else
             # logging_debug "Bold on";
             # logging_debug "Italic on";
             IN_BOLD=true;
             IN_ITALIC=true;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           fi
           buffer="${buffer: -1}";
           dirty=true;
@@ -235,11 +235,11 @@ if [[ ${TO_TTY} == true ]]; then
           if [[ ${IN_BOLD} == true ]]; then
             # logging_debug "Bold off";
             IN_BOLD=false;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           else
             # logging_debug "Bold on";
             IN_BOLD=true;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           fi
           buffer="${buffer: -1}";
           dirty=true;
@@ -247,11 +247,11 @@ if [[ ${TO_TTY} == true ]]; then
           if [[ ${IN_ITALIC} == true ]]; then
             # logging_debug "Italic off";
             IN_ITALIC=false;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           else
             # logging_debug "Italic on";
             IN_ITALIC=true;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           fi
           buffer="${buffer: -1}";
           dirty=true;
@@ -259,11 +259,11 @@ if [[ ${TO_TTY} == true ]]; then
           if [[ ${IN_STRIKETHROUGH} == true ]]; then
             # logging_debug "Strikethrough off";
             IN_STRIKETHROUGH=false;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           else
             # logging_debug "Strikethrough on";
             IN_STRIKETHROUGH=true;
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           fi
           buffer="${buffer: -1}";
           dirty=true;
@@ -275,13 +275,13 @@ if [[ ${TO_TTY} == true ]]; then
           if [[ ${IN_LINK_TEXT} == true ]]; then
             IN_LINK_TEXT=false;
             # logging_debug "Exit link text mode missing URL";
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
             buffer="${buffer: -1}";
             dirty=true;
           elif [[ ${IN_IMAGE_TEXT} == true ]]; then
             IN_LINK_TEXT=false;
             # logging_debug "Exit link text mode missing URL";
-            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::-1}$(current_style)";
+            echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
             buffer="${buffer: -1}";
             dirty=true;
           else
