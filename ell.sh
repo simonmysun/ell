@@ -62,7 +62,9 @@ if [[ ${ELL_OUTPUT_FILE} != "-" ]]; then
 fi
 
 # logging_debug "Checking if we are outputting to a TTY or not";
-[[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
+if [[ -z "${TO_TTY}" ]]; then
+  [[ -t 1 ]] && TO_TTY=true || TO_TTY=false;
+fi
 export TO_TTY;
 
 # Logging_debug "Decorating the generate_completion to apply hooks before and after";
