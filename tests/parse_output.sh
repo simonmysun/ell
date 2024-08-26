@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -o posix;
+
 echo "";
 echo "gemini stream mode to tty";
 echo "=========================";
@@ -10,14 +12,14 @@ export ELL_API_URL="file://${PWD}/${ELL_API_STYLE}-$([ "x${ELL_API_STREAM}" == "
 export ELL_API_KEY="";
 export ELL_TEMPLATE_PATH="${PWD}/../templates/";
 export ELL_TEMPLATE="default-${ELL_API_STYLE}";
-bash ./../ell test;
+ell test;
 
 echo "";
 echo "gemini no-stream mode to tty";
 echo "============================";
 export ELL_API_STREAM=false;
 export ELL_API_URL="file://${PWD}/${ELL_API_STYLE}-$([ "x${ELL_API_STREAM}" == "xtrue" ] && echo "" || echo "no-")stream.json#";
-bash ./../ell test;
+ell test;
 
 export TO_TTY=false;
 
@@ -31,11 +33,11 @@ export ELL_API_URL="file://${PWD}/${ELL_API_STYLE}-$([ "x${ELL_API_STREAM}" == "
 export ELL_API_KEY="";
 export ELL_TEMPLATE_PATH="${PWD}/../templates/";
 export ELL_TEMPLATE="default-${ELL_API_STYLE}";
-bash ./../ell test;
+ell test;
 
 echo "";
 echo "openai no-stream mode to file";
 echo "=============================";
 export ELL_API_STREAM=false;
 export ELL_API_URL="file://${PWD}/${ELL_API_STYLE}-$([ "x${ELL_API_STREAM}" == "xtrue" ] && echo "" || echo "no-")stream.json#";
-bash ./../ell test;
+ell test;
