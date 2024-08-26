@@ -16,10 +16,10 @@ ELL_VERSION="0.1.1";
 BASE_DIR=$(dirname "${0}");
 
 # logging_debug "Importing helper functions";
-source "${BASE_DIR}/helpers/logging.sh";
-source "${BASE_DIR}/helpers/parse_arguments.sh";
-source "${BASE_DIR}/helpers/load_config.sh";
-source "${BASE_DIR}/helpers/piping.sh";
+. "${BASE_DIR}/helpers/logging.sh";
+. "${BASE_DIR}/helpers/parse_arguments.sh";
+. "${BASE_DIR}/helpers/load_config.sh";
+. "${BASE_DIR}/helpers/piping.sh";
 
 logging_debug "Starting ${0}";
 
@@ -52,7 +52,7 @@ load_config;
 
 parse_arguments "${@}";
 
-source "${BASE_DIR}/llm_backends/generate_completion.sh";
+. "${BASE_DIR}/llm_backends/generate_completion.sh";
 
 # Deciding where to output
 if [[ ${ELL_OUTPUT_FILE} != "-" ]]; then

@@ -10,12 +10,12 @@ function load_config() {
   set -o allexport;
   if [[ -f "${HOME}/.ellrc" ]]; then
     logging_debug "Loading config from ${HOME}/.ellrc (from \$HOME)";
-    source "${HOME}/.ellrc"
+    . "${HOME}/.ellrc"
   fi
 
   if [[ -f "${PWD}/.ellrc" ]]; then
     logging_debug "Loading config from ${PWD}/.ellrc (from \$PWD)";
-    source "${PWD}/.ellrc"
+    . "${PWD}/.ellrc"
   fi
 
   if [[ -z "${ELL_CONFIG}" ]]; then
@@ -23,7 +23,7 @@ function load_config() {
   else
     if [[ -f "${ELL_CONFIG}" ]]; then
       logging_debug "Loading config from ${ELL_CONFIG}";
-      source "${ELL_CONFIG}"
+      . "${ELL_CONFIG}"
     else
       logging_fatal "Config file ${ELL_CONFIG} not found";
       exit 1;
