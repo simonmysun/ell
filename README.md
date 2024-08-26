@@ -170,6 +170,7 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 - https://github.com/plandex-ai/plandex A CLI tool to develop AI-integrated workflow, written in Go.
 - https://github.com/simonw/llm A CLI tool for in-depth manipulation of LLMs, written in Python.
 - https://github.com/sigoden/aichat A CLI tool talks to various LLM providers, written in Rust.
+- https://github.com/npiv/chatblade A CLI Swiss Army Knife for ChatGPT, written in python
 
 ## Contributing
 
