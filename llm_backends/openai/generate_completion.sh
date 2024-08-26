@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function generate_completion() {
-  if [[ ${ELL_API_STREAM} != true ]]; then
+  if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
     response=$(cat - | curl "${ELL_API_URL}" \
       --silent \
@@ -16,7 +16,7 @@ function generate_completion() {
     else
       # check if finish_reason is present
       if (echo "${response}" | jq -e '.choices[0].finish_reason' > /dev/null); then
-        if [[ $(echo "${response}" | jq -r '.choices[0].finish_reason') != "stop" ]]; then
+        if [ "x$(echo "${response}" | jq -r '.choices[0].finish_reason')" != "xstop" ]; then
           logging_error "Unexpected finish reason: $(echo "${response}" | jq -r '.choices[0].finish_reason')";
         else
           echo "${response}" | jq -j -r '.choices[0].message.content';
@@ -40,10 +40,10 @@ function generate_completion() {
       --header "Authorization: Bearer ${ELL_API_KEY}" \
       --data-binary @- | {
       while read -r line; do
-        if [[ "x${line}" == "xdata: [DONE]" ]]; then
+        if [ "x${line}" = "xdata: [DONE]" ]; then
           # End of stream
           break;
-        elif [[ "x${line}" == "xdata: {"* ]]; then
+        elif echo "x${line}" | grep -e "^xdata: {" > /dev/null 2>&1; then
           # Data chunk received
           json_chunk=$(echo "${line}" | cut -c 6-);
           if (echo "${json_chunk}" | jq -e -r '.choices[0].delta.content' > /dev/null); then
@@ -51,7 +51,7 @@ function generate_completion() {
           else
             if (echo "${json_chunk}" | jq -e -r '.finish_reason' > /dev/null); then
               stop_reason=$(echo "${json_chunk}" | jq -j -r '.finish_reason');
-              if [[ "x${stop_reason}" != "xstop" ]]; then
+              if [ "x${stop_reason}" != "xstop" ]; then
                 logging_error "Unexpected stop reason: ${stop_reason}";
               fi
               break;
@@ -64,7 +64,7 @@ function generate_completion() {
               logging_info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
             fi
           fi
-        elif [[ -z "${line}" ]]; then
+        elif [ -z "${line}" ]; then
           # Empty line, skip
           continue;
         else

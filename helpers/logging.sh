@@ -12,40 +12,40 @@
 [[ ${TO_TTY} == true ]] && LOG_STYLE_FATAL="$(echo -ne "\e[91m\e[1m")" || LOG_STYLE_FATAL="";
 
 function logging_debug() {
-  if [[ "${ELL_LOG_LEVEL}" -ge 5 ]]; then
+  if [ "${ELL_LOG_LEVEL}" -ge 5 ]; then
     echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_DEBUG}DEBUG${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
 function logging_warn() {
-  if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
+  if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_WARN}WARN${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
 function logging_info() {
-  if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
+  if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
-  if [[ "${ELL_LOG_LEVEL}" -ge 3 ]]; then
+  if [ "${ELL_LOG_LEVEL}" -ge 3 ]; then
     echo "${LOG_STYLE_INFO}INFO${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
 function logging_error() {
-  if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
+  if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
-  if [[ "${ELL_LOG_LEVEL}" -ge 2 ]]; then
+  if [ "${ELL_LOG_LEVEL}" -ge 2 ]; then
     echo "${LOG_STYLE_ERROR}ERROR${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
 function logging_fatal() {
-  if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
+  if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
-  if [[ "${ELL_LOG_LEVEL}" -ge 1 ]]; then
+  if [ "${ELL_LOG_LEVEL}" -ge 1 ]; then
     echo "${LOG_STYLE_FATAL}FATAL${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
