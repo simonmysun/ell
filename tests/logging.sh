@@ -9,35 +9,35 @@ source "$(dirname "${0}")/../helpers/logging.sh";
 export ELL_LOG_LEVEL=5;
 echo "ELL_LOG_LEVEL=${ELL_LOG_LEVEL}";
 
-logging::debug "logging::debug";
-logging::warn "logging::warn";
-logging::info "logging::info";
-logging::error "logging::error";
-logging::fatal "logging::fatal";
+logging_debug "logging_debug";
+logging_warn "logging_warn";
+logging_info "logging_info";
+logging_error "logging_error";
+logging_fatal "logging_fatal";
 
-echo "ELL_LOG_LEVEL=3";
+export ELL_LOG_LEVEL=3;
 echo "ELL_LOG_LEVEL=${ELL_LOG_LEVEL}";
 
-logging::debug "logging::debug";
-logging::warn "logging::warn";
-logging::info "logging::info";
-logging::error "logging::error";
-logging::fatal "logging::fatal";
+logging_debug "logging_debug";
+logging_warn "logging_warn";
+logging_info "logging_info";
+logging_error "logging_error";
+logging_fatal "logging_fatal";
 
-echo "ELL_LOG_LEVEL=2";
+export ELL_LOG_LEVEL=2;
 echo "ELL_LOG_LEVEL=${ELL_LOG_LEVEL}";
 
-logging::debug "logging::debug";
-logging::warn "logging::warn";
-logging::info "logging::info";
-logging::error "logging::error";
-logging::fatal "logging::fatal";
+logging_debug "logging_debug";
+logging_warn "logging_warn";
+logging_info "logging_info";
+logging_error "logging_error";
+logging_fatal "logging_fatal";
 
-echo "ELL_LOG_LEVEL=0";
+export ELL_LOG_LEVEL=0;
 echo "ELL_LOG_LEVEL=${ELL_LOG_LEVEL}";
 
-logging::debug "logging::debug";
-logging::warn "logging::warn";
-logging::info "logging::info";
-logging::error "logging::error";
-logging::fatal "logging::fatal";
+logging_debug "logging_debug";
+logging_warn "logging_warn";
+logging_info "logging_info";
+logging_error "logging_error";
+logging_fatal "logging_fatal";

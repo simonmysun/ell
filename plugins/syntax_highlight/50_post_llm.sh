@@ -4,7 +4,7 @@
 
 
 if [[ ${TO_TTY} == true ]]; then
-  # logging::debug "Terminal detected. Applying syntax highlighting";
+  # logging_debug "Terminal detected. Applying syntax highlighting";
 
   # Initialize the state machine
   START_OF_LINE=true;
@@ -78,13 +78,13 @@ if [[ ${TO_TTY} == true ]]; then
       IFS= read -r -N 1 char;
       ret=${?};
       if [[ ${ret} -ne 0 ]]; then
-        # logging::debug "EOF";
+        # logging_debug "EOF";
         break;
       fi
       buffer="${buffer}${char}";
     fi
     if [[ "x${char}" == $'x\n' ]]; then
-      # logging::debug "End of line, reseting state";
+      # logging_debug "End of line, reseting state";
       START_OF_LINE=true;
       START_OF_CONTENT=false;
       IN_HEADING=false;
@@ -106,7 +106,7 @@ if [[ ${TO_TTY} == true ]]; then
         echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}";
       fi
       buffer="";
-      # logging::debug "LINE: ${CURRENT_LINE}";
+      # logging_debug "LINE: ${CURRENT_LINE}";
       CURRENT_LINE="";
     else
       if [[ ${START_OF_LINE} == true ]]; then
@@ -116,67 +116,67 @@ if [[ ${TO_TTY} == true ]]; then
         CURRENT_LINE="${CURRENT_LINE}${char}";
       fi
       if [[ ${START_OF_CONTENT} != true ]]; then
-        # logging::debug "Block mode";
-        # logging::debug "$(echo -ne "${buffer}" | hexdump -C | head -n -1)";
+        # logging_debug "Block mode";
+        # logging_debug "$(echo -ne "${buffer}" | hexdump -C | head -n -1)";
         if [[ "x${buffer}" == $'x ' ]]; then
-          # logging::debug "Space";
+          # logging_debug "Space";
           echo -ne "${buffer}";
           buffer="";
           continue;
         elif [[ "x${buffer}" =~ ^x#+[[:space:]]$ ]]; then
-          # logging::debug "Heading mode";
+          # logging_debug "Heading mode";
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}${STYLE_RESET}${STYLE_HEADING}";
           buffer="${buffer: -1}";
           IN_HEADING=true;
           START_OF_CONTENT=true;
         elif [[ "x${buffer}" =~ ^x[[:digit:]]+\.[[:space:]]$ ]]; then
-          # logging::debug "Ordered list";
+          # logging_debug "Ordered list";
           echo -ne "${STYLE_RESET}${STYLE_LIST}${buffer::${#buffer}-1}${STYLE_RESET}";
           buffer="${buffer: -1}";
           IN_LIST=true;
           START_OF_CONTENT=true;
         elif [[ "x${buffer}" =~ ^x(\*|\-|\+)[[:space:]]$ ]]; then
-          # logging::debug "Unordered list";
+          # logging_debug "Unordered list";
           echo -ne "${STYLE_RESET}${STYLE_LIST}${buffer::${#buffer}-1}${STYLE_RESET}";
           buffer="${buffer: -1}";
           IN_LIST=true;
           START_OF_CONTENT=true;
         elif [[ "x${buffer}" =~ ^x\>$ ]]; then
-          # logging::debug "Blockquote mode";
+          # logging_debug "Blockquote mode";
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}${STYLE_BLOCKQUOTE}";
           buffer="";
           IN_BLOCKQUOTE=true;
           # START_OF_CONTENT=true;
         elif [[ "x${buffer}" =~ ^x\`\`\`$ ]]; then
           if [[ ${IN_CODE_BLOCK} == true ]]; then
-            # logging::debug "Code block mode off";
+            # logging_debug "Code block mode off";
             IN_CODE_BLOCK=false;
           else
-            # logging::debug "Code block mode on";
+            # logging_debug "Code block mode on";
             IN_CODE_BLOCK=true;
           fi
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}";
           START_OF_CONTENT=true;
           buffer="";
         elif [[ "x${buffer}" =~ ^x((#+)|([[:digit:]]+\.?)|((\*|\-|\+){1,})|(\`\`?)|((\_|\-|\+)+))$ ]]; then
-          # logging::debug "Undetermined";
+          # logging_debug "Undetermined";
           :
         else
-          # logging::debug "Not a block mode";
+          # logging_debug "Not a block mode";
           START_OF_CONTENT=true;
           dirty=true;
         fi
       fi
       if [[ ${IN_CODE_BLOCK} == true && ! "x${buffer}" =~ ^x\`\`?$ ]]; then
-        # logging::debug "Code block mode";
+        # logging_debug "Code block mode";
         echo -ne "${buffer}";
         buffer="";
       elif [[ ${START_OF_CONTENT} == true && ${IN_CODE_BLOCK} == false ]]; then
-        # logging::debug "Content mode";
-        # logging::debug "$(echo -ne "${buffer}" | hexdump -C | head -n -1)";
+        # logging_debug "Content mode";
+        # logging_debug "$(echo -ne "${buffer}" | hexdump -C | head -n -1)";
         if [[ ${IN_CODE} == true && ${IN_ESCAPE} == false ]]; then
           if [[ "x${buffer}" =~ ^x\`$ ]]; then
-            # logging::debug "Code off";
+            # logging_debug "Code off";
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}$(current_style)";
             IN_CODE=false;
             buffer="";
@@ -185,7 +185,7 @@ if [[ ${TO_TTY} == true ]]; then
             buffer="";
           fi
         elif [[ ${IN_ESCAPE} == true ]]; then
-          # logging::debug "Escape off";
+          # logging_debug "Escape off";
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}$(current_style)";
           IN_ESCAPE=false;
           buffer="";
@@ -197,7 +197,7 @@ if [[ ${TO_TTY} == true ]]; then
           if [[ ${IN_URL} == true ]]; then
             IN_URL=false;
             IN_TITLE=true;
-            # logging::debug "disable URL mode";
+            # logging_debug "disable URL mode";
             echo -ne "$(current_style)${buffer}";
           else
             echo -ne "${buffer}";
@@ -205,26 +205,26 @@ if [[ ${TO_TTY} == true ]]; then
           buffer="";
         elif [[ "x${buffer}" =~ ^x\*\*\*[^\*]$ || "x${buffer}" =~ ^x___[^_]$ ]]; then
           if [[ ${IN_BOLD} == true && ${IN_ITALIC} == true ]]; then
-            # logging::debug "Bold off";
-            # logging::debug "Italic off";
+            # logging_debug "Bold off";
+            # logging_debug "Italic off";
             IN_BOLD=false;
             IN_ITALIC=false;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           elif [[ ${IN_BOLD} == true ]]; then
-            # logging::debug "Bold off";
-            # logging::debug "Italic on";
+            # logging_debug "Bold off";
+            # logging_debug "Italic on";
             IN_BOLD=false;
             IN_ITALIC=true;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           elif [[ ${IN_ITALIC} == true ]]; then
-            # logging::debug "Bold on";
-            # logging::debug "Italic off";
+            # logging_debug "Bold on";
+            # logging_debug "Italic off";
             IN_BOLD=true;
             IN_ITALIC=false;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           else
-            # logging::debug "Bold on";
-            # logging::debug "Italic on";
+            # logging_debug "Bold on";
+            # logging_debug "Italic on";
             IN_BOLD=true;
             IN_ITALIC=true;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
@@ -233,11 +233,11 @@ if [[ ${TO_TTY} == true ]]; then
           dirty=true;
         elif [[ "x${buffer}" =~ ^x\*\*[^\*]$ || "x${buffer}" =~ ^x__[^_]$ ]]; then
           if [[ ${IN_BOLD} == true ]]; then
-            # logging::debug "Bold off";
+            # logging_debug "Bold off";
             IN_BOLD=false;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           else
-            # logging::debug "Bold on";
+            # logging_debug "Bold on";
             IN_BOLD=true;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           fi
@@ -245,11 +245,11 @@ if [[ ${TO_TTY} == true ]]; then
           dirty=true;
         elif [[ "x${buffer}" =~ ^x\*[^\*]$ || "x${buffer}" =~ ^x_[^_]$ ]]; then
           if [[ ${IN_ITALIC} == true ]]; then
-            # logging::debug "Italic off";
+            # logging_debug "Italic off";
             IN_ITALIC=false;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           else
-            # logging::debug "Italic on";
+            # logging_debug "Italic on";
             IN_ITALIC=true;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           fi
@@ -257,11 +257,11 @@ if [[ ${TO_TTY} == true ]]; then
           dirty=true;
         elif [[ "x${buffer}" =~ ^x\~\~[^~]$ ]]; then
           if [[ ${IN_STRIKETHROUGH} == true ]]; then
-            # logging::debug "Strikethrough off";
+            # logging_debug "Strikethrough off";
             IN_STRIKETHROUGH=false;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           else
-            # logging::debug "Strikethrough on";
+            # logging_debug "Strikethrough on";
             IN_STRIKETHROUGH=true;
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
           fi
@@ -274,18 +274,18 @@ if [[ ${TO_TTY} == true ]]; then
         elif [[ "x${buffer}" =~ ^x][^\(]$ ]]; then
           if [[ ${IN_LINK_TEXT} == true ]]; then
             IN_LINK_TEXT=false;
-            # logging::debug "Exit link text mode missing URL";
+            # logging_debug "Exit link text mode missing URL";
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
             buffer="${buffer: -1}";
             dirty=true;
           elif [[ ${IN_IMAGE_TEXT} == true ]]; then
             IN_LINK_TEXT=false;
-            # logging::debug "Exit link text mode missing URL";
+            # logging_debug "Exit link text mode missing URL";
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer::${#buffer}-1}$(current_style)";
             buffer="${buffer: -1}";
             dirty=true;
           else
-            # logging::debug "']' in the wild";
+            # logging_debug "']' in the wild";
             echo -ne "${buffer}";
             buffer="";
           fi
@@ -293,45 +293,45 @@ if [[ ${TO_TTY} == true ]]; then
           if [[ ${IN_LINK_TEXT} == true ]]; then
             IN_LINK_TEXT=false;
             IN_URL=true;
-            # logging::debug "Enter URL mode";
+            # logging_debug "Enter URL mode";
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}${STYLE_URL}";
             buffer="";
           elif [[ ${IN_IMAGE_TEXT} == true ]]; then
             IN_IMAGE_TEXT=false;
             IN_URL=true;
-            # logging::debug "Enter URL mode";
+            # logging_debug "Enter URL mode";
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}${STYLE_URL}";
             buffer="";
           else
-            # logging::debug "'](' in the wild";
+            # logging_debug "'](' in the wild";
             echo -ne "${buffer}";
             buffer="";
           fi
         elif [[ "x${buffer}" =~ ^x\[$ ]]; then
           IN_LINK_TEXT=true;
-          # logging::debug "Link text mode";
+          # logging_debug "Link text mode";
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}$(current_style)";
           buffer="";
         elif [[ "x${buffer}" =~ ^x\)$ ]]; then
           if [[ ${IN_URL} == true || ${IN_TITLE} == true ]]; then
             IN_URL=false;
             IN_TITLE=false;
-            # logging::debug "Exit URL or its title mode";
+            # logging_debug "Exit URL or its title mode";
             echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}$(current_style)";
             buffer="";
           else
-            # logging::debug "')' in the wild";
+            # logging_debug "')' in the wild";
             echo -ne "${buffer}";
             buffer="";
           fi
           buffer="";
         elif [[ "x${buffer}" =~ ^x\!\[$ ]]; then
-          # logging::debug "Image text mode";
+          # logging_debug "Image text mode";
           IN_IMAGE_TEXT=true;
           echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}$(current_style)";
           buffer="";
         elif [[ "x${buffer}" =~ ^x((_)|(~)|(\*)|(\`)|(\!)|(]))+$ ]]; then
-          # logging::debug "Undetermined";
+          # logging_debug "Undetermined";
           :
         else
           echo -ne "${buffer}";
@@ -346,7 +346,7 @@ if [[ ${TO_TTY} == true ]]; then
   done
   echo -ne "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer}${STYLE_RESET}";
 else
-  # logging::debug "Not a terminal";
+  # logging_debug "Not a terminal";
   cat -;
 fi
 

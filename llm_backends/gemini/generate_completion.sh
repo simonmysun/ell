@@ -2,22 +2,22 @@
 
 function generate_completion() {
   if [[ ${ELL_API_STREAM} != true ]]; then
-    logging::debug "Streaming disabled";
+    logging_debug "Streaming disabled";
     response=$(cat - | curl "${ELL_API_URL}${ELL_LLM_MODEL}:generateContent" \
       --silent \
       --header "Content-Type: application/json" \
       --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @-);
     # Check if curl was successful
-    if [ $? -ne 0 ]; then
-      logging::fatal "Failed to generate completion";
-      logging::debug "Response: ${response}";
+    if [ "${?}" -ne 0 ]; then
+      logging_fatal "Failed to generate completion";
+      logging_debug "Response: ${response}";
       exit 1;
     else
       # check if finishReason is present
       if (echo "${response}" | jq -e '.candidates[0].finishReason' > /dev/null); then
         if [[ "x$(echo "${response}" | jq -r '.candidates[0].finishReason')" != "xSTOP" ]]; then
-          logging::error "Unexpected finish reason: $(echo "${response}" | jq -r '.choices[0].finish_reason')";
+          logging_error "Unexpected finish reason: $(echo "${response}" | jq -r '.choices[0].finish_reason')";
         else
           echo "${response}" | jq -j -r '.candidates[0].content.parts[0].text';
           echo "";
@@ -26,11 +26,11 @@ function generate_completion() {
             completion_tokens=$(echo "${response}" | jq -j -r '.usageMetadata.candidatesTokenCount');
             total_tokens=$(echo "${response}" | jq -j -r '.usageMetadata.totalTokenCount');
             echo '';
-            logging::info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
+            logging_info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
           fi
         fi
       else
-        logging::error "Unexpected format: ${response}";
+        logging_error "Unexpected format: ${response}";
       fi
     fi
   else
@@ -49,10 +49,10 @@ function generate_completion() {
       while read -r line; do
         line=$(echo "${line}" | tr -d '\r');
         if [[ ${PART_FINISHED} == true && "x${line}" == "x]" ]]; then
-          logging::debug "End of stream";
+          logging_debug "End of stream";
           break;
         elif [[ ${PART_FINISHED} == true && "x${line}" == "x," ]]; then
-          logging::debug "skip comma";
+          logging_debug "skip comma";
           continue;
         elif [[ ${PART_FINISHED} == true ]]; then
           PART_FINISHED=false;
@@ -61,14 +61,13 @@ function generate_completion() {
           BUFFER="${BUFFER}${line}";
           # trying to parse the buffer as JSON
           if jq -e . >/dev/null 2>&1 <<<"${BUFFER}"; then
-            json_chunk=$(echo "${line}" | cut -c 6-);
             if (echo "${BUFFER}" | jq -e -r '.candidates[0].content.parts[0].text' > /dev/null); then
               echo "${BUFFER}" | jq -j -r '.candidates[0].content.parts[0].text';
             fi
             if (echo "${BUFFER}" | jq -e -r '.candidates[0].finishReason' > /dev/null); then
               stop_reason=$(echo "${BUFFER}" | jq -j -r '.candidates[0].finishReason');
               if [[ "x${stop_reason}" != "xSTOP" ]]; then
-                logging::error "Unexpected stop reason: ${stop_reason}";
+                logging_error "Unexpected stop reason: ${stop_reason}";
                 break;
               fi
             fi
@@ -83,12 +82,12 @@ function generate_completion() {
           fi
         fi
       done
-      logging::debug "Buffer: ${BUFFER}";
+      logging_debug "Buffer: ${BUFFER}";
       echo '';
-      logging::info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
+      logging_info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
     }
-    if [ ${PIPESTATUS[0]} -ne 0 ]; then
-      logging::fatal "Failed to generate completion";
+    if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+      logging_fatal "Failed to generate completion";
       exit 1;
     fi
   fi
