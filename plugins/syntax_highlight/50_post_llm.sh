@@ -40,7 +40,7 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
 
   CURRENT_LINE="";
 
-  function current_style() {
+  current_style() {
     # Set the style based on the current state of the syntax highlighting.
     printf "%b" "${STYLE_RESET}";
     if [ "x${IN_LINK_TEXT}" = "xtrue" ]; then

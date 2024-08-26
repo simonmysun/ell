@@ -2,8 +2,8 @@
 
 # This is a dummy function that echoes the input. Designed for debugging and testing purposes.
 
-function generate_completion() {
+generate_completion() {
   cat -;
 }
 
-export -f generate_completion;
+export generate_completion;
