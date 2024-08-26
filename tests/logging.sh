@@ -4,7 +4,7 @@ set -o posix;
 
 export TO_TTY=true;
 
-source "$(dirname "${0}")/../helpers/logging.sh";
+. "$(dirname "${0}")/../helpers/logging.sh";
 
 export ELL_LOG_LEVEL=5;
 echo "ELL_LOG_LEVEL=${ELL_LOG_LEVEL}";
