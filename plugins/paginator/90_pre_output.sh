@@ -24,11 +24,11 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
       # logging_debug "Consuming escape sequence";
       esc_seq="${char}";
       read -r -N 1 char;
-      esc_seq+="${char}";
+      esc_seq="${esc_seq}${char}";
       if echo "x${char}" | grep -q -E '^x(\[|\()$'; then
         while true; do
           read -r -N 1 char;
-          esc_seq+="${char}";
+          esc_seq="${esc_seq}${char}";
           echo "${char}" | grep -q -E '[a-zA-Z]' && break;
         done
       fi
