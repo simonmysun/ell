@@ -18,3 +18,8 @@ If you don't like the default colors and styles of syntax highlighting, the styl
 - `STYLE_PUNCTUATION`: Escape code for markdown punctuations.
 
 Refer to terminfo(5) for more information on escape codes.
+
+To customize the prompt (prompt here means shell prompt, not for LLMs), you can use the following variables:
+
+- `ELL_PS1`: the prompt for user input.
+- `ELL_PS2`: the prompt for llm generations.
