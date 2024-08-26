@@ -144,7 +144,7 @@ The term "Plugin" here means a script that can be called by ell. It can be used 
 
 See [Risks Consideration](docs/Risk_Consideration.md).
 
-## FAQ
+## Q&A
 
 - **Q**: Why is it called "ell"?
 - **A**: "ell" is a combination of shell and LLM. It is a shell script to use LLM backends. "shellm" was once considered, but it was dropped because it could be misunderstood as "she llm". "ell" is shorter, easy to type and easy to remember. It does not conflict with any active software. Note that the name "shell" of shell scripts is because it is the outer layer of the operating system exposed to the user. It doesn't indicate that it is a CLI or GUI. Unfortunately it cannot be shortened to "L" which has the same pronunciation because that would conflict with too many things. 
