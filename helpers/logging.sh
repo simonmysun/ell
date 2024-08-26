@@ -17,13 +17,13 @@ logging_debug() {
   fi
 }
 
-function logging_warn() {
+logging_warn() {
   if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_WARN}WARN${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
-function logging_info() {
+logging_info() {
   if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     printf "%s" "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
@@ -32,7 +32,7 @@ function logging_info() {
   fi
 }
 
-function logging_error() {
+logging_error() {
   if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     printf "%s" "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
@@ -41,7 +41,7 @@ function logging_error() {
   fi
 }
 
-function logging_fatal() {
+logging_fatal() {
   if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     printf "%s" "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
@@ -50,4 +50,4 @@ function logging_fatal() {
   fi
 }
 
-export -f logging_debug logging_info logging_warn logging_error logging_fatal;
+export logging_debug logging_info logging_warn logging_error logging_fatal;

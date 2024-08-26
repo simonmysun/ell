@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function generate_completion() {
+generate_completion() {
   if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
     response=$(cat - | curl "${ELL_API_URL}" \
@@ -81,4 +81,4 @@ function generate_completion() {
   fi
 }
 
-export -f generate_completion;
+export generate_completion;

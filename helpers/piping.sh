@@ -15,4 +15,4 @@ piping() {
   fi
 }
 
-export -f piping;
+export piping;

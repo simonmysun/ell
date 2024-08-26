@@ -26,7 +26,7 @@ print_version() {
   echo "${0} $ELL_VERSION https://github.com/simonmysun/ell";
 }
 
-function parse_arguments() {
+parse_arguments() {
   if [ ${#} -eq 0 ]; then
     if [ "x${ELL_RECORD}" = "xtrue" ]; then
       logging_debug "Record mode enabled. Context is used.";
