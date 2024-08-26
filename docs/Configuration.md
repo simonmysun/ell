@@ -57,6 +57,6 @@ The following variables can be set in the command line arguments:
 - `--api-url`: `ELL_API_URL`
 - `--api-disable-streaming`: sets `ELL_API_STREAM` to **false**
 - `-c, --config`: `ELL_CONFIG`
-- `-O, --option`: Other options. The format is `A=b` or `C=d,E=f`.
+- `-O, --option`: Other options. The format is `A=b` or `C=d,E=f`. They will be accessible in the templates.
 
 Currently, only OpenAI and Gemini style API is supported. More API styles are coming soon.
