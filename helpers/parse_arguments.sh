@@ -118,8 +118,8 @@ parse_arguments() {
         shift 2;
         ;;
       -O|--option)
-        # -o A=b -o C=d,E=f
-        logging_debug "\"-o\" present in args";
+        # -O A=b -o C=d,E=f
+        logging_debug "\"-O\" present in args";
         other_options="${2}";
         other_options_array=();
         IFS=',' read -r -a other_options_array <<EOF
