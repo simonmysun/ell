@@ -10,7 +10,7 @@ piping() {
   else
     # logging_debug "Piping: ${@}";
     pipes="$(printf " | %s" "${@}")";
-    pipes="${pipes:3}";
+    pipes=$(echo "$pipes" | cut -c 4-);
     bash -c "${pipes}";
   fi
 }
