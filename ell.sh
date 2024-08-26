@@ -81,7 +81,7 @@ export PAGE_SIZE;
 export COLUMNS;
 
 # Logging_debug "Decorating the generate_completion to apply hooks before and after";
-eval "$(echo -ne "orig_"; declare -f generate_completion)";
+eval "$(printf "orig_"; command -V generate_completion | tail -n +2)";
 generate_completion() {
   pre_llm_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_llm.sh 2>/dev/null | sort -k3 -t/);
   logging_debug "Pre LLM hooks: ${pre_llm_hooks}";
@@ -163,7 +163,7 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
     PAYLOAD="$(eval "cat <<EOF
 $(<"${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json")
 EOF")";
-    echo -ne "${ELL_PS2}";
+    printf "%s" "${ELL_PS2}";
     echo "${PAYLOAD}" | generate_completion | piping "${pre_output_hooks[@]}";
   done
   logging_debug "Exiting interactive mode";
