@@ -37,7 +37,7 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
       BUFFER="${BUFFER}${char}";
       LENGTH=$((LENGTH - 1));
     fi
-    echo -ne "${BUFFER}";
+    printf '%s' "${BUFFER}";
     BUFFER="";
     NEWLINE=false;
     if [ "x${char}" = $'x\n' ]; then
@@ -54,8 +54,7 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
       if [ ${LINE_NUM} -eq ${PAGE_SIZE} ]; then
         read -n 1 -s -r -p "Press any key to continue" < /dev/tty;
         # clear the line and move the cursor to the beginning
-        echo -ne "\e[1K"
-        echo -ne "\r";
+        printf '\033[1K\r';
         LINE_NUM=1;
       fi
     fi

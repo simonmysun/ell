@@ -47,8 +47,8 @@ load_config;
 : "${ELL_API_KEY:=""}";
 : "${ELL_API_URL:=""}";
 : "${ELL_API_STREAM:="true"}";
-: "${ELL_PS1:="$(echo -ne "\e[0m\e[2m")<$(echo -ne "\e[0m")user_prompt$(echo -ne "\e[2m")>$(echo -ne "\e[0m") $(echo -ne "\e[34m\e[1m")\$$(echo -ne "\e[0m") "}";
-: "${ELL_PS2:="$(echo -ne "\e[0m\e[2m")<$(echo -ne "\e[0m")llm_gen$(echo -ne "\e[2m")>$(echo -ne "\e[0m") "}";
+: "${ELL_PS1:="$(printf "\e[0m\e[2m<\e[0muser_prompt\e[2m>\e[0m \e[34m\e[1m$\e[0m ")"}";
+: "${ELL_PS2:="$(printf "\e[0m\e[2m<\e[0mllm_gen\e[2m>\e[0m ")"}";
 : "${ELL_CONFIG:=""}";
 
 parse_arguments "${@}";

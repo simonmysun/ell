@@ -4,7 +4,7 @@ set -o posix;
 
 function inc() {
   while read -r -N 1 char; do
-    echo -ne $(( (char + 1) % 10 ));
+    printf '%s' $(( (char + 1) % 10 ));
   done
 }
 
