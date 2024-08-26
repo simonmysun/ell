@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-cd ..;
+set -o posix;
+
+cd "$(dirname "${0}")/.." || exit 1;
 
 echo "Running tests with bash:4.1";
 echo "===========================";

@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 
-apk add jq curl perl;
+set -o posix;
 
-cd $(dirname "$0");
+echo "Setting up prerequisites...";
+apk -q add jq curl perl;
+
+echo "Installing ell...";
+
+echo -e '#!/usr/bin/env bash\n\n/ell/ell ${@}' > /usr/local/bin/ell;
+chmod +x /usr/local/bin/ell;
+
+cd "$(dirname "${0}")" || exit 1;
 
 echo "Running tests...";
 
