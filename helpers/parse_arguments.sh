@@ -127,7 +127,7 @@ function parse_arguments() {
           key="${option_array[0]}";
           value="${option_array[1]}";
           logging_debug "Setting ${key} to ${value}";
-          eval "${key}=${value}";
+          eval "export ${key}=${value}";
         done
         shift 2;
         ;;

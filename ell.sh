@@ -59,7 +59,7 @@ parse_arguments "${@}";
 if [ "x${ELL_OUTPUT_FILE}" != "x-" ]; then
   if [ "${ELL_RECORD}" != "xtrue" ] && [ "${ELL_INTERACTIVE}" != "xtrue" ]; then
     logging_debug "Outputting to file: ${ELL_OUTPUT_FILE}";
-    exec 1>${ELL_OUTPUT_FILE};
+    exec 1>"${ELL_OUTPUT_FILE}";
   fi
 fi
 
@@ -97,7 +97,7 @@ if [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ] && [ "x
   if [ "x${ELL_OUTPUT_FILE}" != "x-" ]; then
     export ELL_TMP_SHELL_LOG="${ELL_OUTPUT_FILE}";
   else
-    export ELL_TMP_SHELL_LOG=$(mktemp);
+    export ELL_TMP_SHELL_LOG="$(mktemp)";
   fi
   export ELL_RECORD=true;
   logging_info "Session being recorded to ${ELL_TMP_SHELL_LOG}";
@@ -129,7 +129,7 @@ if [ -n "${ELL_INPUT_FILE}" ]; then
     exit 1;
   else
     logging_debug "Reading input from file: ${ELL_INPUT_FILE}, overriding USER_PROMPT";
-    USER_PROMPT=$(sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g' ${ELL_INPUT_FILE} | awk '{printf "%s\\n", $0}');
+    USER_PROMPT=$(sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g' "${ELL_INPUT_FILE}" | awk '{printf "%s\\n", $0}');
   fi
 fi
 
@@ -158,7 +158,7 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
     if [ -z "${ELL_TMP_SHELL_LOG}" ]; then
       logging_debug "ELL_TMP_SHELL_LOG not set";
     else
-      SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | ${BASE_DIR}/helpers/render_to_text.perl | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
+      export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | "${BASE_DIR}/helpers/render_to_text.perl" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
     fi
     PAYLOAD="$(eval "cat <<EOF
 $(<"${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json")

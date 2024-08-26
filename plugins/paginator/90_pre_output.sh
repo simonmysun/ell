@@ -2,14 +2,14 @@
 
 get_current_column() {
   # https://stackoverflow.com/questions/2575037/how-to-get-the-cursor-position-in-bash
-  exec < /dev/tty
-  oldstty="$(stty -g)"
-  stty raw -echo min 0
-  echo -ne "\e[6n" > /dev/tty
+  exec < /dev/tty;
+  oldstty="$(stty -g)";
+  stty raw -echo min 0;
+  echo -ne "\e[6n" > /dev/tty;
   # tput u7 > /dev/tty    # when TERM=xterm (and relatives)
-  IFS=';' read -r -d R -a pos
-  stty "${oldstty}"
-  echo "$((pos[1] - 1))"
+  IFS=';' read -r -d R -a pos;
+  stty "${oldstty}";
+  echo "$((pos[1] - 1))";
 }
 
 if [ "x${TO_TTY}" = "xtrue" ]; then
@@ -60,7 +60,7 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
     fi
   done
 else
-  logging_debug "Not a terminal";
+  # logging_debug "Not a terminal";
   cat -;
 fi
 
