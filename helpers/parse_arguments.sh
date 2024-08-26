@@ -29,9 +29,9 @@ print_version() {
 function parse_arguments() {
   if [[ ${#} -eq 0 ]]; then
     if [[ ${ELL_RECORD} == true ]]; then
-      logging::debug "Record mode enabled. Context is used.";
+      logging_debug "Record mode enabled. Context is used.";
     else
-      logging::debug "No arguments provided, printing usage";
+      logging_debug "No arguments provided, printing usage";
       print_usage;
       exit 64; # EX_USAGE
     fi
@@ -39,101 +39,101 @@ function parse_arguments() {
   while [[ ${#} -gt 0 ]]; do
     case "${1}" in
       -h|--help)
-        logging::debug "\"-h\" present in args, printing usage";
+        logging_debug "\"-h\" present in args, printing usage";
         print_usage;
         exit 0;
         ;;
       -V|--version)
-        logging::debug "\"-V\" present in args, printing version";
+        logging_debug "\"-V\" present in args, printing version";
         print_version;
         exit 0;
         ;;
       -l|--log-level)
-        logging::debug "\"-l\" present in args, setting ELL_LOG_LEVEL to ${2}";
-        ELL_LOG_LEVEL="${2}";
+        logging_debug "\"-l\" present in args, setting ELL_LOG_LEVEL to ${2}";
+        export ELL_LOG_LEVEL="${2}";
         shift 2;
         ;;
       -m|--model)
-        logging::debug "\"-m\" present in args, setting ELL_LLM_MODEL to ${2}";
-        ELL_LLM_MODEL="${2}";
+        logging_debug "\"-m\" present in args, setting ELL_LLM_MODEL to ${2}";
+        export ELL_LLM_MODEL="${2}";
         shift 2;
         ;;
       -T|--template-path)
-        logging::debug "\"-T\" present in args, setting ELL_TEMPLATE_PATH to ${2}";
-        ELL_TEMPLATE_PATH="${2}";
+        logging_debug "\"-T\" present in args, setting ELL_TEMPLATE_PATH to ${2}";
+        export ELL_TEMPLATE_PATH="${2}";
         shift 2;
         ;;
       -t|--template)
-        logging::debug "\"-t\" present in args, setting ELL_TEMPLATE to ${2}";
-        ELL_TEMPLATE="${2}";
+        logging_debug "\"-t\" present in args, setting ELL_TEMPLATE to ${2}";
+        export ELL_TEMPLATE="${2}";
         shift 2;
         ;;
       -f|--input-file)
-        logging::debug "\"-f\" present in args, setting ELL_INPUT_FILE to ${2}";
-        ELL_INPUT_FILE="${2}";
+        logging_debug "\"-f\" present in args, setting ELL_INPUT_FILE to ${2}";
+        export ELL_INPUT_FILE="${2}";
         shift 2;
         ;;
       -r|--record)
-        logging::debug "\"-r\" present in args, setting ELL_RECORD to true";
+        logging_debug "\"-r\" present in args, setting ELL_RECORD to true";
         if [[ "${ELL_RECORD}" == "true" ]]; then
-          logging::fatal "Record mode already enabled";
+          logging_fatal "Record mode already enabled";
           exit 1;
         fi
         ELL_RECORD=true;
         shift 1;
         ;;
       -o|--output-file)
-        logging::debug "\"-o\" present in args, setting ELL_OUTPUT_FILE to ${2}";
-        ELL_OUTPUT_FILE="${2}";
+        logging_debug "\"-o\" present in args, setting ELL_OUTPUT_FILE to ${2}";
+        export ELL_OUTPUT_FILE="${2}";
         shift 2;
         ;;
       -i|--interactive)
-        logging::debug "\"-i\" present in args, setting ELL_INTERACTIVE to true";
-        ELL_INTERACTIVE=true;
+        logging_debug "\"-i\" present in args, setting ELL_INTERACTIVE to true";
+        export ELL_INTERACTIVE=true;
         shift 1;
         ;;
       --api-style)
-        logging::debug "\"--api-style\" present in args, setting ELL_API_STYLE to ${2}";
-        ELL_API_STYLE="${2}";
+        logging_debug "\"--api-style\" present in args, setting ELL_API_STYLE to ${2}";
+        export ELL_API_STYLE="${2}";
         shift 2;
         ;;
       --api-key)
-        logging::debug "\"--api-key\" present in args, setting ELL_API_KEY to ${2}";
-        ELL_API_KEY="${2}";
+        logging_debug "\"--api-key\" present in args, setting ELL_API_KEY to ${2}";
+        export ELL_API_KEY="${2}";
         shift 2;
         ;;
       --api-url)
-        logging::debug "\"--api-url\" present in args, setting ELL_API_URL to ${2}";
-        ELL_API_URL="${2}";
+        logging_debug "\"--api-url\" present in args, setting ELL_API_URL to ${2}";
+        export ELL_API_URL="${2}";
         shift 2;
         ;;
       --api-disable-streaming)
-        logging::debug "\"--api-disable-streaming\" present in args, setting ELL_API_STREAM to false";
-        ELL_API_STREAM="false";
+        logging_debug "\"--api-disable-streaming\" present in args, setting ELL_API_STREAM to false";
+        export ELL_API_STREAM="false";
         shift 1;
         ;;
       -c|--config)
-        logging::debug "\"-c\" present in args, setting ELL_CONFIG to ${2}";
-        ELL_CONFIG="${2}";
+        logging_debug "\"-c\" present in args, setting ELL_CONFIG to ${2}";
+        export ELL_CONFIG="${2}";
         shift 2;
         ;;
       -O|--option)
         # -o A=b -o C=d,E=f
-        logging::debug "\"-o\" present in args";
+        logging_debug "\"-o\" present in args";
         other_options="${2}";
         IFS=',' read -r -a other_options_array <<< "${other_options}";
         for option in "${other_options_array[@]}"; do
           IFS='=' read -r -a option_array <<< "${option}";
           key="${option_array[0]}";
           value="${option_array[1]}";
-          logging::debug "Setting ${key} to ${value}";
+          logging_debug "Setting ${key} to ${value}";
           eval "${key}=${value}";
         done
         shift 2;
         ;;
       *)
-        logging::debug "No more options, setting prompt to ${@}";
-        USER_PROMPT="${@}";
+        logging_debug "No more options, setting prompt to ${*}";
+        export USER_PROMPT="${*}";
         break;
         ;;
     esac

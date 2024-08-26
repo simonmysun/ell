@@ -5,10 +5,10 @@
 
 piping() {
   if [[ ${#} -eq 0 || ${1} == '' ]]; then
-    # logging::debug "No pipes";
+    # logging_debug "No pipes";
     cat -;
   else
-    # logging::debug "Piping: ${@}";
+    # logging_debug "Piping: ${@}";
     pipes="$(printf " | %s" "${@}")";
     pipes="${pipes:3}";
     bash -c "${pipes}";

@@ -9,11 +9,11 @@ get_current_column() {
   # tput u7 > /dev/tty    # when TERM=xterm (and relatives)
   IFS=';' read -r -d R -a pos
   stty "${oldstty}"
-  echo "$((${pos[1]} - 1))"
+  echo "$((pos[1] - 1))"
 }
 
 if [[ ${TO_TTY} == true ]]; then
-  # logging::debug "Terminal detected";
+  # logging_debug "Terminal detected";
   CURR_COL=$(get_current_column);
   BUFFER="";
   # Remaining characters in the of the first line is reduced by $CURR_COL
@@ -21,7 +21,7 @@ if [[ ${TO_TTY} == true ]]; then
   LINE_NUM=1;
   while IFS= read -r -N 1 char; do
     if [[ "x${char}" == $'x\e' ]]; then
-      # logging::debug "Consuming escape sequence";
+      # logging_debug "Consuming escape sequence";
       esc_seq="${char}";
       read -r -N 1 char;
       esc_seq+="${char}";
@@ -43,7 +43,7 @@ if [[ ${TO_TTY} == true ]]; then
     if [[ "x${char}" == $'x\n' ]]; then
       LENGTH=${COLUMNS};
       NEWLINE=true;
-    elif (( ${LENGTH} == 0 )); then
+    elif (( LENGTH == 0 )); then
       echo;
       LENGTH=${COLUMNS};
       NEWLINE=true;
@@ -61,7 +61,7 @@ if [[ ${TO_TTY} == true ]]; then
     fi
   done
 else
-  logging::debug "Not a terminal";
+  logging_debug "Not a terminal";
   cat -;
 fi
 

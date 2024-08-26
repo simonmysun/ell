@@ -11,43 +11,43 @@
 [[ ${TO_TTY} == true ]] && LOG_STYLE_ERROR="$(echo -ne "\e[93m\e[1m")" || LOG_STYLE_ERROR="";
 [[ ${TO_TTY} == true ]] && LOG_STYLE_FATAL="$(echo -ne "\e[91m\e[1m")" || LOG_STYLE_FATAL="";
 
-function logging::debug() {
+function logging_debug() {
   if [[ "${ELL_LOG_LEVEL}" -ge 5 ]]; then
-    echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_DEBUG}DEBUG${LOG_STYLE_RESET} ${@}" >&2;
+    echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_DEBUG}DEBUG${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
-function logging::warn() {
+function logging_warn() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
-    echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_WARN}WARN${LOG_STYLE_RESET} ${@}" >&2;
+    echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_WARN}WARN${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
-function logging::info() {
+function logging_info() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
   if [[ "${ELL_LOG_LEVEL}" -ge 3 ]]; then
-    echo "${LOG_STYLE_INFO}INFO${LOG_STYLE_RESET} ${@}" >&2;
+    echo "${LOG_STYLE_INFO}INFO${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
-function logging::error() {
+function logging_error() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
   if [[ "${ELL_LOG_LEVEL}" -ge 2 ]]; then
-    echo "${LOG_STYLE_ERROR}ERROR${LOG_STYLE_RESET} ${@}" >&2;
+    echo "${LOG_STYLE_ERROR}ERROR${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
-function logging::fatal() {
+function logging_fatal() {
   if [[ "${ELL_LOG_LEVEL}" -ge 4 ]]; then
     echo -n "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
   if [[ "${ELL_LOG_LEVEL}" -ge 1 ]]; then
-    echo "${LOG_STYLE_FATAL}FATAL${LOG_STYLE_RESET} ${@}" >&2;
+    echo "${LOG_STYLE_FATAL}FATAL${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
-export -f logging::debug logging::info logging::warn logging::error logging::fatal;
+export -f logging_debug logging_info logging_warn logging_error logging_fatal;
