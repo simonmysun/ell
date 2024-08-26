@@ -121,9 +121,15 @@ parse_arguments() {
         # -o A=b -o C=d,E=f
         logging_debug "\"-o\" present in args";
         other_options="${2}";
-        IFS=',' read -r -a other_options_array <<< "${other_options}";
+        other_options_array=();
+        IFS=',' read -r -a other_options_array <<EOF
+${other_options}
+EOF
+        echo "${other_options_array[@]}";
         for option in "${other_options_array[@]}"; do
-          IFS='=' read -r -a option_array <<< "${option}";
+          IFS='=' read -r -a option_array <<EOF
+${option}
+EOF
           key="${option_array[0]}";
           value="${option_array[1]}";
           logging_debug "Setting ${key} to ${value}";

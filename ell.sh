@@ -161,7 +161,7 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
       export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | "${BASE_DIR}/helpers/render_to_text.perl" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
     fi
     PAYLOAD="$(eval "cat <<EOF
-$(<"${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json")
+$(cat "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json")
 EOF")";
     printf "%s" "${ELL_PS2}";
     echo "${PAYLOAD}" | generate_completion | piping "${pre_output_hooks[@]}";
@@ -171,7 +171,7 @@ else
   USER_PROMPT=$(echo "${USER_PROMPT}" | piping "${post_input_hooks[@]}");
 
   PAYLOAD="$(eval "cat <<EOF
-$(<"${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json")
+$(cat "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json")
 EOF")";
 
   echo "${PAYLOAD}" | generate_completion | piping "${pre_output_hooks[@]}";

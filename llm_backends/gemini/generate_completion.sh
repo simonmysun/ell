@@ -60,6 +60,9 @@ generate_completion() {
         else
           BUFFER="${BUFFER}${line}";
           # trying to parse the buffer as JSON
+          jq -e . >/dev/null 2>&1 <<EOF
+${BUFFER}
+EOF
           if [ "${?}" -eq 0 ]; then
             if (echo "${BUFFER}" | jq -e -r '.candidates[0].content.parts[0].text' > /dev/null); then
               echo "${BUFFER}" | jq -j -r '.candidates[0].content.parts[0].text';
