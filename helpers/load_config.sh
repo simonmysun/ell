@@ -8,20 +8,20 @@ function load_config() {
   logging_debug "Storing current environment";
   current_env=$(declare -p -x | sed -e 's/declare -x /export /');
   set -o allexport;
-  if [[ -f "${HOME}/.ellrc" ]]; then
+  if [ -f "${HOME}/.ellrc" ]; then
     logging_debug "Loading config from ${HOME}/.ellrc (from \$HOME)";
     . "${HOME}/.ellrc"
   fi
 
-  if [[ -f "${PWD}/.ellrc" ]]; then
+  if [ -f "${PWD}/.ellrc" ]; then
     logging_debug "Loading config from ${PWD}/.ellrc (from \$PWD)";
     . "${PWD}/.ellrc"
   fi
 
-  if [[ -z "${ELL_CONFIG}" ]]; then
+  if [ -z "${ELL_CONFIG}" ]; then
     logging_debug "ELL_CONFIG is not set";
   else
-    if [[ -f "${ELL_CONFIG}" ]]; then
+    if [ -f "${ELL_CONFIG}" ]; then
       logging_debug "Loading config from ${ELL_CONFIG}";
       . "${ELL_CONFIG}"
     else

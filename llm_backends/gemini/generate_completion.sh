@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function generate_completion() {
-  if [[ ${ELL_API_STREAM} != true ]]; then
+  if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
     response=$(cat - | curl "${ELL_API_URL}${ELL_LLM_MODEL}:generateContent" \
       --silent \
@@ -16,7 +16,7 @@ function generate_completion() {
     else
       # check if finishReason is present
       if (echo "${response}" | jq -e '.candidates[0].finishReason' > /dev/null); then
-        if [[ "x$(echo "${response}" | jq -r '.candidates[0].finishReason')" != "xSTOP" ]]; then
+        if [ "x$(echo "${response}" | jq -r '.candidates[0].finishReason')" != "xSTOP" ]; then
           logging_error "Unexpected finish reason: $(echo "${response}" | jq -r '.choices[0].finish_reason')";
         else
           echo "${response}" | jq -j -r '.candidates[0].content.parts[0].text';
@@ -48,25 +48,25 @@ function generate_completion() {
       BUFFER="";
       while read -r line; do
         line=$(echo "${line}" | tr -d '\r');
-        if [[ ${PART_FINISHED} == true && "x${line}" == "x]" ]]; then
+        if [ "x${PART_FINISHED}" = "xtrue" ] && [ "x${line}" = "x]" ]; then
           logging_debug "End of stream";
           break;
-        elif [[ ${PART_FINISHED} == true && "x${line}" == "x," ]]; then
+        elif [ "x${PART_FINISHED}" = "xtrue" ] && [ "x${line}" = "x," ]; then
           logging_debug "skip comma";
           continue;
-        elif [[ ${PART_FINISHED} == true ]]; then
+        elif [ "x${PART_FINISHED}" = "xtrue" ]; then
           PART_FINISHED=false;
           BUFFER="${line}";
         else
           BUFFER="${BUFFER}${line}";
           # trying to parse the buffer as JSON
-          if jq -e . >/dev/null 2>&1 <<<"${BUFFER}"; then
+          if [ "${?}" -eq 0 ]; then
             if (echo "${BUFFER}" | jq -e -r '.candidates[0].content.parts[0].text' > /dev/null); then
               echo "${BUFFER}" | jq -j -r '.candidates[0].content.parts[0].text';
             fi
             if (echo "${BUFFER}" | jq -e -r '.candidates[0].finishReason' > /dev/null); then
               stop_reason=$(echo "${BUFFER}" | jq -j -r '.candidates[0].finishReason');
-              if [[ "x${stop_reason}" != "xSTOP" ]]; then
+              if [ "x${stop_reason}" != "xSTOP" ]; then
                 logging_error "Unexpected stop reason: ${stop_reason}";
                 break;
               fi

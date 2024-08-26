@@ -27,8 +27,8 @@ print_version() {
 }
 
 function parse_arguments() {
-  if [[ ${#} -eq 0 ]]; then
-    if [[ ${ELL_RECORD} == true ]]; then
+  if [ ${#} -eq 0 ]; then
+    if [ "x${ELL_RECORD}" = "xtrue" ]; then
       logging_debug "Record mode enabled. Context is used.";
     else
       logging_debug "No arguments provided, printing usage";
@@ -36,7 +36,7 @@ function parse_arguments() {
       exit 64; # EX_USAGE
     fi
   fi
-  while [[ ${#} -gt 0 ]]; do
+  while [ ${#} -gt 0 ]; do
     case "${1}" in
       -h|--help)
         logging_debug "\"-h\" present in args, printing usage";
@@ -75,7 +75,7 @@ function parse_arguments() {
         ;;
       -r|--record)
         logging_debug "\"-r\" present in args, setting ELL_RECORD to true";
-        if [[ "${ELL_RECORD}" == "true" ]]; then
+        if [ "${ELL_RECORD}" = "xtrue" ]; then
           logging_fatal "Record mode already enabled";
           exit 1;
         fi

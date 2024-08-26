@@ -12,7 +12,7 @@ get_current_column() {
   echo "$((pos[1] - 1))"
 }
 
-if [[ ${TO_TTY} == true ]]; then
+if [ "x${TO_TTY}" = "xtrue" ]; then
   # logging_debug "Terminal detected";
   CURR_COL=$(get_current_column);
   BUFFER="";
@@ -20,16 +20,16 @@ if [[ ${TO_TTY} == true ]]; then
   LENGTH=$((COLUMNS - CURR_COL));
   LINE_NUM=1;
   while IFS= read -r -N 1 char; do
-    if [[ "x${char}" == $'x\e' ]]; then
+    if [ "x${char}" = "$(printf 'x\e')" ]; then
       # logging_debug "Consuming escape sequence";
       esc_seq="${char}";
       read -r -N 1 char;
       esc_seq+="${char}";
-      if [[ "x${char}" =~ ^x(\[|\()$ ]]; then
+      if echo "x${char}" | grep -q -E '^x(\[|\()$'; then
         while true; do
           read -r -N 1 char;
           esc_seq+="${char}";
-          [[ "${char}" =~ [a-zA-Z] ]] && break;
+          echo "${char}" | grep -q -E '[a-zA-Z]' && break;
         done
       fi
       BUFFER="${BUFFER}${esc_seq}";
@@ -40,18 +40,18 @@ if [[ ${TO_TTY} == true ]]; then
     echo -ne "${BUFFER}";
     BUFFER="";
     NEWLINE=false;
-    if [[ "x${char}" == $'x\n' ]]; then
+    if [ "x${char}" = $'x\n' ]; then
       LENGTH=${COLUMNS};
       NEWLINE=true;
-    elif (( LENGTH == 0 )); then
+    elif [ ${LENGTH} -eq 0 ]; then
       echo;
       LENGTH=${COLUMNS};
       NEWLINE=true;
     fi
-    if [[ ${NEWLINE} == true ]]; then
+    if [ "x${NEWLINE}" = "xtrue" ]; then
       # if we reached the end of the line, increment the line number
       LINE_NUM=$((LINE_NUM+1));
-      if [[ ${LINE_NUM} -eq ${PAGE_SIZE} ]]; then
+      if [ ${LINE_NUM} -eq ${PAGE_SIZE} ]; then
         read -n 1 -s -r -p "Press any key to continue" < /dev/tty;
         # clear the line and move the cursor to the beginning
         echo -ne "\e[1K"

@@ -4,7 +4,7 @@
 # e.g. piping "cat" "grep -v 'foo'" "sort"
 
 piping() {
-  if [[ ${#} -eq 0 || ${1} == '' ]]; then
+  if [ ${#} -eq 0 ] || [ "${1}" = '' ]; then
     # logging_debug "No pipes";
     cat -;
   else
