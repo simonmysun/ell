@@ -21,8 +21,8 @@ To use ell, you need the following:
 - bash-4.1 or later and coreutils / OS X utilities
 - jq (For parsing JSON)
 - curl (For sending HTTPS requests)
-- perl (Not necessary if you don't use record mode. For PCRE. POSIX bash doesn't support look-ahead and look-behind regex)
-- util-linux (Not necessary if you don't use record mode. For script command to record terminal input and output)
+- perl (Not necessary if you don't use record mode. For PCRE. POSIX bash doesn't support look-ahead and look-behind regular expressions)
+- util-linux (Not necessary if you don't use record mode. For `script` command to record terminal input and output)
 
 ## Install
 
