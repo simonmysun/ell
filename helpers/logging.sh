@@ -3,6 +3,9 @@
 # logging functions
 # the logs are written to stderr so that they don't interfere with pipes
 
+ELL_LOG_LEVEL="${ELL_LOG_LEVEL:-4}";
+TO_TTY="${TO_TTY:-true}";
+
 [ "x${TO_TTY}" = xtrue ] && LOG_STYLE_RESET="$(printf "\033[0m")" || LOG_STYLE_RESET="";
 [ "x${TO_TTY}" = xtrue ] && LOG_STYLE_PUNC="$(printf "\033[0m\033[2m")" || LOG_STYLE_PUNC="";
 [ "x${TO_TTY}" = xtrue ] && LOG_STYLE_DEBUG="$(printf "\033[97m\033[1m")" || LOG_STYLE_DEBUG="";
