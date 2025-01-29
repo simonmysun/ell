@@ -12,7 +12,7 @@ print_usage() {
   echo "  -i, --interactive: enter interactive mode";
   echo "  -o, --output: output to file";
   echo "  --api-style: api style";
-  echo "  --api-key: api key";
+  echo "  --api-key: api key (NOT recommended in multi-user environment)";
   echo "  --api-url: api url";
   echo "  --api-disable-streaming: disable api response streaming";
   echo "  -c, --config: config file";
