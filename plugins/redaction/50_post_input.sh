@@ -49,7 +49,7 @@ redact_high_entropy_strings() (
   if sed -z '' </dev/null 2>/dev/null; then
     sed -z 's/-----BEGIN.*PRIVATE KEY-----.*-----END.*PRIVATE KEY-----/[PRIVATE KEY REDACTED]/g' `# Redact potential SSH private keys`;
   else
-    logging_info "GNU sed > 4.2.2 is required for multiline redaction";
+    logging_info "GNU sed >= 4.2.2 is required for multiline redaction";
     cat;
   fi
 ) \
