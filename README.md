@@ -12,7 +12,8 @@ A command-line interface for LLMs written in Bash.
 - Pipe friendly
 - Bring your terminal context to the LLMs and ask questions
 - Chat with LLMs in your terminal
-- Function calling and more supported via templates.
+- Function calling and more supported via templates
+- Sensitive information redaction ([#14](https://github.com/simonmysun/ell/issues/14))
 
 ## Requirements
 

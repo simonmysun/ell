@@ -9,6 +9,7 @@ The term "plugin" here means a script that can be called by ell. It can be used 
 
 Built-in plugins are available in the `./plugins` directory of the ell repository: 
 
+- **redaction**: Redacts sensitive information.
 - **aginator**: Paginates the output.
 - **syntax_highlight**: Syntax highlights the output.
 
