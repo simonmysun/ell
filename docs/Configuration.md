@@ -53,7 +53,7 @@ The following variables can be set in the command line arguments:
 - `-i, --interactive`: `ELL_INTERACTIVE`.  This will ignore the prompt input or the file input.
 - `-o, --output-file`: `ELL_OUTPUT_FILE`
 - `--api-style`: `ELL_API_STYLE`
-- `--api-key`: `ELL_API_KEY`
+- `--api-key`: `ELL_API_KEY`, note that in multi-user environments, other users are able to see the command line arguments.
 - `--api-url`: `ELL_API_URL`
 - `--api-disable-streaming`: sets `ELL_API_STREAM` to **false**
 - `-c, --config`: `ELL_CONFIG`
