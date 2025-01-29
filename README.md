@@ -12,7 +12,8 @@ A command-line interface for LLMs written in Bash.
 - Pipe friendly
 - Bring your terminal context to the LLMs and ask questions
 - Chat with LLMs in your terminal
-- Function calling and more supported via templates.
+- Function calling and more supported via templates
+- Sensitive information redaction ([#14](https://github.com/simonmysun/ell/issues/14))
 
 ## Requirements
 
@@ -21,8 +22,8 @@ To use ell, you need the following:
 - bash-4.1 or later and coreutils / OS X utilities
 - jq (For parsing JSON)
 - curl (For sending HTTPS requests)
-- perl (Not necessary if you don't use record mode. For PCRE. POSIX bash doesn't support look-ahead and look-behind regex)
-- util-linux (Not necessary if you don't use record mode. For script command to record terminal input and output)
+- perl (Not necessary if you don't use record mode. For PCRE. POSIX bash doesn't support look-ahead and look-behind regular expressions)
+- util-linux (Not necessary if you don't use record mode. For `script` command to record terminal input and output)
 
 ## Install
 

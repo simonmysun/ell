@@ -25,3 +25,6 @@ bash templating.sh;
 
 echo "Running test: parse_input.sh";
 bash parse_output.sh;
+
+echo "Running test: redaction.sh";
+bash redaction.sh;

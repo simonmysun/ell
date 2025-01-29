@@ -1,6 +1,21 @@
 # Plugins
+## Overview
+
+The plugin system is designed to enrich the user experience and extend the functionality of ell, while keeping the code modular and flexible.
 
 The term "plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers are not included here. Please refer to [Templates](docs/Templates.md).
+
+## Built-in Plugins
+
+Built-in plugins are available in the `./plugins` directory of the ell repository: 
+
+- **redaction**: Redacts sensitive information.
+- **aginator**: Paginates the output.
+- **syntax_highlight**: Syntax highlights the output.
+
+The "redaction" plugin is disabled by default. To enable it, remove the `.disabled` extension from the plugin script name.
+
+## Writing Plugins
 
 Ell supports plugins to extend its functionality through a hook system. Currently, the following hooks are available:
 
@@ -26,3 +41,13 @@ cat;
 ```
 
 This plugin will simply pass the input to the next plugin in the chain.
+
+## Possible Use Cases (not implemented yet)
+
+- **Store dialogues**: Store dialogues into a database or file.
+- **Load system secrets**: Load system secrets from a secret manager instead of environment variables or CLI parameters ([#18](https://github.com/simonmysun/ell/issues/18)).
+- **Custom redaction**: Implement custom redaction logic or call third-party softwares for desensitization of sensitive information.
+- **Custom formatting**: Support more output formatters, e.g. XML, code block formatting, etc.
+- **Execute commands**: Semi-automate tasks by executing commands based on the output.
+
+Pull requests are welcome for new plugins or improvements to existing plugins.
