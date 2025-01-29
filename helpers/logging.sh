@@ -20,18 +20,18 @@ logging_debug() {
   fi
 }
 
-logging_warn() {
+logging_info() {
   if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
-    echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_WARN}WARN${LOG_STYLE_RESET} ${*}" >&2;
+    echo "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") ${LOG_STYLE_INFO}INFO${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
-logging_info() {
+logging_warn() {
   if [ "${ELL_LOG_LEVEL}" -ge 4 ]; then
     printf "%s" "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}$(date +'%Y-%m-%d %H:%M:%S')${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} $(basename "${0}") " >&2;
   fi
   if [ "${ELL_LOG_LEVEL}" -ge 3 ]; then
-    echo "${LOG_STYLE_INFO}INFO${LOG_STYLE_RESET} ${*}" >&2;
+    echo "${LOG_STYLE_WARN}WARN${LOG_STYLE_RESET} ${*}" >&2;
   fi
 }
 
