@@ -68,7 +68,7 @@ if [ -z "${TO_TTY}" ]; then
   [ -t 1 ] && TO_TTY=true || TO_TTY=false;
 fi
 export TO_TTY;
-read PAGE_SIZE COLUMNS <<EOF
+read -r PAGE_SIZE COLUMNS <<EOF
 $(stty size)
 EOF
 if [ -z "${PAGE_SIZE}" ]; then
