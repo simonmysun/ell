@@ -118,7 +118,7 @@ parse_arguments() {
         shift 2;
         ;;
       -O|--option)
-        # -O A=b -o C=d,E=f
+        # -O A=b -O C=d,E=f
         logging_debug "\"-O\" present in args";
         other_options="${2}";
         other_options_array=();
