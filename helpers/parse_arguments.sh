@@ -17,7 +17,7 @@ print_usage() {
   echo "  --api-disable-streaming: disable api response streaming";
   echo "  -c, --config: config file";
   echo "  -l, --log-level: log level";
-  echo "  -O, --option: other options, e.g. -o A=b -o C=d,E=f";
+  echo "  -O, --option: other options, e.g. -O A=b -O C=d,E=f";
   echo "  PROMPT: prompt to input";
   echo "For more information, see https://github.com/simonmysun/ell";
 }
@@ -118,7 +118,7 @@ parse_arguments() {
         shift 2;
         ;;
       -O|--option)
-        # -O A=b -o C=d,E=f
+        # -O A=b -O C=d,E=f
         logging_debug "\"-O\" present in args";
         other_options="${2}";
         other_options_array=();
