@@ -172,6 +172,23 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 - https://github.com/sigoden/aichat A CLI tool talks to various LLM providers, written in Rust.
 - https://github.com/npiv/chatblade A CLI Swiss Army Knife for ChatGPT, written in python
 
+## Testing
+
+The test suite is meant to be run inside Docker. The tests hard-code the
+container path `/ell` (the repository is mounted there read-only) and rely on
+a clean, predictable environment, so running them directly on your host is not
+supported and will fail (e.g. templates are looked up under `/ell/templates/`).
+
+Run the full suite against the supported Bash versions with:
+
+```bash
+bash tests/docker.sh
+```
+
+This mounts the repository into `bash:4.1` and `bash:5.2` containers and runs
+`tests/entry.sh`, which installs the runtime dependencies and executes every
+test (`logging`, `piping`, `templating`, `parse_output` and `redaction`).
+
 ## Contributing
 
 Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request.
