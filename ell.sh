@@ -22,6 +22,7 @@ BASE_DIR=$(dirname "${0}");
 . "${BASE_DIR}/helpers/parse_arguments.sh";
 . "${BASE_DIR}/helpers/load_config.sh";
 . "${BASE_DIR}/helpers/piping.sh";
+. "${BASE_DIR}/helpers/json.sh";
 
 logging_debug "Starting ${0}";
 

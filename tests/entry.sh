@@ -3,7 +3,7 @@
 set -o posix;
 
 echo "Setting up prerequisites...";
-apk -q add jq curl perl;
+apk -q add curl perl;
 
 echo "Installing ell...";
 
