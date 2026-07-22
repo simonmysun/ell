@@ -19,18 +19,13 @@ A command-line interface for LLMs written in Bash.
 
 To use ell, you need the following:
 
-- bash-4.1 or later and coreutils / OS X utilities
-- curl (For sending HTTPS requests)
-- perl (Not necessary if you don't use record mode. For PCRE. POSIX bash doesn't support look-ahead and look-behind regular expressions)
-- util-linux (Not necessary if you don't use record mode. For `script` command to record terminal input and output)
+- `bash-4.1` or later
+- `coreutils` / OS X utilities and `awk` and `sed`
+- `curl` (For sending HTTPS requests)
+- `util-linux` (Not necessary if you don't use record mode. For `script` command to record terminal input and output)
 
 ## Install
 
-```bash
-git clone --depth 1 https://github.com/simonmysun/ell.git \
-  "${XDG_DATA_HOME:-$HOME/.local/share}/ell"
-echo 'export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/ell:$PATH"' >> ~/.bashrc
-```
 
 or
 

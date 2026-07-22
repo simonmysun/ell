@@ -148,7 +148,7 @@ if [ -z "${ELL_TMP_SHELL_LOG}" ]; then
   logging_debug "ELL_TMP_SHELL_LOG not set";
 else
   logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
-  SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | "${BASE_DIR}/helpers/render_to_text.perl" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
+  SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
 fi
 
 # Logging_debug "Loading the post_input and pre_output hooks";
@@ -168,7 +168,7 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
     if [ -z "${ELL_TMP_SHELL_LOG}" ]; then
       logging_debug "ELL_TMP_SHELL_LOG not set";
     else
-      export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | "${BASE_DIR}/helpers/render_to_text.perl" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
+      export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
     fi
     PAYLOAD="$(eval "cat <<EOF
 $(cat "${ELL_TEMPLATE_FILE}")
