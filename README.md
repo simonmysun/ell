@@ -26,25 +26,46 @@ To use ell, you need the following:
 
 ## Install
 
-```
-git clone --depth 1 https://github.com/simonmysun/ell.git ~/.ellrc.d
-echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
+```bash
+git clone --depth 1 https://github.com/simonmysun/ell.git \
+  "${XDG_DATA_HOME:-$HOME/.local/share}/ell"
+echo 'export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/ell:$PATH"' >> ~/.bashrc
 ```
 
 or
 
-```
-git clone --depth 1 git@github.com:simonmysun/ell.git ~/.ellrc.d
-echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
+```bash
+git clone --depth 1 git@github.com:simonmysun/ell.git \
+  "${XDG_DATA_HOME:-$HOME/.local/share}/ell"
+echo 'export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/ell:$PATH"' >> ~/.bashrc
 ```
 
-This will clone the repository into `.ellrc.d` in your home directory and add it to your PATH. 
+This clones the repository into `${XDG_DATA_HOME:-$HOME/.local/share}/ell`
+(following the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html))
+and adds it to your `PATH`. You may clone it anywhere you like; only the
+directory on your `PATH` matters.
+
+> **Upgrading from an older install?** The previous layout
+> (`git clone ... ~/.ellrc.d` with configuration in `~/.ellrc`) still works:
+> `~/.ellrc` is still read, and templates and plugins under `~/.ellrc.d` are
+> still picked up. No migration is required.
+
+### Windows
+
+ell is a Bash program, so run it from a Bash environment such as **Git Bash**,
+**MSYS2**, **Cygwin** or **WSL**.
+
+The `ell` command is a plain wrapper script (not a symbolic link), so it works
+even when git does not create symlinks on checkout — the default on Windows
+unless Developer Mode or administrator rights are available. No extra setup is
+required; clone the repository and add its directory to your `PATH` as shown
+above. You invoke it the same way, e.g. `ell "your prompt"`.
 
 ## Configuration
 
 See [Configuration](docs/Configuration.md).
 
-Here's an example configuration to use `gemini-1.5-flash` from Google. You need to set these variables in your `~/.ellrc`:
+Here's an example configuration to use `gemini-1.5-flash` from Google. You need to set these variables in your config file, `${XDG_CONFIG_HOME:-$HOME/.config}/ell/config` (the legacy `~/.ellrc` also still works):
 
 ```ini
 ELL_API_STYLE=gemini

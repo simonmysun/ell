@@ -24,11 +24,22 @@ Ell supports plugins to extend its functionality through a hook system. Currentl
 - `post_llm`: Called after the response is received and decoded from the language model.
 - `pre_output`: Called before the output is sent to the user.
 
-Plugins should be placed in the `./plugins` directory related to the ell script, typically located at `~/.ellrc.d/plugins` if you follow the installation instructions in the readme. 
+Plugins are discovered from the `plugins/` directory under each of the
+following roots, searched in this priority order:
 
-Each plugin should be a folder containing executable shell scripts. The file name should follow the format `XX_${HOOK_NAME}.sh`, where `XX` is a number that determines the execution order among other plugins. For example, the paginator plugin is placed in `~/.ellrc.d/plugins/paginator/90_pre_output.sh`.
+- `${XDG_CONFIG_HOME:-$HOME/.config}/ell/plugins/` (your own plugins)
+- `${XDG_DATA_HOME:-$HOME/.local/share}/ell/plugins/`
+- `~/.ellrc.d/plugins/` (legacy location, still supported)
+- the `plugins/` directory bundled with ell (built-in plugins)
 
-Plugin scripts are executed in ascending numerical order and piped to each other.
+If the same plugin hook (identified by `<plugin-dir>/<hook-file>`) exists in
+more than one root, only the highest-priority copy runs, so you can drop a
+plugin with the same name under your XDG config directory to override a
+built-in one.
+
+Each plugin should be a folder containing executable shell scripts. The file name should follow the format `XX_${HOOK_NAME}.sh`, where `XX` is a number that determines the execution order among other plugins. For example, the built-in paginator plugin is placed in `plugins/paginator/90_pre_output.sh` (so a user copy would live at `${XDG_CONFIG_HOME:-$HOME/.config}/ell/plugins/paginator/90_pre_output.sh`).
+
+Plugin scripts are executed in ascending numerical order (across all roots, ordered by `<plugin-dir>/<hook-file>`) and piped to each other.
 
 It is recommended to write plugins in a streaming manner.
 

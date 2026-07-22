@@ -1,0 +1,13 @@
+# Shell and helper scripts must use LF line endings on every platform.
+# On Windows, a CRLF line ending on the shebang line (e.g. "#!/usr/bin/env
+# bash\r") makes the interpreter lookup fail, so force LF regardless of the
+# user's core.autocrlf setting.
+*.sh        text eol=lf
+*.perl      text eol=lf
+
+# The launcher and its real implementation are extension-less / .sh scripts.
+ell         text eol=lf
+ell.sh      text eol=lf
+
+# Templates and configuration examples are line-oriented text; keep them LF.
+*.json      text eol=lf
