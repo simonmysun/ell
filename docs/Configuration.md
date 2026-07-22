@@ -8,9 +8,11 @@ ell can be configured in three ways (in order of precedence, from lowest to high
 - environment variables
 - command line arguments
 
-The configuration files are read and applied in the following order:
+The configuration files are read and applied in the following order (later
+files override earlier ones):
 
-- `~/.ellrc`
+- `${XDG_CONFIG_HOME:-$HOME/.config}/ell/config` (the main config, following the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html))
+- `~/.ellrc` (legacy location, still read for backward compatibility)
 - `.ellrc` in the current directory
 - `$ELL_CONFIG` specified in the environment variables or command line arguments.
 
@@ -23,11 +25,11 @@ If you are running ell in a relatively hostile environment, it is recommended to
 The following variables can be set in the configuration files, environment variables:
 
 - `ELL_LOG_LEVEL`: The log level of the logger. The default is `2`. A log level of `0` will log everything. A log level of `3` will log token usage.
-- `ELL_CONFIG`: The configuration file to use. The default is `~/.ellrc`.
+- `ELL_CONFIG`: An extra configuration file to load, applied last (highest precedence among files). Unset by default. The standard config files (`${XDG_CONFIG_HOME:-$HOME/.config}/ell/config`, `~/.ellrc`, `./.ellrc`) are always read regardless of this variable.
 - `ELL_LLM_MODEL`: The model to use. Default is `gpt-4o-mini`.
 - `ELL_LLM_TEMPERATURE`: The temperature of the model. The default is `0.6`.
 - `ELL_LLM_MAX_TOKENS`: The maximum number of tokens to generate. The default is `4096`.
-- `ELL_TEMPLATE_PATH`: The path to the templates. The default is `~/.ellrc.d/templates`.
+- `ELL_TEMPLATE_PATH`: Force templates to be loaded from this single directory (note the trailing slash, e.g. `/path/to/templates/`). When unset (the default), templates are searched, in order, under `${XDG_CONFIG_HOME:-$HOME/.config}/ell/templates/`, `${XDG_DATA_HOME:-$HOME/.local/share}/ell/templates/`, `~/.ellrc.d/templates/` (legacy) and the `templates/` directory bundled with ell. This lets you override a bundled template by placing a file with the same name under your XDG config directory.
 - `ELL_TEMPLATE`: The template to use. The default is `default`. The file extension is not needed.
 - `ELL_INPUT_FILE`: The input file to use. If specified, it will override the prompt given in command line arguments. Setting this to `-` will let ell always read from stdin. 
 - `ELL_RECORD`: This is used for controlling whether record mode is on. It should be set to `false` unless you want to disable recording.  

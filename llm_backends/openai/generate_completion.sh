@@ -14,17 +14,21 @@ generate_completion() {
       logging_debug "Response: ${response}";
       exit 1;
     else
+      if ! json_parse "${response}"; then
+        logging_error "Unexpected format: ${response}";
+        return;
+      fi
       # check if finish_reason is present
-      if (echo "${response}" | jq -e '.choices[0].finish_reason' > /dev/null); then
-        if [ "x$(echo "${response}" | jq -r '.choices[0].finish_reason')" != "xstop" ]; then
-          logging_error "Unexpected finish reason: $(echo "${response}" | jq -r '.choices[0].finish_reason')";
+      if json_has "choices.0.finish_reason"; then
+        if [ "x$(json_get "choices.0.finish_reason")" != "xstop" ]; then
+          logging_error "Unexpected finish reason: $(json_get "choices.0.finish_reason")";
         else
-          echo "${response}" | jq -j -r '.choices[0].message.content';
+          json_get "choices.0.message.content";
           echo "";
-          if (echo "${response}" | jq -e -r '.usage' > /dev/null); then
-            prompt_tokens=$(echo "${response}" | jq -j -r '.usage.prompt_tokens');
-            completion_tokens=$(echo "${response}" | jq -j -r '.usage.completion_tokens');
-            total_tokens=$(echo "${response}" | jq -j -r '.usage.total_tokens');
+          if json_has "usage"; then
+            prompt_tokens=$(json_get "usage.prompt_tokens");
+            completion_tokens=$(json_get "usage.completion_tokens");
+            total_tokens=$(json_get "usage.total_tokens");
             echo '';
             logging_info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
           fi
@@ -46,20 +50,24 @@ generate_completion() {
         elif echo "x${line}" | grep -e "^xdata: {" > /dev/null 2>&1; then
           # Data chunk received
           json_chunk=$(echo "${line}" | cut -c 6-);
-          if (echo "${json_chunk}" | jq -e -r '.choices[0].delta.content' > /dev/null); then
-            echo "${json_chunk}" | jq -j -r '.choices[0].delta.content';
+          if ! json_parse "${json_chunk}"; then
+            logging_debug "Unexpected chunk: ${json_chunk}";
+            continue;
+          fi
+          if json_has "choices.0.delta.content"; then
+            json_get "choices.0.delta.content";
           else
-            if (echo "${json_chunk}" | jq -e -r '.finish_reason' > /dev/null); then
-              stop_reason=$(echo "${json_chunk}" | jq -j -r '.finish_reason');
+            if json_has "finish_reason"; then
+              stop_reason=$(json_get "finish_reason");
               if [ "x${stop_reason}" != "xstop" ]; then
                 logging_error "Unexpected stop reason: ${stop_reason}";
               fi
               break;
-            elif (echo "${json_chunk}" | jq -e -r '.usage' > /dev/null); then
+            elif json_has "usage"; then
               # Data chunk contains usage information (This is usually the last chunk)
-              prompt_tokens=$(echo "${json_chunk}" | jq -j -r '.usage.prompt_tokens');
-              completion_tokens=$(echo "${json_chunk}" | jq -j -r '.usage.completion_tokens');
-              total_tokens=$(echo "${json_chunk}" | jq -j -r '.usage.total_tokens');
+              prompt_tokens=$(json_get "usage.prompt_tokens");
+              completion_tokens=$(json_get "usage.completion_tokens");
+              total_tokens=$(json_get "usage.total_tokens");
               echo '';
               logging_info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
             fi

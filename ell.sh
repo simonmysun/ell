@@ -22,6 +22,8 @@ BASE_DIR=$(dirname "${0}");
 . "${BASE_DIR}/helpers/parse_arguments.sh";
 . "${BASE_DIR}/helpers/load_config.sh";
 . "${BASE_DIR}/helpers/piping.sh";
+. "${BASE_DIR}/helpers/json.sh";
+. "${BASE_DIR}/helpers/resolve_paths.sh";
 
 logging_debug "Starting ${0}";
 
@@ -37,7 +39,9 @@ load_config;
 : "${ELL_LLM_MODEL:=gpt-4o-mini}";
 : "${ELL_LLM_TEMPERATURE:=0.6}";
 : "${ELL_LLM_MAX_TOKENS:=4096}";
-: "${ELL_TEMPLATE_PATH:="${HOME}/.ellrc.d/templates/"}";
+# ELL_TEMPLATE_PATH is intentionally left unset by default: templates are
+# resolved through resolve_template() across the XDG and bundled search roots.
+# Setting it explicitly (e.g. via -T) forces that single directory instead.
 : "${ELL_TEMPLATE:=default-openai}";
 : "${ELL_INPUT_FILE:=""}";
 : "${ELL_RECORD:="false"}";
@@ -83,9 +87,9 @@ export COLUMNS;
 # Logging_debug "Decorating the generate_completion to apply hooks before and after";
 eval "$(printf "orig_"; command -V generate_completion | tail -n +2)";
 generate_completion() {
-  pre_llm_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_llm.sh 2>/dev/null | sort -k3 -t/);
+  pre_llm_hooks=$(list_plugin_hooks _pre_llm.sh);
   logging_debug "Pre LLM hooks: ${pre_llm_hooks}";
-  post_llm_hooks=$(ls ${BASE_DIR}/plugins/*/*_post_llm.sh 2>/dev/null | sort -k3 -t/);
+  post_llm_hooks=$(list_plugin_hooks _post_llm.sh);
   logging_debug "Post LLM hooks: ${post_llm_hooks}";
   piping "${pre_llm_hooks[@]}" \
   | orig_generate_completion \
@@ -116,11 +120,17 @@ if [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ] && [ "x
   exit 0;
 fi
 
-# Logging_debug "Checking if the template is available";
-if [ ! -f "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json" ]; then
-  logging_fatal "Template not found: ${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json";
+# Logging_debug "Resolving the template across the search roots";
+ELL_TEMPLATE_FILE="$(resolve_template "${ELL_TEMPLATE}")";
+if [ -z "${ELL_TEMPLATE_FILE}" ]; then
+  if [ -n "${ELL_TEMPLATE_PATH}" ]; then
+    logging_fatal "Template not found: ${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json";
+  else
+    logging_fatal "Template not found: ${ELL_TEMPLATE}.json (searched XDG config/data, ~/.ellrc.d and ${BASE_DIR})";
+  fi
   exit 1;
 fi
+logging_debug "Using template: ${ELL_TEMPLATE_FILE}";
 
 # Logging_debug "Checking if we are going to read from a file";
 if [ -n "${ELL_INPUT_FILE}" ]; then
@@ -142,9 +152,9 @@ else
 fi
 
 # Logging_debug "Loading the post_input and pre_output hooks";
-post_input_hooks=$(ls ${BASE_DIR}/plugins/*/*_post_input.sh 2>/dev/null | sort -k3 -t/);
+post_input_hooks=$(list_plugin_hooks _post_input.sh);
 logging_debug "Post input hooks: ${post_input_hooks}";
-pre_output_hooks=$(ls ${BASE_DIR}/plugins/*/*_pre_output.sh 2>/dev/null | sort -k3 -t/);
+pre_output_hooks=$(list_plugin_hooks _pre_output.sh);
 logging_debug "Pre output hooks: ${pre_output_hooks}";
 
 # Logging_debug "Checking if we are going to enter interactive mode";
@@ -161,7 +171,7 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
       export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | "${BASE_DIR}/helpers/render_to_text.perl" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
     fi
     PAYLOAD="$(eval "cat <<EOF
-$(cat "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json")
+$(cat "${ELL_TEMPLATE_FILE}")
 EOF")";
     printf "%s" "${ELL_PS2}";
     echo "${PAYLOAD}" | generate_completion | piping "${pre_output_hooks[@]}";
@@ -171,7 +181,7 @@ else
   USER_PROMPT=$(echo "${USER_PROMPT}" | piping "${post_input_hooks[@]}");
 
   PAYLOAD="$(eval "cat <<EOF
-$(cat "${ELL_TEMPLATE_PATH}${ELL_TEMPLATE}.json")
+$(cat "${ELL_TEMPLATE_FILE}")
 EOF")";
 
   echo "${PAYLOAD}" | generate_completion | piping "${pre_output_hooks[@]}";

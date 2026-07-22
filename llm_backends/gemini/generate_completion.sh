@@ -14,17 +14,21 @@ generate_completion() {
       logging_debug "Response: ${response}";
       exit 1;
     else
+      if ! json_parse "${response}"; then
+        logging_error "Unexpected format: ${response}";
+        return;
+      fi
       # check if finishReason is present
-      if (echo "${response}" | jq -e '.candidates[0].finishReason' > /dev/null); then
-        if [ "x$(echo "${response}" | jq -r '.candidates[0].finishReason')" != "xSTOP" ]; then
-          logging_error "Unexpected finish reason: $(echo "${response}" | jq -r '.choices[0].finish_reason')";
+      if json_has "candidates.0.finishReason"; then
+        if [ "x$(json_get "candidates.0.finishReason")" != "xSTOP" ]; then
+          logging_error "Unexpected finish reason: $(json_get "candidates.0.finishReason")";
         else
-          echo "${response}" | jq -j -r '.candidates[0].content.parts[0].text';
+          json_get "candidates.0.content.parts.0.text";
           echo "";
-          if (echo "${response}" | jq -e -r '.usageMetadata' > /dev/null); then
-            prompt_tokens=$(echo "${response}" | jq -j -r '.usageMetadata.promptTokenCount');
-            completion_tokens=$(echo "${response}" | jq -j -r '.usageMetadata.candidatesTokenCount');
-            total_tokens=$(echo "${response}" | jq -j -r '.usageMetadata.totalTokenCount');
+          if json_has "usageMetadata"; then
+            prompt_tokens=$(json_get "usageMetadata.promptTokenCount");
+            completion_tokens=$(json_get "usageMetadata.candidatesTokenCount");
+            total_tokens=$(json_get "usageMetadata.totalTokenCount");
             echo '';
             logging_info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
           fi
@@ -60,25 +64,22 @@ generate_completion() {
         else
           BUFFER="${BUFFER}${line}";
           # trying to parse the buffer as JSON
-          jq -e . >/dev/null 2>&1 <<EOF
-${BUFFER}
-EOF
-          if [ "${?}" -eq 0 ]; then
-            if (echo "${BUFFER}" | jq -e -r '.candidates[0].content.parts[0].text' > /dev/null); then
-              echo "${BUFFER}" | jq -j -r '.candidates[0].content.parts[0].text';
+          if json_parse "${BUFFER}"; then
+            if json_has "candidates.0.content.parts.0.text"; then
+              json_get "candidates.0.content.parts.0.text";
             fi
-            if (echo "${BUFFER}" | jq -e -r '.candidates[0].finishReason' > /dev/null); then
-              stop_reason=$(echo "${BUFFER}" | jq -j -r '.candidates[0].finishReason');
+            if json_has "candidates.0.finishReason"; then
+              stop_reason=$(json_get "candidates.0.finishReason");
               if [ "x${stop_reason}" != "xSTOP" ]; then
                 logging_error "Unexpected stop reason: ${stop_reason}";
                 break;
               fi
             fi
             # check if usageMetadata is present, gemini API v1beta sends usageMetadata in every chunk
-            if (echo "${BUFFER}" | jq -e -r '.usageMetadata' > /dev/null); then
-              prompt_tokens=$(echo "${BUFFER}" | jq -j -r '.usageMetadata.promptTokenCount');
-              completion_tokens=$(echo "${BUFFER}" | jq -j -r '.usageMetadata.candidatesTokenCount');
-              total_tokens=$(echo "${BUFFER}" | jq -j -r '.usageMetadata.totalTokenCount');
+            if json_has "usageMetadata"; then
+              prompt_tokens=$(json_get "usageMetadata.promptTokenCount");
+              completion_tokens=$(json_get "usageMetadata.candidatesTokenCount");
+              total_tokens=$(json_get "usageMetadata.totalTokenCount");
             fi
             PART_FINISHED=true;
             BUFFER="";

@@ -20,32 +20,52 @@ A command-line interface for LLMs written in Bash.
 To use ell, you need the following:
 
 - bash-4.1 or later and coreutils / OS X utilities
-- jq (For parsing JSON)
 - curl (For sending HTTPS requests)
 - perl (Not necessary if you don't use record mode. For PCRE. POSIX bash doesn't support look-ahead and look-behind regular expressions)
 - util-linux (Not necessary if you don't use record mode. For `script` command to record terminal input and output)
 
 ## Install
 
-```
-git clone --depth 1 https://github.com/simonmysun/ell.git ~/.ellrc.d
-echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
+```bash
+git clone --depth 1 https://github.com/simonmysun/ell.git \
+  "${XDG_DATA_HOME:-$HOME/.local/share}/ell"
+echo 'export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/ell:$PATH"' >> ~/.bashrc
 ```
 
 or
 
-```
-git clone --depth 1 git@github.com:simonmysun/ell.git ~/.ellrc.d
-echo 'export PATH="${HOME}/.ellrc.d:${PATH}"' >> ~/.bashrc
+```bash
+git clone --depth 1 git@github.com:simonmysun/ell.git \
+  "${XDG_DATA_HOME:-$HOME/.local/share}/ell"
+echo 'export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/ell:$PATH"' >> ~/.bashrc
 ```
 
-This will clone the repository into `.ellrc.d` in your home directory and add it to your PATH. 
+This clones the repository into `${XDG_DATA_HOME:-$HOME/.local/share}/ell`
+(following the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html))
+and adds it to your `PATH`. You may clone it anywhere you like; only the
+directory on your `PATH` matters.
+
+> **Upgrading from an older install?** The previous layout
+> (`git clone ... ~/.ellrc.d` with configuration in `~/.ellrc`) still works:
+> `~/.ellrc` is still read, and templates and plugins under `~/.ellrc.d` are
+> still picked up. No migration is required.
+
+### Windows
+
+ell is a Bash program, so run it from a Bash environment such as **Git Bash**,
+**MSYS2**, **Cygwin** or **WSL**.
+
+The `ell` command is a plain wrapper script (not a symbolic link), so it works
+even when git does not create symlinks on checkout — the default on Windows
+unless Developer Mode or administrator rights are available. No extra setup is
+required; clone the repository and add its directory to your `PATH` as shown
+above. You invoke it the same way, e.g. `ell "your prompt"`.
 
 ## Configuration
 
 See [Configuration](docs/Configuration.md).
 
-Here's an example configuration to use `gemini-1.5-flash` from Google. You need to set these variables in your `~/.ellrc`:
+Here's an example configuration to use `gemini-1.5-flash` from Google. You need to set these variables in your config file, `${XDG_CONFIG_HOME:-$HOME/.config}/ell/config` (the legacy `~/.ellrc` also still works):
 
 ```ini
 ELL_API_STYLE=gemini
@@ -172,6 +192,23 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 - https://github.com/simonw/llm A CLI tool for in-depth manipulation of LLMs, written in Python.
 - https://github.com/sigoden/aichat A CLI tool talks to various LLM providers, written in Rust.
 - https://github.com/npiv/chatblade A CLI Swiss Army Knife for ChatGPT, written in python
+
+## Testing
+
+The test suite is meant to be run inside Docker. The tests hard-code the
+container path `/ell` (the repository is mounted there read-only) and rely on
+a clean, predictable environment, so running them directly on your host is not
+supported and will fail (e.g. templates are looked up under `/ell/templates/`).
+
+Run the full suite against the supported Bash versions with:
+
+```bash
+bash tests/docker.sh
+```
+
+This mounts the repository into `bash:4.1` and `bash:5.2` containers and runs
+`tests/entry.sh`, which installs the runtime dependencies and executes every
+test (`logging`, `piping`, `templating`, `parse_output` and `redaction`).
 
 ## Contributing
 

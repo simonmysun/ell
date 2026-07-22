@@ -1,1 +1,28 @@
-ell.sh
+#!/usr/bin/env bash
+
+# Thin launcher for ell.
+#
+# This file used to be a symbolic link to ell.sh, but git symlinks are not
+# checked out as links on Windows (unless core.symlinks is enabled, which
+# usually requires Developer Mode or administrator rights). There they become
+# plain text files containing the link target, which cannot be executed.
+#
+# A real wrapper script works identically on Linux, macOS and Windows (Git
+# Bash / MSYS2 / Cygwin / WSL), so `ell` stays a valid, extension-less command
+# everywhere. It simply resolves its own directory and execs the real script.
+
+# Resolve the directory this launcher lives in, following any symlinks that
+# may still exist (e.g. a link created in ~/.local/bin on Unix).
+SOURCE="${BASH_SOURCE[0]:-${0}}";
+while [ -h "${SOURCE}" ]; do
+  DIR="$(cd -P "$(dirname "${SOURCE}")" >/dev/null 2>&1 && pwd)";
+  SOURCE="$(readlink "${SOURCE}")";
+  # If the link target is relative, resolve it against the link's directory.
+  case "${SOURCE}" in
+    /*) ;;
+    *) SOURCE="${DIR}/${SOURCE}"; ;;
+  esac
+done
+ELL_DIR="$(cd -P "$(dirname "${SOURCE}")" >/dev/null 2>&1 && pwd)";
+
+exec "${ELL_DIR}/ell.sh" "${@}";
