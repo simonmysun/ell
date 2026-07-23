@@ -72,6 +72,18 @@ function erase(from, to,   c) {
 
 BEGIN {
   # Slurp the whole input as one record so byte content is preserved exactly.
+  #
+  # RS = "^$" is the portable "read the entire file as one record" idiom: it is
+  # an anchor-only regex that can never match any actual text, so no record
+  # separator is ever found and the whole stream becomes a single record. This
+  # was verified to keep the input intact -- including blank lines and trailing
+  # newlines -- on gawk, one-true-awk (nawk) and busybox awk (the CI runtime).
+  #
+  # A single literal byte as RS is deliberately NOT used: the input is a raw
+  # `script` terminal recording that may contain arbitrary bytes (including NUL
+  # and every control byte), so there is no byte guaranteed to be absent. Any
+  # byte that did occur would silently split the record and corrupt the exact
+  # byte-for-byte content this emulator depends on.
   RS = "^$";
 
   ESC = sprintf("%c", 27);
