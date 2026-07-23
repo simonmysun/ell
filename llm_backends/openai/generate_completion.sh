@@ -54,6 +54,7 @@ generate_completion() {
       received=0;
       emitted=0;
       unparsable=0;
+      bad_stop=0;
       while read -r line; do
         if [ "x${line}" = "xdata: [DONE]" ]; then
           # End of stream
@@ -75,6 +76,7 @@ generate_completion() {
               stop_reason=$(json_get "finish_reason");
               if [ "x${stop_reason}" != "xstop" ]; then
                 logging_error "Unexpected stop reason: ${stop_reason}";
+                bad_stop=1;
               fi
               break;
             elif json_has "usage"; then
@@ -105,6 +107,13 @@ generate_completion() {
           logging_error "Streaming response contained no content";
         fi
         exit 3;
+      fi
+      # A non-"stop" finish reason means the completion was truncated or
+      # otherwise abnormal (e.g. length, content_filter). Fail even if some
+      # content was emitted, matching the non-streaming path, so a truncated
+      # completion is not reported as success.
+      if [ "${bad_stop}" -ne 0 ]; then
+        exit 4;
       fi
     }
     # Capture the whole PIPESTATUS array at once: any later simple command
