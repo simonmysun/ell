@@ -92,10 +92,45 @@ case_test "two-byte ESC sequence" \
   'x\033Xy\n' \
   'xy\n';
 
-# 9. Single-byte C1 CSI introducer (0x9b) behaves like ESC [.
-case_test "C1 CSI (0x9b)" \
-  'p\x9b31mq\n' \
-  'pq\n';
+# 9. UTF-8 multibyte text (e.g. Chinese) passes through intact. Many CJK
+#    continuation bytes fall in 0x80-0x9f; they must be treated as data, not as
+#    C1 control codes, otherwise the text is corrupted and following context
+#    can be swallowed.
+case_test "UTF-8 Chinese passthrough" \
+  '你好世界测试\n' \
+  '你好世界测试\n';
+
+# 9b. UTF-8 text mixed with colour codes: colours stripped, characters intact.
+case_test "UTF-8 Chinese with colour codes" \
+  '\033[31m你好\033[0m 世界\n' \
+  '你好 世界\n';
+
+# 9c. Cursor editing around UTF-8 text still works (each character is one cell).
+case_test "UTF-8 Chinese with backspace overwrite" \
+  '密码=123\b\b\b456\n' \
+  '密码=456\n';
+
+# 9d. The UTF-8 handling is generic, not Chinese-specific. Various scripts whose
+#     bytes include the 0x80-0x9f range must all pass through intact.
+case_test "UTF-8 Cyrillic/Greek/Arabic passthrough" \
+  'Привет Γειά مرحبا café\n' \
+  'Привет Γειά مرحبا café\n';
+
+# 9e. Japanese with a colour code: characters intact, colour stripped.
+case_test "UTF-8 Japanese with colour code" \
+  '\033[32mこんにちは\033[0m 世界\n' \
+  'こんにちは 世界\n';
+
+# 9f. 4-byte characters (emoji) are treated as a single cell, so backspace
+#     editing deletes a whole emoji rather than a stray byte.
+case_test "UTF-8 emoji backspace overwrite" \
+  'ab😀😀\b\bcd\n' \
+  'abcd\n';
+
+# 9g. Erasing a non-ASCII secret with a redraw (Ctrl-U style) removes it.
+case_test "UTF-8 secret erased by redraw" \
+  'パスワード=秘密\r\033[Kok\n' \
+  'ok\n';
 
 # --- Cursor movement and overwrite ------------------------------------------
 

@@ -56,6 +56,12 @@ function put(ch) {
     maxcol = cur;
 }
 
+# _ord: byte value (0-255) of a single-byte string, via a lookup table built
+# in BEGIN. Used to detect UTF-8 lead / continuation bytes.
+function _ord(c) {
+  return ORD[c];
+}
+
 function erase(from, to,   c) {
   for (c = from; c <= to; c++)
     delete cell[c];
@@ -72,14 +78,18 @@ BEGIN {
   CR  = sprintf("%c", 13);
   LF  = sprintf("%c", 10);
   BS  = sprintf("%c", 8);
+  BEL = sprintf("%c", 7);
 
-  # C1 single-byte introducers / terminators.
-  C90 = sprintf("%c", 144);  # DCS
-  C9B = sprintf("%c", 155);  # CSI
-  C9C = sprintf("%c", 156);  # ST
-  C9D = sprintf("%c", 157);  # OSC
-  C9E = sprintf("%c", 158);  # PM
-  C9F = sprintf("%c", 159);  # APC
+  # Byte-value lookup table for _ord().
+  for (_b = 0; _b < 256; _b++)
+    ORD[sprintf("%c", _b)] = _b;
+
+  # NOTE: single-byte C1 controls (0x80-0x9f) are deliberately NOT treated as
+  # control codes. In a UTF-8 terminal those byte values are common as
+  # continuation bytes of multibyte characters (e.g. many CJK characters), and
+  # real recordings always introduce escape sequences with ESC (0x1b), never
+  # with a lone C1 byte. Treating C1 bytes as controls corrupted UTF-8 text
+  # (Chinese input/output) and could even swallow the rest of the context.
 }
 
 {
@@ -94,9 +104,9 @@ BEGIN {
   while (i <= n) {
     ch = substr(s, i, 1);
 
-    # --- CSI: ESC [ ... final, or single-byte C1 CSI (0x9b) ------------------
-    if ((ch == ESC && i < n && substr(s, i + 1, 1) == "[") || ch == C9B) {
-      if (ch == C9B) { i += 1; } else { i += 2; }
+    # --- CSI: ESC [ ... final ------------------------------------------------
+    if (ch == ESC && i < n && substr(s, i + 1, 1) == "[") {
+      i += 2;
       params = "";
       # Collect parameter / intermediate bytes (0x20-0x3f) until a final byte.
       while (i <= n) {
@@ -129,27 +139,24 @@ BEGIN {
       continue;
     }
 
-    # --- OSC: ESC ] ... (BEL | ST) or 0x9d -----------------------------------
-    if ((ch == ESC && i < n && substr(s, i + 1, 1) == "]") || ch == C9D) {
-      if (ch == C9D) { i += 1; } else { i += 2; }
+    # --- OSC: ESC ] ... (BEL | ST) -------------------------------------------
+    if (ch == ESC && i < n && substr(s, i + 1, 1) == "]") {
+      i += 2;
       while (i <= n) {
         cc = substr(s, i, 1);
-        if (cc == sprintf("%c", 7)) { i++; break; }                 # BEL
+        if (cc == BEL) { i++; break; }
         if (cc == ESC && i < n && substr(s, i + 1, 1) == "\\") { i += 2; break; }
-        if (cc == C9C) { i++; break; }
         i++;
       }
       continue;
     }
 
-    # --- DCS / PM / APC: ESC P|^|_ ... ST, or 0x90/0x9e/0x9f -----------------
-    if ((ch == ESC && i < n && substr(s, i + 1, 1) ~ /[P^_]/) ||
-        ch == C90 || ch == C9E || ch == C9F) {
-      if (ch == ESC) { i += 2; } else { i += 1; }
+    # --- DCS / PM / APC: ESC P|^|_ ... ST ------------------------------------
+    if (ch == ESC && i < n && substr(s, i + 1, 1) ~ /[P^_]/) {
+      i += 2;
       while (i <= n) {
         cc = substr(s, i, 1);
         if (cc == ESC && i < n && substr(s, i + 1, 1) == "\\") { i += 2; break; }
-        if (cc == C9C) { i++; break; }
         i++;
       }
       continue;
@@ -167,18 +174,33 @@ BEGIN {
       continue;
     }
 
-    # --- Lone C1 control byte 0x80-0x9f (not already handled) -----------------
-    if (ch >= sprintf("%c", 128) && ch <= sprintf("%c", 159)) {
-      i++;
-      continue;
-    }
-
     # --- Control / cursor bytes ----------------------------------------------
     if (ch == LF) { flush_line(); outbuf = outbuf LF; i++; continue; }
     if (ch == CR) { cur = 0; i++; continue; }
     if (ch == BS) { cur--; if (cur < 0) cur = 0; i++; continue; }
 
-    # --- Printable byte ------------------------------------------------------
+    # --- Printable character -------------------------------------------------
+    # Group UTF-8 multibyte sequences into a single cell so a wide character is
+    # kept intact and occupies one logical column. A leading byte 0xC0-0xF7 is
+    # followed by 1-3 continuation bytes (0x80-0xBF).
+    b = _ord(ch);
+    if (b >= 192 && b <= 247) {
+      if      (b >= 240) { need = 3; }   # 4-byte
+      else if (b >= 224) { need = 2; }   # 3-byte
+      else               { need = 1; }   # 2-byte
+      ch2 = ch;
+      k = 1;
+      while (k <= need && (i + k) <= n) {
+        nb = _ord(substr(s, i + k, 1));
+        if (nb < 128 || nb > 191) break;   # not a continuation byte
+        ch2 = ch2 substr(s, i + k, 1);
+        k++;
+      }
+      put(ch2);
+      i += length(ch2);
+      continue;
+    }
+
     put(ch);
     i++;
   }
