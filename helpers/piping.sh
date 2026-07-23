@@ -4,6 +4,7 @@
 # e.g. `piping "cat" "grep -v 'foo'" "sort"`
 
 piping() {
+  local pipes;
   if [ ${#} -eq 0 ] || [ "${1}" = '' ]; then
     # logging_debug "No pipes";
     cat -;

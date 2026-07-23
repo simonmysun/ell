@@ -45,6 +45,18 @@ This clones the repository into `${XDG_DATA_HOME:-$HOME/.local/share}/ell`
 and adds it to your `PATH`. You may clone it anywhere you like; only the
 directory on your `PATH` matters.
 
+Alternatively, if `~/.local/bin` is already on your `PATH` (as it is on many
+modern distributions), you can leave the repository directory off your `PATH`
+and instead symlink the launcher into it:
+
+```bash
+mkdir -p ~/.local/bin
+ln -s "${XDG_DATA_HOME:-$HOME/.local/share}/ell/ell" ~/.local/bin/ell
+```
+
+Link the `ell` launcher (not `ell.sh`): it resolves the symlink back to the
+clone so the bundled helpers, templates and plugins are always found.
+
 > **Upgrading from an older install?** The previous layout
 > (`git clone ... ~/.ellrc.d` with configuration in `~/.ellrc`) still works:
 > `~/.ellrc` is still read, and templates and plugins under `~/.ellrc.d` are

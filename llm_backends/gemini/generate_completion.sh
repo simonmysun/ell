@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 generate_completion() {
+  local response curl_status prompt_tokens completion_tokens total_tokens line stop_reason;
   if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
     response=$(cat - | curl "${ELL_API_URL}${ELL_LLM_MODEL}:generateContent" \
@@ -8,15 +9,16 @@ generate_completion() {
       --header "Content-Type: application/json" \
       --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @-);
+    curl_status="${?}";
     # Check if curl was successful
-    if [ "${?}" -ne 0 ]; then
-      logging_fatal "Failed to generate completion";
+    if [ "${curl_status}" -ne 0 ]; then
+      logging_fatal "Failed to generate completion: curl exited with ${curl_status}";
       logging_debug "Response: ${response}";
       exit 1;
     else
       if ! json_parse "${response}"; then
         logging_error "Unexpected format: ${response}";
-        return;
+        return 1;
       fi
       # check if finishReason is present
       if json_has "candidates.0.finishReason"; then
