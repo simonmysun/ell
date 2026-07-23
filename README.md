@@ -26,9 +26,6 @@ To use ell, you need the following:
 
 ## Install
 
-
-or
-
 ```bash
 git clone --depth 1 git@github.com:simonmysun/ell.git \
   "${XDG_DATA_HOME:-$HOME/.local/share}/ell"
