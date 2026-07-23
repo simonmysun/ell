@@ -3,7 +3,7 @@
 # bash\r") makes the interpreter lookup fail, so force LF regardless of the
 # user's core.autocrlf setting.
 *.sh        text eol=lf
-*.perl      text eol=lf
+*.awk       text eol=lf
 
 # The launcher and its real implementation are extension-less / .sh scripts.
 ell         text eol=lf

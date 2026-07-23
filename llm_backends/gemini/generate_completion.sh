@@ -14,7 +14,7 @@ generate_completion() {
     if [ "${curl_status}" -ne 0 ]; then
       logging_fatal "Failed to generate completion: curl exited with ${curl_status}";
       logging_debug "Response: ${response}";
-      exit 1;
+      return 1;
     else
       if ! json_parse "${response}"; then
         logging_error "Unexpected format: ${response}";
@@ -24,6 +24,7 @@ generate_completion() {
       if json_has "candidates.0.finishReason"; then
         if [ "x$(json_get "candidates.0.finishReason")" != "xSTOP" ]; then
           logging_error "Unexpected finish reason: $(json_get "candidates.0.finishReason")";
+          return 1;
         else
           json_get "candidates.0.content.parts.0.text";
           echo "";
@@ -37,9 +38,11 @@ generate_completion() {
         fi
       else
         logging_error "Unexpected format: ${response}";
+        return 1;
       fi
     fi
   else
+    local curl_pipe_status stream_status;
     prompt_tokens="";
     completion_tokens=""
     total_tokens="";
@@ -52,8 +55,12 @@ generate_completion() {
       read -N 1;
       PART_FINISHED=false;
       BUFFER="";
+      received=0;
+      emitted=0;
+      bad_stop=0;
       while read -r line; do
         line=$(echo "${line}" | tr -d '\r');
+        received=1;
         if [ "x${PART_FINISHED}" = "xtrue" ] && [ "x${line}" = "x]" ]; then
           logging_debug "End of stream";
           break;
@@ -69,11 +76,13 @@ generate_completion() {
           if json_parse "${BUFFER}"; then
             if json_has "candidates.0.content.parts.0.text"; then
               json_get "candidates.0.content.parts.0.text";
+              emitted=1;
             fi
             if json_has "candidates.0.finishReason"; then
               stop_reason=$(json_get "candidates.0.finishReason");
               if [ "x${stop_reason}" != "xSTOP" ]; then
                 logging_error "Unexpected stop reason: ${stop_reason}";
+                bad_stop=1;
                 break;
               fi
             fi
@@ -91,10 +100,37 @@ generate_completion() {
       logging_debug "Buffer: ${BUFFER}";
       echo '';
       logging_info "usage: prompt_tokens=${prompt_tokens}, completion_tokens=${completion_tokens}, total_tokens=${total_tokens}";
+      # Report a failure if nothing usable came back, instead of silently
+      # succeeding with no output.
+      if [ "${emitted}" -eq 0 ]; then
+        if [ "${received}" -eq 0 ]; then
+          logging_error "No data received from ${ELL_API_URL} (empty response)";
+        else
+          logging_error "Streaming response contained no content";
+        fi
+        exit 3;
+      fi
+      # A non-"STOP" finish reason means the completion was truncated or
+      # otherwise abnormal (e.g. MAX_TOKENS, SAFETY). Fail even if some content
+      # was emitted, matching the non-streaming path, so a truncated completion
+      # is not reported as success.
+      if [ "${bad_stop}" -ne 0 ]; then
+        exit 4;
+      fi
     }
-    if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-      logging_fatal "Failed to generate completion";
-      exit 1;
+    # Capture the whole PIPESTATUS array at once: any later simple command
+    # (including an assignment) resets it.
+    local ps=("${PIPESTATUS[@]}");
+    curl_pipe_status="${ps[0]}";
+    stream_status="${ps[1]}";
+    # Preserve the distinct exit codes so callers can tell a curl failure (the
+    # curl exit code) from a stream-parse failure (exit 3 from the reader).
+    if [ "${curl_pipe_status}" -ne 0 ]; then
+      logging_fatal "Failed to generate completion: curl exited with ${curl_pipe_status}";
+      return "${curl_pipe_status}";
+    fi
+    if [ "${stream_status}" -ne 0 ]; then
+      return "${stream_status}";
     fi
   fi
 }

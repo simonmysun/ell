@@ -87,7 +87,7 @@ export COLUMNS;
 # Logging_debug "Decorating the generate_completion to apply hooks before and after";
 eval "$(printf "orig_"; command -V generate_completion | tail -n +2)";
 generate_completion() {
-  local pre_llm_hooks post_llm_hooks;
+  local pre_llm_hooks post_llm_hooks backend_status;
   mapfile -t pre_llm_hooks < <(list_plugin_hooks _pre_llm.sh);
   logging_debug "Pre LLM hooks: ${pre_llm_hooks[*]}";
   mapfile -t post_llm_hooks < <(list_plugin_hooks _post_llm.sh);
@@ -95,6 +95,10 @@ generate_completion() {
   piping "${pre_llm_hooks[@]}" \
   | orig_generate_completion \
   | piping "${post_llm_hooks[@]}";
+  # Propagate the backend's status (the middle stage), not the last hook's, so
+  # a failed completion is not masked by a successful post-LLM plugin.
+  backend_status="${PIPESTATUS[1]}";
+  return "${backend_status}";
 }
 
 # Logging_debug "Checking if we are going to enter record mode";
@@ -149,7 +153,7 @@ if [ -z "${ELL_TMP_SHELL_LOG}" ]; then
   logging_debug "ELL_TMP_SHELL_LOG not set";
 else
   logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
-  SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | "${BASE_DIR}/helpers/render_to_text.perl" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
+  SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
 fi
 
 # Logging_debug "Loading the post_input and pre_output hooks";
@@ -169,13 +173,21 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
     if [ -z "${ELL_TMP_SHELL_LOG}" ]; then
       logging_debug "ELL_TMP_SHELL_LOG not set";
     else
-      export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | "${BASE_DIR}/helpers/render_to_text.perl" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
+      export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
     fi
     PAYLOAD="$(eval "cat <<EOF
 $(cat "${ELL_TEMPLATE_FILE}")
 EOF")";
+    if [ -z "${PAYLOAD}" ]; then
+      logging_error "Failed to build request payload from template ${ELL_TEMPLATE_FILE}";
+      continue;
+    fi
     printf "%s" "${ELL_PS2}";
     echo "${PAYLOAD}" | generate_completion | piping "${pre_output_hooks[@]}";
+    completion_status="${PIPESTATUS[1]}";
+    if [ "${completion_status}" -ne 0 ]; then
+      logging_error "Completion failed (backend exited with ${completion_status})";
+    fi
   done
   logging_debug "Exiting interactive mode";
 else
@@ -184,8 +196,17 @@ else
   PAYLOAD="$(eval "cat <<EOF
 $(cat "${ELL_TEMPLATE_FILE}")
 EOF")";
+  if [ -z "${PAYLOAD}" ]; then
+    logging_fatal "Failed to build request payload from template ${ELL_TEMPLATE_FILE}";
+    exit 1;
+  fi
 
   echo "${PAYLOAD}" | generate_completion | piping "${pre_output_hooks[@]}";
+  completion_status="${PIPESTATUS[1]}";
+  if [ "${completion_status}" -ne 0 ]; then
+    logging_fatal "Completion failed (backend exited with ${completion_status})";
+    exit "${completion_status}";
+  fi
 fi
 
 logging_debug "END OF ELL";
