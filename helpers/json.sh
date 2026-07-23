@@ -172,9 +172,16 @@ _json_parse_literal() {
 }
 
 # _json_parse_number: parse a number token starting at the cursor.
+# The candidate run of number characters is scanned first, then validated
+# against the JSON number grammar (RFC 8259):
+#   number = [ "-" ] int [ frac ] [ exp ]
+#   int    = "0" | ( digit1-9 *digit )
+#   frac   = "." 1*digit
+#   exp    = ("e" | "E") ["+" | "-"] 1*digit
+# so malformed tokens such as 1+2, 1.2.3, 1e, 1., 00 or 01 are rejected.
 _json_parse_number() {
   local path="${1}";
-  local start="${_JSON_I}" c;
+  local start="${_JSON_I}" c token;
   while [ "${_JSON_I}" -lt "${_JSON_N}" ]; do
     c="${_JSON_S:${_JSON_I}:1}";
     case "${c}" in
@@ -182,7 +189,12 @@ _json_parse_number() {
       *) break; ;;
     esac
   done
-  JSON["${path}"]="${_JSON_S:${start}:$((_JSON_I - start))}";
+  token="${_JSON_S:${start}:$((_JSON_I - start))}";
+  if [[ ! "${token}" =~ ^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][-+]?[0-9]+)?$ ]]; then
+    _json_error "invalid number '${token}'";
+    return 1;
+  fi
+  JSON["${path}"]="${token}";
   JSON_TYPE["${path}"]="number";
   return 0;
 }

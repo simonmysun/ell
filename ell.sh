@@ -87,10 +87,11 @@ export COLUMNS;
 # Logging_debug "Decorating the generate_completion to apply hooks before and after";
 eval "$(printf "orig_"; command -V generate_completion | tail -n +2)";
 generate_completion() {
-  pre_llm_hooks=$(list_plugin_hooks _pre_llm.sh);
-  logging_debug "Pre LLM hooks: ${pre_llm_hooks}";
-  post_llm_hooks=$(list_plugin_hooks _post_llm.sh);
-  logging_debug "Post LLM hooks: ${post_llm_hooks}";
+  local pre_llm_hooks post_llm_hooks;
+  mapfile -t pre_llm_hooks < <(list_plugin_hooks _pre_llm.sh);
+  logging_debug "Pre LLM hooks: ${pre_llm_hooks[*]}";
+  mapfile -t post_llm_hooks < <(list_plugin_hooks _post_llm.sh);
+  logging_debug "Post LLM hooks: ${post_llm_hooks[*]}";
   piping "${pre_llm_hooks[@]}" \
   | orig_generate_completion \
   | piping "${post_llm_hooks[@]}";
@@ -152,10 +153,10 @@ else
 fi
 
 # Logging_debug "Loading the post_input and pre_output hooks";
-post_input_hooks=$(list_plugin_hooks _post_input.sh);
-logging_debug "Post input hooks: ${post_input_hooks}";
-pre_output_hooks=$(list_plugin_hooks _pre_output.sh);
-logging_debug "Pre output hooks: ${pre_output_hooks}";
+mapfile -t post_input_hooks < <(list_plugin_hooks _post_input.sh);
+logging_debug "Post input hooks: ${post_input_hooks[*]}";
+mapfile -t pre_output_hooks < <(list_plugin_hooks _pre_output.sh);
+logging_debug "Pre output hooks: ${pre_output_hooks[*]}";
 
 # Logging_debug "Checking if we are going to enter interactive mode";
 if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then

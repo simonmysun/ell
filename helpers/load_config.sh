@@ -10,6 +10,7 @@
 #   4. $ELL_CONFIG                                    (explicit override)
 
 load_config() {
+  local current_env ELL_XDG_CONFIG;
   logging_debug "Storing current environment";
   current_env=$(declare -p -x | sed -e 's/declare -x /export /');
   set -o allexport;
