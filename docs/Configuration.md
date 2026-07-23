@@ -30,7 +30,7 @@ The following variables can be set in the configuration files, environment varia
 - `ELL_LLM_TEMPERATURE`: The temperature of the model. The default is `0.6`.
 - `ELL_LLM_MAX_TOKENS`: The maximum number of tokens to generate. The default is `4096`.
 - `ELL_TEMPLATE_PATH`: Force templates to be loaded from this single directory (note the trailing slash, e.g. `/path/to/templates/`). When unset (the default), templates are searched, in order, under `${XDG_CONFIG_HOME:-$HOME/.config}/ell/templates/`, `${XDG_DATA_HOME:-$HOME/.local/share}/ell/templates/`, `~/.ellrc.d/templates/` (legacy) and the `templates/` directory bundled with ell. This lets you override a bundled template by placing a file with the same name under your XDG config directory.
-- `ELL_TEMPLATE`: The template to use. The default is `default`. The file extension is not needed.
+- `ELL_TEMPLATE`: The template to use. The default is `default-openai`. The file extension is not needed.
 - `ELL_INPUT_FILE`: The input file to use. If specified, it will override the prompt given in command line arguments. Setting this to `-` will let ell always read from stdin. 
 - `ELL_RECORD`: This is used for controlling whether record mode is on. It should be set to `false` unless you want to disable recording.  
 - `ELL_OUTPUT_FILE`: The output file to use. If specified, it will redirect stdout to the file. The default is `-`. When in interactive mode and record mode, the terminal history is written to stdout.
