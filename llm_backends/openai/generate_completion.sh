@@ -112,13 +112,14 @@ generate_completion() {
     local ps=("${PIPESTATUS[@]}");
     curl_pipe_status="${ps[0]}";
     stream_status="${ps[1]}";
-    # Check if curl was successful
+    # Preserve the distinct exit codes so callers can tell a curl failure (the
+    # curl exit code) from a stream-parse failure (exit 3 from the reader).
     if [ "${curl_pipe_status}" -ne 0 ]; then
       logging_fatal "Failed to generate completion: curl exited with ${curl_pipe_status}";
-      return 1;
+      return "${curl_pipe_status}";
     fi
     if [ "${stream_status}" -ne 0 ]; then
-      return 1;
+      return "${stream_status}";
     fi
   fi
 }
