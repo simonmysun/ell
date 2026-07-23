@@ -2,6 +2,7 @@
 
 get_current_column() {
   # https://stackoverflow.com/questions/2575037/how-to-get-the-cursor-position-in-bash
+  local oldstty pos;
   exec < /dev/tty;
   oldstty="$(stty -g)";
   stty raw -echo min 0;

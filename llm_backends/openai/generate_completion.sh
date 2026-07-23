@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 generate_completion() {
+  local response prompt_tokens completion_tokens total_tokens line json_chunk stop_reason;
   if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
     response=$(cat - | curl "${ELL_API_URL}" \
