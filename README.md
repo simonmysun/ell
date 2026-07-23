@@ -27,7 +27,7 @@ To use ell, you need the following:
 ## Install
 
 ```bash
-git clone --depth 1 git@github.com:simonmysun/ell.git \
+git clone --depth 1 https://github.com/simonmysun/ell.git \
   "${XDG_DATA_HOME:-$HOME/.local/share}/ell"
 echo 'export PATH="${XDG_DATA_HOME:-$HOME/.local/share}/ell:$PATH"' >> ~/.bashrc
 ```
