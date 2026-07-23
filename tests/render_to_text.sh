@@ -40,8 +40,11 @@ assert_render() {
 case_test() {
   local name="${1}" in_fmt="${2}" exp_fmt="${3}" in exp;
   in="$(mktemp)"; exp="$(mktemp)";
-  printf "${in_fmt}" > "${in}";
-  printf "${exp_fmt}" > "${exp}";
+  # Use '%b' with the string as an argument (not as the format itself) so
+  # backslash escapes like \033 and \n are still interpreted while any '%' in
+  # a test case is kept literal, preserving the byte-exact input goal.
+  printf '%b' "${in_fmt}" > "${in}";
+  printf '%b' "${exp_fmt}" > "${exp}";
   assert_render "${name}" "${in}" "${exp}";
   rm -f "${in}" "${exp}";
 }
