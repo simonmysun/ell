@@ -69,6 +69,13 @@ case_test "CSI colour codes" \
   '\033[31mRED\033[0m and \033[1;32mGREEN\033[0m\n' \
   'RED and GREEN\n';
 
+# 3b. CSI sequences using intermediate (0x20-0x2f) or private parameter bytes
+#     (e.g. "!", " ", "=") must be fully consumed, not have their final byte
+#     leak into the output.
+case_test "CSI intermediate/private bytes fully consumed" \
+  'a\033[!pb\033[ qc\033[=3hd\n' \
+  'abcd\n';
+
 # 4. A carriage return with nothing overwriting it after it leaves the line
 #    text intact (cursor returns to column 0, then LF flushes the line).
 case_test "CR before LF, no overwrite" \

@@ -120,17 +120,23 @@ BEGIN {
     if (ch == ESC && i < n && substr(s, i + 1, 1) == "[") {
       i += 2;
       params = "";
-      # Collect parameter / intermediate bytes (0x20-0x3f) until a final byte.
+      # Collect parameter and intermediate bytes (the full 0x20-0x3f range)
+      # until the final byte (0x40-0x7e). Consuming the whole range prevents a
+      # valid parameter/intermediate byte outside the common subset from being
+      # mistaken for the final byte and leaking the rest of the sequence.
       while (i <= n) {
-        cc = substr(s, i, 1);
-        if (cc ~ /[0-9;?:> ]/) { params = params cc; i++; continue; }
+        cb = _ord(substr(s, i, 1));
+        if (cb >= 32 && cb <= 63) { params = params substr(s, i, 1); i++; continue; }
         break;
       }
       if (i > n) break;
       final = substr(s, i, 1);
       i++;
-      # Numeric first parameter (default handled per command).
-      np = params; gsub(/[;?:> ].*$/, "", np);
+      # Numeric first parameter: the leading run of digits (default handled
+      # per command). Anything else (private-mode markers, separators, etc.)
+      # is ignored.
+      np = params;
+      if (match(np, /^[0-9]+/)) np = substr(np, 1, RLENGTH); else np = "";
       if (final == "K") {
         p = (np == "" ? 0 : np + 0);
         if (p == 0)      erase(cur, maxcol - 1);
