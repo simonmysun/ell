@@ -3,7 +3,7 @@
 
 The plugin system is designed to enrich the user experience and extend the functionality of ell, while keeping the code modular and flexible.
 
-The term "plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers are not included here. Please refer to [Templates](docs/Templates.md).
+The term "plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers are not included here. Please refer to [Templates](Templates.md).
 
 ## Built-in Plugins
 

@@ -41,7 +41,7 @@ The following variables can be set in the configuration files, environment varia
 - `ELL_API_STREAM`: Whether to stream the output. The default is `true`.
 - Plugins related variables:
   - `TO_TTY`: Force ell to output with syntax highlighting and pagination or not. 
-  - Styling related variables can be found in [Styling](docs/Styling.md).
+  - Styling related variables can be found in [Styling](Styling.md).
 
 The following variables can be set in the command line arguments:
   -h, --help: show this help
