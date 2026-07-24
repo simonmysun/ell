@@ -18,7 +18,9 @@
 # test so the script exits non-zero when anything failed.
 
 # set -o posix is intentionally NOT forced here: sourcing files decide their own
-# shell options. These helpers only use POSIX-compatible constructs plus local.
+# shell options. These helpers target Bash (see shebang): mostly POSIX-style
+# constructs plus a few Bash features (local, ${var//pat/repl}) used where they
+# avoid correctness traps such as glob metacharacters in case patterns.
 
 _ASSERT_PASS=0;
 _ASSERT_FAIL=0;
@@ -63,20 +65,34 @@ assert_not_equals() {
   fi
 }
 
+# _assert_haystack_has <haystack> <needle>
+# Returns 0 if <haystack> contains <needle> as a *literal* substring, else 1.
+#
+# NOTE: `case "${haystack}" in *"${needle}"*)` cannot be used here. In a case
+# pattern, glob metacharacters inside ${needle} (notably '[' ... ']', but also
+# '?' and unquoted '*') keep their pattern meaning, so needles like
+# '[EMAIL REDACTED]' are matched as character classes rather than literal text,
+# producing false passes/failures. Bash parameter-expansion replacement with a
+# double-quoted needle treats the needle literally, so we detect containment by
+# checking whether removing the needle changes the string.
+_assert_haystack_has() {
+  local haystack="${1}" needle="${2}";
+  # An empty needle is a substring of everything.
+  [ -z "${needle}" ] && return 0;
+  [ "${haystack//"${needle}"/}" != "${haystack}" ];
+}
+
 # assert_contains <name> <haystack> <needle>
 # Succeeds if <haystack> contains the literal substring <needle>.
 assert_contains() {
   local name="${1}" haystack="${2}" needle="${3}";
-  case "${haystack}" in
-    *"${needle}"*)
-      _assert_pass "${name}";
-      ;;
-    *)
-      _assert_fail "${name}";
-      echo "  needle  : $(_assert_show "${needle}")";
-      echo "  haystack: $(_assert_show "${haystack}")";
-      ;;
-  esac
+  if _assert_haystack_has "${haystack}" "${needle}"; then
+    _assert_pass "${name}";
+  else
+    _assert_fail "${name}";
+    echo "  needle  : $(_assert_show "${needle}")";
+    echo "  haystack: $(_assert_show "${haystack}")";
+  fi
 }
 
 # assert_not_contains <name> <haystack> <needle>
@@ -84,16 +100,13 @@ assert_contains() {
 # Useful for security assertions: "the secret must not survive".
 assert_not_contains() {
   local name="${1}" haystack="${2}" needle="${3}";
-  case "${haystack}" in
-    *"${needle}"*)
-      _assert_fail "${name}";
-      echo "  unexpected needle: $(_assert_show "${needle}")";
-      echo "  in haystack      : $(_assert_show "${haystack}")";
-      ;;
-    *)
-      _assert_pass "${name}";
-      ;;
-  esac
+  if _assert_haystack_has "${haystack}" "${needle}"; then
+    _assert_fail "${name}";
+    echo "  unexpected needle: $(_assert_show "${needle}")";
+    echo "  in haystack      : $(_assert_show "${haystack}")";
+  else
+    _assert_pass "${name}";
+  fi
 }
 
 # assert_success <name> <command...>
