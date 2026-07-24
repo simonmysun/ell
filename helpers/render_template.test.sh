@@ -7,6 +7,11 @@
 # which was arbitrary code execution. render_template must substitute only the
 # allowlisted ${VAR} placeholders as literal data, never evaluating $(...),
 # backticks or arithmetic, and must leave unknown placeholders untouched.
+#
+# render_template also owns JSON escaping: string placeholders (USER_PROMPT,
+# SHELL_CONTEXT, ELL_LLM_MODEL) are escaped so the rendered payload is valid
+# JSON even when the value contains quotes, backslashes or newlines; numeric /
+# boolean placeholders are inserted verbatim.
 
 set -o posix;
 
@@ -63,5 +68,36 @@ assert_equals "empty value substitutes to empty string" '{"c":""}' "${out}";
 
 # A missing template file returns non-zero.
 assert_failure "missing template returns non-zero" render_template "${WORK}/nope.json";
+
+# --- JSON escaping of string placeholders -----------------------------------
+. "${DIR}/json.sh";
+
+# Double quotes in a string value are escaped so the payload stays valid JSON.
+tmpl_q="${WORK}/quote.json";
+printf '{"p":"${USER_PROMPT}"}\n' > "${tmpl_q}";
+out="$(USER_PROMPT='say "hi"' render_template "${tmpl_q}")";
+assert_contains "quotes are JSON-escaped" "${out}" '\"hi\"';
+assert_success  "payload with quotes is valid JSON" json_is_valid "${out}";
+
+# Backslashes are escaped.
+out="$(USER_PROMPT='a\b' render_template "${tmpl_q}")";
+assert_contains "backslash is JSON-escaped" "${out}" 'a\\b';
+assert_success  "payload with backslash is valid JSON" json_is_valid "${out}";
+
+# Newlines in a value become \n, keeping the JSON single-line and valid.
+out="$(USER_PROMPT="$(printf 'line1\nline2')" render_template "${tmpl_q}")";
+assert_contains "newline becomes \\n" "${out}" 'line1\nline2';
+assert_success  "payload with newline is valid JSON" json_is_valid "${out}";
+
+# A value that decodes back to the original round-trips through the parser.
+out="$(USER_PROMPT='he said "x" \ y' render_template "${tmpl_q}")";
+assert_success "escaped payload parses" json_parse "${out}";
+assert_equals  "escaped value round-trips" 'he said "x" \ y' "$(json_get p)";
+
+# Numeric/boolean placeholders are NOT quoted or escaped.
+tmpl_n="${WORK}/num.json";
+printf '{"t":${ELL_LLM_TEMPERATURE},"s":${ELL_API_STREAM}}\n' > "${tmpl_n}";
+out="$(ELL_LLM_TEMPERATURE=0.6 ELL_API_STREAM=true render_template "${tmpl_n}")";
+assert_equals "numeric placeholders inserted verbatim" '{"t":0.6,"s":true}' "${out}";
 
 assert_summary;

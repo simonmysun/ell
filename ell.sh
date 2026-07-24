@@ -145,16 +145,10 @@ if [ -n "${ELL_INPUT_FILE}" ]; then
     exit 1;
   else
     logging_debug "Reading input from file: ${ELL_INPUT_FILE}, overriding USER_PROMPT";
-    USER_PROMPT=$(sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g' "${ELL_INPUT_FILE}" | awk '{printf "%s\\n", $0}');
+    # Read the file as raw text; JSON escaping is handled later by
+    # render_template, and it is run through the post_input hooks below.
+    USER_PROMPT="$(cat "${ELL_INPUT_FILE}")";
   fi
-fi
-
-# Logging_debug "Checking if we are using terminal output as context";
-if [ -z "${ELL_TMP_SHELL_LOG}" ]; then
-  logging_debug "ELL_TMP_SHELL_LOG not set";
-else
-  logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
-  SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
 fi
 
 # Logging_debug "Loading the post_input and pre_output hooks";
@@ -162,6 +156,17 @@ mapfile -t post_input_hooks < <(list_plugin_hooks _post_input.sh);
 logging_debug "Post input hooks: ${post_input_hooks[*]}";
 mapfile -t pre_output_hooks < <(list_plugin_hooks _pre_output.sh);
 logging_debug "Pre output hooks: ${pre_output_hooks[*]}";
+
+# Logging_debug "Checking if we are using terminal output as context";
+# The captured context is kept as raw text (JSON escaping is done later by
+# render_template) and is run through the post_input hooks so that redaction and
+# other input filters apply to the terminal context too, not just USER_PROMPT.
+if [ -z "${ELL_TMP_SHELL_LOG}" ]; then
+  logging_debug "ELL_TMP_SHELL_LOG not set";
+else
+  logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
+  SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | piping "${post_input_hooks[@]}")";
+fi
 
 # Logging_debug "Checking if we are going to enter interactive mode";
 if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
@@ -174,7 +179,9 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
     if [ -z "${ELL_TMP_SHELL_LOG}" ]; then
       logging_debug "ELL_TMP_SHELL_LOG not set";
     else
-      export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
+      # Raw text through the post_input hooks (redaction etc.); render_template
+      # handles JSON escaping.
+      export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | piping "${post_input_hooks[@]}")";
     fi
     PAYLOAD="$(render_template "${ELL_TEMPLATE_FILE}")";
     if [ -z "${PAYLOAD}" ]; then
