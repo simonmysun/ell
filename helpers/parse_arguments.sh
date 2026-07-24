@@ -126,15 +126,22 @@ parse_arguments() {
         IFS=',' read -r -a other_options_array <<EOF
 ${other_options}
 EOF
-        echo "${other_options_array[@]}";
         for option in "${other_options_array[@]}"; do
-          IFS='=' read -r -a option_array <<EOF
-${option}
-EOF
-          key="${option_array[0]}";
-          value="${option_array[1]}";
+          # Split only on the first "=", so values may themselves contain "=".
+          key="${option%%=*}";
+          value="${option#*=}";
+          # Reject anything that is not a valid shell variable name so the
+          # value below can never be interpreted as code (e.g. "X=$(rm -rf ~)").
+          if [ "x${key}" = "x${option}" ]; then
+            logging_error "Ignoring malformed -O option (expected KEY=VALUE): ${option}";
+            continue;
+          fi
+          if ! [[ "${key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+            logging_error "Ignoring -O option with invalid variable name: ${key}";
+            continue;
+          fi
           logging_debug "Setting ${key} to ${value}";
-          eval "export ${key}=${value}";
+          export "${key}=${value}";
         done
         shift 2;
         ;;
