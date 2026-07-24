@@ -199,20 +199,82 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 
 ## Testing
 
-The test suite is meant to be run inside Docker. The tests hard-code the
-container path `/ell` (the repository is mounted there read-only) and rely on
-a clean, predictable environment, so running them directly on your host is not
-supported and will fail (e.g. templates are looked up under `/ell/templates/`).
+The tests are self-checking Bash scripts: each asserts expected values and
+exits non-zero on any failure, so they can gate CI without human inspection.
+They use a tiny built-in assertion helper (`tests/assert.sh`) rather than an
+external framework, keeping the project dependency-free. The LLM backends are
+exercised offline via the `ell_echo` dummy backend and `file://` JSON fixtures,
+so no network or API key is required.
 
-Run the full suite against the supported Bash versions with:
+### Layout
+
+Tests come in two flavours:
+
+- **Unit tests live next to the source they cover**, named `<source>.test.sh`,
+  so a file's tests are easy to find right beside it:
+
+  ```
+  helpers/json.sh                        helpers/json.test.sh
+  helpers/logging.sh                     helpers/logging.test.sh
+  helpers/piping.sh                      helpers/piping.test.sh
+  helpers/render_to_text.awk             helpers/render_to_text.test.sh
+  plugins/redaction/50_post_input.sh     plugins/redaction/50_post_input.test.sh
+  ```
+
+- **End-to-end tests that drive the whole `ell` pipeline** (and their JSON
+  fixtures) live in `tests/`: `tests/templating.sh` and `tests/parse_output.sh`,
+  alongside the shared assertion helper `tests/assert.sh`.
+
+### Running
+
+Run the whole suite once, on your host:
+
+```bash
+bash tests/entry.sh
+```
+
+Or run it against the oldest and current supported Bash versions in Docker:
 
 ```bash
 bash tests/docker.sh
 ```
 
-This mounts the repository into `bash:4.1` and `bash:5.2` containers and runs
-`tests/entry.sh`, which installs the runtime dependencies and executes every
-test (`logging`, `piping`, `templating`, `parse_output` and `redaction`).
+`tests/entry.sh` auto-discovers every `*.test.sh` in the repository and then
+runs the end-to-end tests. `docker.sh` runs it inside `bash:4.1` and `bash:5.2`
+containers and fails if the suite fails under either version.
+
+### Continuous integration
+
+`.github/workflows/ci.yml` runs on every push and pull request:
+
+- **ShellCheck** over all shell scripts. Findings at `error` severity block the
+  build; warnings are reported but non-blocking so they can be cleaned up
+  incrementally.
+- **Tests** across a `bash:4.1` and `bash:5.2` matrix.
+
+### Adding a test
+
+For a unit test, create `<source>.test.sh` next to the file it covers, source
+the assertion helper (via a path relative to that location), write assertions,
+and end with `assert_summary`. It is picked up automatically by `entry.sh` —
+no registration needed:
+
+```bash
+#!/usr/bin/env bash
+set -o posix;
+DIR="$(dirname "${0}")";
+# From helpers/ this is ../tests/assert.sh; adjust the depth for other dirs.
+. "${DIR}/../tests/assert.sh";
+. "${DIR}/my_helper.sh";
+
+assert_equals "adds up" "3" "$((1 + 2))";
+
+assert_summary;
+```
+
+End-to-end tests that need JSON fixtures or the full pipeline go in `tests/`
+(sourcing `"${DIR}/assert.sh"`) and are registered with an explicit
+`run_test tests/<name>.sh` line in `tests/entry.sh`.
 
 ## Contributing
 

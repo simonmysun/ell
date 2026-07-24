@@ -11,7 +11,7 @@
 # Each case feeds a byte-exact input and asserts a byte-exact expected output.
 # The script exits non-zero if any case fails.
 
-RENDER="$(dirname "${0}")/../helpers/render_to_text.awk";
+RENDER="$(dirname "${0}")/render_to_text.awk";
 
 render() {
   LC_ALL=C awk -f "${RENDER}";

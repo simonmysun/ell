@@ -11,3 +11,7 @@ ell.sh      text eol=lf
 
 # Templates and configuration examples are line-oriented text; keep them LF.
 *.json      text eol=lf
+
+# CI workflow files are YAML; keep them LF for consistent parsing.
+*.yml       text eol=lf
+*.yaml      text eol=lf

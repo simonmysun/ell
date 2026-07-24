@@ -1,16 +1,42 @@
 #!/usr/bin/env bash
 
+# Container entry point for the test suite.
+#
+# Works both when the repo is mounted read-only at /ell (via docker.sh) and when
+# it is checked out anywhere (e.g. GitHub Actions), by deriving all paths from
+# this script's own location instead of hardcoding /ell.
+#
+# Tests come in two flavours:
+#   * Unit tests live next to the source they cover and are named
+#     "<source>.test.sh" (e.g. helpers/json.test.sh). They are auto-discovered,
+#     so adding one requires no change here.
+#   * End-to-end tests that drive the whole ell pipeline (and their JSON
+#     fixtures) live in this tests/ directory and are listed explicitly below.
+
 set -o posix;
 
+TESTS_DIR="$(cd "$(dirname "${0}")" && pwd)";
+REPO_DIR="$(cd "${TESTS_DIR}/.." && pwd)";
+
 echo "Setting up prerequisites...";
-apk -q add curl;
+# curl is only needed on the minimal bash:* (alpine) images; ignore failures on
+# environments where it is already present or apk is unavailable.
+if command -v apk >/dev/null 2>&1; then
+  apk -q add curl 2>/dev/null || true;
+fi
 
-echo "Installing ell...";
+echo "Installing ell launcher...";
+# Install a global `ell` launcher pointing at this checkout. This is best-effort:
+# the individual tests invoke ell via a relative path, so the suite still runs
+# even if /usr/local/bin is not writable.
+if printf '#!/usr/bin/env bash\n\n%s/ell "${@}"\n' "${REPO_DIR}" \
+     > /usr/local/bin/ell 2>/dev/null; then
+  chmod +x /usr/local/bin/ell;
+else
+  echo "  (skipped: /usr/local/bin not writable; tests use relative paths)";
+fi
 
-echo -e '#!/usr/bin/env bash\n\n/ell/ell ${@}' > /usr/local/bin/ell;
-chmod +x /usr/local/bin/ell;
-
-cd "$(dirname "${0}")" || exit 1;
+cd "${REPO_DIR}" || exit 1;
 
 echo "Running tests...";
 
@@ -29,13 +55,34 @@ run_test() {
   fi;
 }
 
-run_test logging.sh;
-run_test piping.sh;
-run_test templating.sh;
-run_test parse_output.sh;
-run_test redaction.sh;
-run_test render_to_text.sh;
+# --- Co-located unit tests (auto-discovered) --------------------------------
+# Find every *.test.sh under the repo, excluding the tests/ directory itself
+# (which holds shared helpers and the end-to-end tests run below). Sorted for a
+# stable, reproducible order.
+#
+# Process substitution (`< <(...)`) is a bashism that is disabled under
+# `set -o posix` on older bash (e.g. 4.1), so we iterate over the find output
+# with a plain for-loop and a newline-only IFS instead. Test paths contain no
+# whitespace, so word-splitting on newlines is safe here.
+unit_tests="$(find . -type f -name '*.test.sh' -not -path './tests/*' 2>/dev/null | sort)";
+if [ -n "${unit_tests}" ]; then
+  OLD_IFS="${IFS}";
+  # Newline-only IFS via ANSI-C quoting rather than a multiline literal, so the
+  # value is unambiguously a single newline. A literal would silently absorb any
+  # indentation before its closing quote and reintroduce space-splitting; and a
+  # $(printf '\n') substitution is wrong here because command substitution strips
+  # the trailing newline, leaving IFS empty. $'\n' works under `set -o posix`.
+  IFS=$'\n';
+  for test_file in ${unit_tests}; do
+    run_test "${test_file}";
+  done
+  IFS="${OLD_IFS}";
+fi
+
+# --- End-to-end tests (explicit) --------------------------------------------
+run_test tests/templating.sh;
+run_test tests/parse_output.sh;
 
 # Propagate the suite status: fail if any test above failed, so a regression in
-# any test (not just render_to_text.sh's escape-sequence stripping) fails CI.
+# any test fails CI.
 exit "${suite_status}";

@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Static analysis: shellcheck every shell script. The `error` severity gate
+  # is a hard failure (the repo is clean at this level today). Warnings are
+  # reported separately and do not fail the build, so they can be cleaned up
+  # incrementally without blocking merges.
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Collect shell scripts
+        id: collect
+        run: |
+          # ell and the launcher have no .sh extension; include them explicitly.
+          files="$(git ls-files '*.sh' 'ell' | tr '\n' ' ')"
+          echo "files=${files}" >> "${GITHUB_OUTPUT}"
+          echo "Scripts to check: ${files}"
+
+      - name: ShellCheck (errors, blocking)
+        run: shellcheck -S error ${{ steps.collect.outputs.files }}
+
+      - name: ShellCheck (warnings, non-blocking)
+        continue-on-error: true
+        run: shellcheck -S warning ${{ steps.collect.outputs.files }}
+
+  # Run the full test suite across the oldest and current supported bash
+  # versions using the project's own containerised entry point.
+  tests:
+    name: Tests (bash ${{ matrix.bash }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        bash: [ "4.1", "5.2" ]
+    container:
+      image: bash:${{ matrix.bash }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # entry.sh derives all paths from its own location and best-effort installs
+      # curl and a global launcher, so no extra setup is needed here.
+      - name: Run test suite
+        run: bash tests/entry.sh
