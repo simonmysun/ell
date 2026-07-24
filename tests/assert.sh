@@ -114,11 +114,16 @@ assert_not_contains() {
 assert_success() {
   local name="${1}";
   shift;
-  if "${@}" >/dev/null 2>&1; then
+  local status;
+  # Capture the command's exit status immediately: any command run before this
+  # (e.g. _assert_fail) would overwrite $?.
+  "${@}" >/dev/null 2>&1;
+  status="${?}";
+  if [ "${status}" -eq 0 ]; then
     _assert_pass "${name}";
   else
     _assert_fail "${name}";
-    echo "  command failed (exit ${?}): ${*}";
+    echo "  command failed (exit ${status}): ${*}";
   fi
 }
 
