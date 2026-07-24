@@ -77,4 +77,35 @@ assert_equals "-O rejects invalid variable name" "0" "${bad_env}";
 prompt="$(parse_arguments -O 'A=b' "hello world" >/dev/null 2>&1; printf '%s' "${USER_PROMPT}")";
 assert_equals "prompt captured with -O present" "hello world" "${prompt}";
 
+# --- Missing-argument handling ----------------------------------------------
+#
+# A value-taking option given with no value used to leave a single argument for
+# `shift 2`, which failed and made the while loop spin forever. Each such option
+# must instead exit with EX_USAGE (64) and not hang. Every check is wrapped in
+# `timeout` so a regression to the infinite loop fails loudly instead of hanging
+# the whole suite.
+missing_arg_status() {
+  # Run parse_arguments with the given args in a subshell, bounded by timeout,
+  # and print its exit status. A timeout (124) indicates the infinite-loop
+  # regression.
+  timeout 5 bash -c '
+    set -o posix;
+    ELL_LOG_LEVEL=0;
+    . "'"${DIR}"'/logging.sh";
+    . "'"${DIR}"'/parse_arguments.sh";
+    parse_arguments "${@}";
+  ' _ "${@}" >/dev/null 2>&1;
+  printf '%s' "${?}";
+}
+
+for opt in -l -m -T -t -f -o --api-style --api-key --api-url -c -O; do
+  st="$(missing_arg_status "${opt}")";
+  assert_equals "missing arg for ${opt} exits 64 (no hang)" "64" "${st}";
+done
+
+# A value-taking option followed by a valid trailing value still works even when
+# it is the last option before the prompt.
+model="$(parse_arguments -m gpt-4o "hi" >/dev/null 2>&1; printf '%s' "${ELL_LLM_MODEL}")";
+assert_equals "option with value before prompt still parses" "gpt-4o" "${model}";
+
 assert_summary;

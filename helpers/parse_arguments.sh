@@ -26,6 +26,17 @@ print_version() {
   echo "${0} $ELL_VERSION https://github.com/simonmysun/ell";
 }
 
+# _require_arg <count> <flag>: fail with a usage error unless at least <count>
+# arguments remain (i.e. the flag <flag> was actually given its value). Without
+# this, a trailing option like `ell -m` leaves only one argument, `shift 2`
+# fails, and the while loop spins forever on the same argument.
+_require_arg() {
+  if [ "${1}" -lt 2 ]; then
+    logging_fatal "Option ${2} requires an argument";
+    exit 64; # EX_USAGE
+  fi
+}
+
 parse_arguments() {
   local other_options other_options_array option option_array key value;
   if [ ${#} -eq 0 ]; then
@@ -50,26 +61,31 @@ parse_arguments() {
         exit 0;
         ;;
       -l|--log-level)
+        _require_arg ${#} "-l/--log-level";
         logging_debug "\"-l\" present in args, setting ELL_LOG_LEVEL to ${2}";
         export ELL_LOG_LEVEL="${2}";
         shift 2;
         ;;
       -m|--model)
+        _require_arg ${#} "-m/--model";
         logging_debug "\"-m\" present in args, setting ELL_LLM_MODEL to ${2}";
         export ELL_LLM_MODEL="${2}";
         shift 2;
         ;;
       -T|--template-path)
+        _require_arg ${#} "-T/--template-path";
         logging_debug "\"-T\" present in args, setting ELL_TEMPLATE_PATH to ${2}";
         export ELL_TEMPLATE_PATH="${2}";
         shift 2;
         ;;
       -t|--template)
+        _require_arg ${#} "-t/--template";
         logging_debug "\"-t\" present in args, setting ELL_TEMPLATE to ${2}";
         export ELL_TEMPLATE="${2}";
         shift 2;
         ;;
       -f|--input-file)
+        _require_arg ${#} "-f/--input-file";
         logging_debug "\"-f\" present in args, setting ELL_INPUT_FILE to ${2}";
         export ELL_INPUT_FILE="${2}";
         shift 2;
@@ -84,6 +100,7 @@ parse_arguments() {
         shift 1;
         ;;
       -o|--output-file)
+        _require_arg ${#} "-o/--output-file";
         logging_debug "\"-o\" present in args, setting ELL_OUTPUT_FILE to ${2}";
         export ELL_OUTPUT_FILE="${2}";
         shift 2;
@@ -94,16 +111,19 @@ parse_arguments() {
         shift 1;
         ;;
       --api-style)
+        _require_arg ${#} "--api-style";
         logging_debug "\"--api-style\" present in args, setting ELL_API_STYLE to ${2}";
         export ELL_API_STYLE="${2}";
         shift 2;
         ;;
       --api-key)
+        _require_arg ${#} "--api-key";
         logging_debug "\"--api-key\" present in args, setting ELL_API_KEY to ${2}";
         export ELL_API_KEY="${2}";
         shift 2;
         ;;
       --api-url)
+        _require_arg ${#} "--api-url";
         logging_debug "\"--api-url\" present in args, setting ELL_API_URL to ${2}";
         export ELL_API_URL="${2}";
         shift 2;
@@ -114,11 +134,13 @@ parse_arguments() {
         shift 1;
         ;;
       -c|--config)
+        _require_arg ${#} "-c/--config";
         logging_debug "\"-c\" present in args, setting ELL_CONFIG to ${2}";
         export ELL_CONFIG="${2}";
         shift 2;
         ;;
       -O|--option)
+        _require_arg ${#} "-O/--option";
         # -O A=b -O C=d,E=f
         logging_debug "\"-O\" present in args";
         other_options="${2}";
