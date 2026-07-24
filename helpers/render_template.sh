@@ -73,6 +73,29 @@ _json_escape() {
   printf '%s' "${out}";
 }
 
+# _ell_replace_literal <haystack> <token> <value>
+# Print <haystack> with every literal occurrence of <token> replaced by the
+# literal <value>. Implemented with prefix/suffix stripping rather than
+# ${haystack//token/value} because that replacement's handling of backslashes
+# and quotes in the replacement string differs between bash 4.1, 4.2 and 5.x
+# (some versions eat "\\", others treat surrounding quotes literally). This
+# split-and-concat approach is byte-exact and identical across all of them.
+_ell_replace_literal() {
+  local haystack="${1}" token="${2}" value="${3}" out="" rest pre;
+  rest="${haystack}";
+  while true; do
+    pre="${rest%%"${token}"*}";
+    if [ "${pre}" = "${rest}" ]; then
+      # No further occurrence of the token.
+      out="${out}${rest}";
+      break;
+    fi
+    out="${out}${pre}${value}";
+    rest="${rest#*"${token}"}";
+  done
+  printf '%s' "${out}";
+}
+
 # render_template <template-file>
 # Print the template with the allowlisted ${VAR} placeholders replaced. String
 # placeholders are JSON-escaped; numeric/boolean placeholders are inserted
@@ -91,25 +114,21 @@ render_template() {
   # is irrelevant.
   content="$(cat "${template_file}")";
 
-  # String placeholders: JSON-escape the value before substituting. Both the
-  # search token and the replacement are double-quoted: quoting the token
-  # disables globbing, and quoting the replacement stops bash from treating
-  # backslashes in the value (produced by JSON escaping) as replacement-string
-  # escapes. So nothing in the value can be interpreted as code, as a
-  # replacement escape, or as another placeholder.
+  # String placeholders: JSON-escape the value before substituting.
   for var in "${ELL_TEMPLATE_STRING_VARS[@]}"; do
     value="$(_json_escape "${!var}")";
-    content="${content//"\${${var}}"/"${value}"}";
+    content="$(_ell_replace_literal "${content}" "\${${var}}" "${value}")";
   done
 
   # Raw placeholders: inserted verbatim so JSON numbers/booleans stay valid.
   for var in "${ELL_TEMPLATE_RAW_VARS[@]}"; do
     value="${!var}";
-    content="${content//"\${${var}}"/"${value}"}";
+    content="$(_ell_replace_literal "${content}" "\${${var}}" "${value}")";
   done
 
   printf '%s\n' "${content}";
 }
 
 export -f _json_escape;
+export -f _ell_replace_literal;
 export -f render_template;

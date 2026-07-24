@@ -53,13 +53,17 @@ resolve_template() {
     fi
     return 1;
   fi
+  # Use a here-string (command substitution) rather than `< <(process
+  # substitution)`: under `set -o posix` (as the test harness sets) bash 4.1
+  # rejects process substitution as a syntax error. A here-string keeps the
+  # loop in the current shell so `return` still exits the function.
   while IFS= read -r root; do
     candidate="${root}/templates/${name}.json";
     if [ -f "${candidate}" ]; then
       printf '%s' "${candidate}";
       return 0;
     fi
-  done < <(_ell_search_roots)
+  done <<< "$(_ell_search_roots)";
   return 1;
 }
 
@@ -89,11 +93,13 @@ list_plugin_hooks() {
   shopt -q nullglob && nullglob_was_set=1;
   shopt -s nullglob;
   {
+    # here-string, not process substitution: bash 4.1 under `set -o posix`
+    # rejects `< <(...)` as a syntax error.
     while IFS= read -r root; do
       for hook in "${root}"/plugins/*/*"${suffix}"; do
         printf '%s\n' "${hook}";
       done
-    done < <(_ell_search_roots)
+    done <<< "$(_ell_search_roots)";
   } | awk -F/ '
     # Skip disabled hooks: any path component containing ".disabled".
     $0 ~ /\.disabled(\/|$)/ { next; }

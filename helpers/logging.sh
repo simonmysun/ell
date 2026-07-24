@@ -17,6 +17,21 @@ TO_TTY="${TO_TTY:-true}";
 # instead of forking basename on every log line.
 _ELL_LOG_PROG="${0##*/}";
 
+# The printf %()T time format is a bash 4.2 builtin that lets us format the
+# timestamp without forking `date`. 
+if [ "${BASH_VERSINFO[0]:-0}" -gt 4 ] \
+   || { [ "${BASH_VERSINFO[0]:-0}" -eq 4 ] && [ "${BASH_VERSINFO[1]:-0}" -ge 2 ]; }; then
+  # bash >= 4.2: format via the printf %()T builtin, no subprocess.
+  _ell_now() {
+    printf -v "${1}" '%(%Y-%m-%d %H:%M:%S)T' -1;
+  }
+else
+  # bash 4.1: fall back to forking date.
+  _ell_now() {
+    printf -v "${1}" '%s' "$(date +'%Y-%m-%d %H:%M:%S')";
+  }
+fi
+
 [ "x${TO_TTY}" = xtrue ] && LOG_STYLE_RESET="$(printf "\033[0m")" || LOG_STYLE_RESET="";
 [ "x${TO_TTY}" = xtrue ] && LOG_STYLE_PUNC="$(printf "\033[0m\033[2m")" || LOG_STYLE_PUNC="";
 [ "x${TO_TTY}" = xtrue ] && LOG_STYLE_DEBUG="$(printf "\033[97m\033[1m")" || LOG_STYLE_DEBUG="";
@@ -25,11 +40,12 @@ _ELL_LOG_PROG="${0##*/}";
 [ "x${TO_TTY}" = xtrue ] && LOG_STYLE_ERROR="$(printf "\033[93m\033[1m")" || LOG_STYLE_ERROR="";
 [ "x${TO_TTY}" = xtrue ] && LOG_STYLE_FATAL="$(printf "\033[91m\033[1m")" || LOG_STYLE_FATAL="";
 
-# _ell_log_prefix: print "[<timestamp>] <prog> " to stderr, using the bash
-# printf %()T builtin so no `date` subprocess is spawned per log line.
+# _ell_log_prefix: print "[<timestamp>] <prog> " to stderr. The timestamp
+# strategy (_ell_now) was chosen once at load time, so there is no per-call
+# version check here.
 _ell_log_prefix() {
   local ts;
-  printf -v ts '%(%Y-%m-%d %H:%M:%S)T' -1;
+  _ell_now ts;
   printf "%s" "${LOG_STYLE_PUNC}[${LOG_STYLE_RESET}${ts}${LOG_STYLE_PUNC}]${LOG_STYLE_RESET} ${_ELL_LOG_PROG} " >&2;
 }
 
@@ -74,4 +90,4 @@ logging_fatal() {
   fi
 }
 
-export -f _ell_log_prefix logging_debug logging_info logging_warn logging_error logging_fatal;
+export -f _ell_now _ell_log_prefix logging_debug logging_info logging_warn logging_error logging_fatal;
