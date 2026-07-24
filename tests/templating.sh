@@ -1,11 +1,41 @@
 #!/usr/bin/env bash
 
+# Self-checking tests for template rendering.
+#
+# The ell_echo backend simply echoes the request body ell built, so pointing
+# ell at it lets us inspect exactly what the templating step produced without
+# any network. We assert that the chosen template shape is used, the model is
+# substituted, the user prompt is embedded, and the result is valid JSON.
+
 set -o posix;
 
-export ELL_TEMPLATE_PATH='/ell/templates/';
+DIR="$(cd "$(dirname "${0}")" && pwd)";
+. "${DIR}/assert.sh";
+. "${DIR}/../helpers/json.sh";
 
-echo "openai template test";
-ell --api-style ell_echo -m gpt-4o --api-disable-streaming test;
+export ELL_TEMPLATE_PATH="${DIR}/../templates/";
+export TO_TTY=false;
 
-echo "gemini template test";
-ell --api-style ell_echo -t default-gemini test;
+echo "templating tests";
+echo "================";
+
+# --- OpenAI template --------------------------------------------------------
+
+out="$(printf '' | "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming UNIQUE_PROMPT_XYZ 2>/dev/null)";
+assert_success  "openai template renders valid JSON" json_is_valid "${out}";
+assert_contains "openai template uses messages array" "${out}" '"messages"';
+assert_contains "openai template has role field"       "${out}" '"role"';
+assert_contains "openai model substituted"             "${out}" '"gpt-4o"';
+assert_contains "openai embeds user prompt"            "${out}" 'UNIQUE_PROMPT_XYZ';
+assert_not_contains "openai not using gemini shape"    "${out}" '"contents"';
+
+# --- Gemini template --------------------------------------------------------
+
+out="$(printf '' | "${DIR}/../ell" --api-style ell_echo -t default-gemini UNIQUE_PROMPT_XYZ 2>/dev/null)";
+assert_success  "gemini template renders valid JSON"  json_is_valid "${out}";
+assert_contains "gemini template uses contents array" "${out}" '"contents"';
+assert_contains "gemini template has parts field"      "${out}" '"parts"';
+assert_contains "gemini embeds user prompt"            "${out}" 'UNIQUE_PROMPT_XYZ';
+assert_not_contains "gemini not using openai shape"    "${out}" '"messages"';
+
+assert_summary;
