@@ -59,10 +59,12 @@ generate_completion() {
         if [ "x${line}" = "xdata: [DONE]" ]; then
           # End of stream
           break;
-        elif echo "x${line}" | grep -e "^xdata: {" > /dev/null 2>&1; then
-          # Data chunk received
+        elif [[ "${line}" == "data: {"* ]]; then
+          # Data chunk received. Use bash builtins (pattern match + prefix
+          # stripping) instead of `echo | grep` / `echo | cut`, which forked two
+          # subprocesses per streamed chunk.
           received=1;
-          json_chunk=$(echo "${line}" | cut -c 6-);
+          json_chunk="${line#data: }";
           if ! json_parse "${json_chunk}"; then
             logging_debug "Unexpected chunk: ${json_chunk}";
             unparsable=1;

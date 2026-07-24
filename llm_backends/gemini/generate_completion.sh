@@ -59,7 +59,9 @@ generate_completion() {
       emitted=0;
       bad_stop=0;
       while read -r line; do
-        line=$(echo "${line}" | tr -d '\r');
+        # Strip CR with a bash builtin instead of `echo | tr`, which forked a
+        # subprocess for every streamed line.
+        line="${line//$'\r'/}";
         received=1;
         if [ "x${PART_FINISHED}" = "xtrue" ] && [ "x${line}" = "x]" ]; then
           logging_debug "End of stream";
