@@ -32,6 +32,22 @@ run_ell() {
     "${DIR}/../ell" test 2>/dev/null;
 }
 
+# run_ell_fixture_status <style> <stream> <fixture-basename>
+# Runs `ell test` against an explicit fixture file and returns ell's exit
+# status (output discarded). Used to assert that abnormal responses fail.
+run_ell_fixture_status() {
+  local style="${1}" stream="${2}" fixture="${3}";
+  ELL_API_STYLE="${style}" \
+  ELL_LLM_MODEL="model" \
+  ELL_API_STREAM="${stream}" \
+  ELL_API_URL="file://${DIR}/${fixture}#" \
+  ELL_API_KEY="" \
+  ELL_TEMPLATE_PATH="${DIR}/../templates/" \
+  ELL_TEMPLATE="default-${style}" \
+  TO_TTY=false \
+    "${DIR}/../ell" test >/dev/null 2>&1;
+}
+
 echo "parse_output tests";
 echo "==================";
 
@@ -47,6 +63,17 @@ out="$(run_ell openai gpt-4o-mini true)";
 assert_not_equals "openai stream produced output" "" "${out}";
 assert_contains   "openai stream parsed content"  "${out}" "Markdown";
 assert_not_contains "openai stream leaks no data: prefix" "${out}" 'data:';
+
+# A well-formed streaming completion (finish_reason "stop") exits 0.
+assert_success "openai stream stop exits 0" \
+  run_ell_fixture_status openai true "openai-stream.json";
+
+# A truncated streaming completion (choices.0.finish_reason "length") must be
+# reported as a failure, not silently succeed. This is the regression guard for
+# the finish-reason path bug: the check previously looked at a root-level
+# "finish_reason" that never existed, so truncation went undetected.
+assert_failure "openai stream truncation is detected" \
+  run_ell_fixture_status openai true "openai-stream-truncated.json";
 
 # --- Gemini ------------------------------------------------------------------
 

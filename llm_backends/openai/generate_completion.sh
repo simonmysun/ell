@@ -72,8 +72,14 @@ generate_completion() {
             json_get "choices.0.delta.content";
             emitted=1;
           else
-            if json_has "finish_reason"; then
-              stop_reason=$(json_get "finish_reason");
+            # In the OpenAI streaming schema the finish reason lives at
+            # choices.0.finish_reason (it is null on every intermediate chunk,
+            # for which json_has returns false, and set to "stop"/"length"/
+            # "content_filter"/... on the final chunk). Checking the root-level
+            # "finish_reason" here never matched, so truncated completions were
+            # silently reported as success.
+            if json_has "choices.0.finish_reason"; then
+              stop_reason=$(json_get "choices.0.finish_reason");
               if [ "x${stop_reason}" != "xstop" ]; then
                 logging_error "Unexpected stop reason: ${stop_reason}";
                 bad_stop=1;
