@@ -84,4 +84,27 @@ export ELL_LOG_LEVEL=5;
 stdout="$(logging_info "ON_STDOUT" 2>/dev/null)";
 assert_equals "logs never reach stdout" "" "${stdout}";
 
+# Each log line carries a [YYYY-MM-DD HH:MM:SS] timestamp (produced by the bash
+# printf %()T builtin rather than a forked `date`).
+export ELL_LOG_LEVEL=4;
+line="$({ logging_info "TSCHECK" >/dev/null; } 2>&1)";
+if printf '%s' "${line}" | grep -qE '\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\]'; then
+  _assert_pass "log line has a timestamp";
+else
+  _assert_fail "log line has a timestamp";
+  echo "  line: $(_assert_show "${line}")";
+fi
+
+# A non-integer ELL_LOG_LEVEL must not break comparisons: it falls back to the
+# default (4), so info is shown and no "integer expression" error is emitted.
+# The fallback happens when logging.sh is sourced, so re-source it in a subshell
+# with a bad value and check info still appears.
+bad_out="$(
+  export TO_TTY=false ELL_LOG_LEVEL="not-a-number";
+  . "${DIR}/logging.sh";
+  { logging_info "AFTER_BAD_LEVEL" >/dev/null; } 2>&1;
+)";
+assert_contains "invalid log level falls back (info shown)" "${bad_out}" "INFO AFTER_BAD_LEVEL";
+assert_not_contains "invalid log level does not error" "${bad_out}" "integer expression";
+
 assert_summary;
