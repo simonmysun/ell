@@ -67,8 +67,12 @@ run_test() {
 unit_tests="$(find . -type f -name '*.test.sh' -not -path './tests/*' 2>/dev/null | sort)";
 if [ -n "${unit_tests}" ]; then
   OLD_IFS="${IFS}";
-  IFS='
-';
+  # Newline-only IFS via ANSI-C quoting rather than a multiline literal, so the
+  # value is unambiguously a single newline. A literal would silently absorb any
+  # indentation before its closing quote and reintroduce space-splitting; and a
+  # $(printf '\n') substitution is wrong here because command substitution strips
+  # the trailing newline, leaving IFS empty. $'\n' works under `set -o posix`.
+  IFS=$'\n';
   for test_file in ${unit_tests}; do
     run_test "${test_file}";
   done
