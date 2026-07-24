@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
+. "$(dirname "${BASH_SOURCE[0]}")/../http.sh";
+
 generate_completion() {
   local response curl_status prompt_tokens completion_tokens total_tokens line stop_reason;
   if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
-    response=$(cat - | curl "${ELL_API_URL}${ELL_LLM_MODEL}:generateContent" \
-      --silent \
+    response=$(ell_curl "${ELL_API_URL}${ELL_LLM_MODEL}:generateContent" \
       --header "Content-Type: application/json" \
       --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @-);
@@ -46,8 +47,7 @@ generate_completion() {
     prompt_tokens="";
     completion_tokens=""
     total_tokens="";
-    curl "${ELL_API_URL}${ELL_LLM_MODEL}:streamGenerateContent" \
-      --silent \
+    ell_curl "${ELL_API_URL}${ELL_LLM_MODEL}:streamGenerateContent" \
       --header "Content-Type: application/json" \
       --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @- | {

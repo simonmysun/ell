@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+# Shared HTTP helper for the LLM backends.
+#
+# Centralises curl invocation so every backend gets the same robustness
+# treatment instead of hand-rolling `curl --silent ...` four times:
+#
+#   * connection/overall timeouts, so a stalled server does not hang ell
+#     forever (previously there was no timeout at all);
+#   * HTTP error handling, so a 401/429/500 becomes a non-zero curl exit
+#     (previously curl returned 0 with an error body and the failure only
+#     surfaced later as a vague "Unexpected format").
+#
+# Configuration (all optional, read from the environment):
+#   ELL_CONNECT_TIMEOUT  seconds to wait for the TCP/TLS connection (default 10)
+#   ELL_MAX_TIME         seconds for the whole transfer; 0 = no limit
+#                        (default 0, so long streaming completions are not
+#                        killed mid-response)
+#   ELL_CURL_EXTRA_OPTS  extra curl options, word-split, for advanced users
+
+# Detect whether this curl supports --fail-with-body (curl >= 7.76). It makes
+# curl exit non-zero on HTTP >= 400 while still printing the response body, so
+# error details (rate-limit messages etc.) remain visible. Older curl falls back
+# to --fail, which also exits non-zero but discards the body.
+#
+# The result is cached so it is probed at most once per process even though the
+# value is computed lazily (so tests can stub curl before the first probe).
+_ell_curl_fail_opt() {
+  if [ -z "${_ELL_CURL_FAIL_OPT:-}" ]; then
+    if curl --help all 2>/dev/null | grep -q -- '--fail-with-body'; then
+      _ELL_CURL_FAIL_OPT="--fail-with-body";
+    else
+      _ELL_CURL_FAIL_OPT="--fail";
+    fi
+  fi
+  printf '%s' "${_ELL_CURL_FAIL_OPT}";
+}
+
+# ell_curl <url> [extra curl args...]
+# Invoke curl with ell's shared options plus any per-call arguments (headers,
+# --data-binary, etc.). Reads the request body from stdin when the caller
+# passes --data-binary @-. Returns curl's exit status.
+ell_curl() {
+  local url="${1}";
+  shift;
+  # Populate the fail-option cache in this (non-subshell) scope so it is probed
+  # at most once per process, then read the cached value.
+  _ell_curl_fail_opt >/dev/null;
+  local -a opts;
+  opts=(
+    --silent
+    --show-error
+    "${_ELL_CURL_FAIL_OPT}"
+    --connect-timeout "${ELL_CONNECT_TIMEOUT:-10}"
+    --max-time "${ELL_MAX_TIME:-0}"
+  );
+  # Allow advanced users to append arbitrary curl options.
+  if [ -n "${ELL_CURL_EXTRA_OPTS}" ]; then
+    # Intentional word splitting so ELL_CURL_EXTRA_OPTS can hold several opts.
+    # shellcheck disable=SC2206
+    opts+=(${ELL_CURL_EXTRA_OPTS});
+  fi
+  curl "${url}" "${opts[@]}" "${@}";
+}
+
+export -f _ell_curl_fail_opt;
+export -f ell_curl;

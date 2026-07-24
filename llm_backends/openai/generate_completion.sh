@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
+. "$(dirname "${BASH_SOURCE[0]}")/../http.sh";
+
 generate_completion() {
   local response curl_status prompt_tokens completion_tokens total_tokens line json_chunk stop_reason;
   if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
-    response=$(cat - | curl "${ELL_API_URL}" \
-      --silent \
+    response=$(ell_curl "${ELL_API_URL}" \
       --header "Content-Type: application/json" \
       --header "Authorization: Bearer ${ELL_API_KEY}" \
       --data-binary @-);
@@ -43,8 +44,7 @@ generate_completion() {
     fi
   else
     local curl_pipe_status stream_status;
-    curl "${ELL_API_URL}" \
-      --silent \
+    ell_curl "${ELL_API_URL}" \
       --header "Content-Type: application/json" \
       --header "Authorization: Bearer ${ELL_API_KEY}" \
       --data-binary @- | {
