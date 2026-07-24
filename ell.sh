@@ -173,7 +173,17 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
   logging_info "Interactive mode enabled. ^C to exit";
   while true; do
     echo -ne "${ELL_PS1}";
+    # Capture read's status. On EOF (Ctrl-D) read returns non-zero; without
+    # handling it the loop spun forever emitting empty completions. read may
+    # still have stored a final unterminated line together with EOF, so process
+    # that line if it is non-empty, then exit.
     IFS= read -r USER_PROMPT;
+    read_status="${?}";
+    if [ "${read_status}" -ne 0 ] && [ -z "${USER_PROMPT}" ]; then
+      echo;
+      logging_debug "EOF on input, exiting interactive mode";
+      break;
+    fi
     USER_PROMPT="$(echo "${USER_PROMPT}" | piping "${post_input_hooks[@]}")";
     logging_debug "Loading shell log from ${ELL_TMP_SHELL_LOG}";
     if [ -z "${ELL_TMP_SHELL_LOG}" ]; then

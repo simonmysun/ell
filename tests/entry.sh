@@ -19,10 +19,24 @@ TESTS_DIR="$(cd "$(dirname "${0}")" && pwd)";
 REPO_DIR="$(cd "${TESTS_DIR}/.." && pwd)";
 
 echo "Setting up prerequisites...";
-# curl is only needed on the minimal bash:* (alpine) images; ignore failures on
-# environments where it is already present or apk is unavailable.
-if command -v apk >/dev/null 2>&1; then
-  apk -q add curl 2>/dev/null || true;
+# curl is a hard dependency of the file:// backend tests (parse_output.sh). On
+# the minimal bash:* (alpine) images it is not preinstalled, so install it via
+# apk. Do NOT swallow the outcome silently: if curl ends up missing, the backend
+# tests fail with nine confusing "produced no output" errors that look like code
+# bugs but are really a missing curl. Instead, verify curl is present and fail
+# fast with a clear message if it is not.
+if ! command -v curl >/dev/null 2>&1; then
+  if command -v apk >/dev/null 2>&1; then
+    echo "  curl not found; installing via apk...";
+    # Show apk's own output so a real install failure (network, CDN) is visible
+    # rather than hidden behind 2>/dev/null.
+    apk add curl || echo "  apk add curl failed";
+  fi
+fi
+if ! command -v curl >/dev/null 2>&1; then
+  echo "ERROR: curl is required to run the test suite (file:// backend tests) but could not be installed." >&2;
+  echo "       Install curl and re-run, e.g. 'apk add curl' or 'apt-get install curl'." >&2;
+  exit 1;
 fi
 
 echo "Installing ell launcher...";
@@ -82,6 +96,7 @@ fi
 # --- End-to-end tests (explicit) --------------------------------------------
 run_test tests/templating.sh;
 run_test tests/parse_output.sh;
+run_test tests/interactive.sh;
 
 # Propagate the suite status: fail if any test above failed, so a regression in
 # any test fails CI.
