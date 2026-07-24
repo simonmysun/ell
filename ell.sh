@@ -24,6 +24,7 @@ BASE_DIR=$(dirname "${0}");
 . "${BASE_DIR}/helpers/piping.sh";
 . "${BASE_DIR}/helpers/json.sh";
 . "${BASE_DIR}/helpers/resolve_paths.sh";
+. "${BASE_DIR}/helpers/render_template.sh";
 
 logging_debug "Starting ${0}";
 
@@ -175,9 +176,7 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
     else
       export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | sed  -e 's/\\/\\\\/g' -e 's/"/\\"/g'| awk '{printf "%s\\n", $0}')";
     fi
-    PAYLOAD="$(eval "cat <<EOF
-$(cat "${ELL_TEMPLATE_FILE}")
-EOF")";
+    PAYLOAD="$(render_template "${ELL_TEMPLATE_FILE}")";
     if [ -z "${PAYLOAD}" ]; then
       logging_error "Failed to build request payload from template ${ELL_TEMPLATE_FILE}";
       continue;
@@ -193,9 +192,7 @@ EOF")";
 else
   USER_PROMPT=$(echo "${USER_PROMPT}" | piping "${post_input_hooks[@]}");
 
-  PAYLOAD="$(eval "cat <<EOF
-$(cat "${ELL_TEMPLATE_FILE}")
-EOF")";
+  PAYLOAD="$(render_template "${ELL_TEMPLATE_FILE}")";
   if [ -z "${PAYLOAD}" ]; then
     logging_fatal "Failed to build request payload from template ${ELL_TEMPLATE_FILE}";
     exit 1;
