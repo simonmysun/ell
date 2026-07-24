@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 
-# Self-checking tests for helpers/resolve_paths.sh, focused on
+# Self-checking tests for helpers/resolve_paths.sh.
+#
 # list_plugin_hooks:
 #   * enabled hooks are discovered,
 #   * hooks carrying a ".disabled" suffix are skipped (this is how the bundled
 #     redaction plugin ships disabled by default),
 #   * duplicate <plugin-dir>/<hook-file> across roots is de-duplicated with the
 #     highest-priority root winning,
-#   * results are ordered by "<plugin-dir>/<hook-file>".
+#   * results are ordered by "<plugin-dir>/<hook-file>",
+#   * paths with spaces are handled (glob iteration, not `ls` parsing),
+#   * nullglob is restored afterwards.
+#
+# resolve_template:
+#   * a valid name resolves across the search roots,
+#   * a name containing "/" or "."/".." is rejected (no path traversal),
+#   * ELL_TEMPLATE_PATH works with or without a trailing slash.
 
 set -o posix;
 
@@ -88,5 +96,42 @@ chmod +x "${BASE_DIR}/plugins/gamma/50.disabled_post_input.sh";
 hooks="$(list_plugin_hooks _post_input.sh)";
 assert_not_contains "disabled directory component skipped" "${hooks}" "beta.disabled";
 assert_not_contains "disabled filename skipped by awk filter" "${hooks}" "50.disabled_post_input.sh";
+
+# A plugin directory containing a space is handled: glob iteration keeps it in
+# one piece, whereas parsing `ls` output would have split it.
+mkplugin "${BASE_DIR}" "with space" "60_post_input.sh";
+hooks="$(list_plugin_hooks _post_input.sh)";
+assert_contains "plugin path with space discovered" "${hooks}" "with space/60_post_input.sh";
+
+# nullglob is restored to its prior (off) state after the call.
+shopt -u nullglob;
+list_plugin_hooks _post_input.sh >/dev/null;
+if shopt -q nullglob; then
+  _assert_fail "nullglob restored after list_plugin_hooks";
+else
+  _assert_pass "nullglob restored after list_plugin_hooks";
+fi
+
+# --- resolve_template -------------------------------------------------------
+
+# A template in the bundled templates/ dir resolves.
+mkdir -p "${BASE_DIR}/templates";
+printf '{}\n' > "${BASE_DIR}/templates/mytemplate.json";
+resolved="$(resolve_template "mytemplate" 2>/dev/null)";
+assert_equals "valid template resolves" "${BASE_DIR}/templates/mytemplate.json" "${resolved}";
+
+# A name that traverses out of the template dir is rejected.
+assert_failure "template traversal rejected"  resolve_template "../../etc/passwd";
+assert_failure "template with slash rejected" resolve_template "sub/dir";
+assert_failure "empty template name rejected" resolve_template "";
+assert_failure "dotdot template name rejected" resolve_template "..";
+
+# ELL_TEMPLATE_PATH resolves with and without a trailing slash.
+mkdir -p "${WORK}/tpl";
+printf '{}\n' > "${WORK}/tpl/explicit.json";
+got_noslash="$(ELL_TEMPLATE_PATH="${WORK}/tpl" resolve_template "explicit" 2>/dev/null)";
+assert_equals "ELL_TEMPLATE_PATH without trailing slash" "${WORK}/tpl/explicit.json" "${got_noslash}";
+got_slash="$(ELL_TEMPLATE_PATH="${WORK}/tpl/" resolve_template "explicit" 2>/dev/null)";
+assert_equals "ELL_TEMPLATE_PATH with trailing slash" "${WORK}/tpl/explicit.json" "${got_slash}";
 
 assert_summary;
