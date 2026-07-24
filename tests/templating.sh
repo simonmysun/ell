@@ -31,7 +31,12 @@ assert_not_contains "openai not using gemini shape"    "${out}" '"contents"';
 
 # --- Gemini template --------------------------------------------------------
 
-out="$(printf '' | "${DIR}/../ell" --api-style ell_echo -t default-gemini UNIQUE_PROMPT_XYZ 2>/dev/null)";
+# Disable streaming here too, matching the OpenAI case above, so both template
+# checks run under one deterministic configuration. The gemini template does not
+# currently reference ${ELL_API_STREAM}, so this does not change today's output;
+# it keeps the two tests symmetric and guards the assertions if a "stream" field
+# is ever added to default-gemini.json.
+out="$(printf '' | "${DIR}/../ell" --api-style ell_echo -t default-gemini --api-disable-streaming UNIQUE_PROMPT_XYZ 2>/dev/null)";
 assert_success  "gemini template renders valid JSON"  json_is_valid "${out}";
 assert_contains "gemini template uses contents array" "${out}" '"contents"';
 assert_contains "gemini template has parts field"      "${out}" '"parts"';
