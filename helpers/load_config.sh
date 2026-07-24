@@ -86,4 +86,4 @@ load_config() {
   set +o allexport;
 }
 
-export load_config;
+export -f load_config;

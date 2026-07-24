@@ -141,4 +141,4 @@ generate_completion() {
   fi
 }
 
-export generate_completion;
+export -f generate_completion;

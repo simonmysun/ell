@@ -53,4 +53,4 @@ logging_fatal() {
   fi
 }
 
-export logging_debug logging_info logging_warn logging_error logging_fatal;
+export -f logging_debug logging_info logging_warn logging_error logging_fatal;

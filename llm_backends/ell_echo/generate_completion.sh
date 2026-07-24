@@ -6,4 +6,4 @@ generate_completion() {
   cat -;
 }
 
-export generate_completion;
+export -f generate_completion;
