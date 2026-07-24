@@ -61,6 +61,11 @@ resolve_template() {
 # The surviving hooks are ordered by "<plugin-dir>/<hook-file>" so the numeric
 # ordering prefix (e.g. 90_pre_output.sh) is respected regardless of which
 # root a plugin lives in.
+#
+# A hook whose filename contains ".disabled" is skipped, so a plugin can be
+# turned off by renaming its script (e.g. 50_post_input.sh -> the same name
+# with a .disabled suffix). This is how the bundled redaction plugin ships:
+# disabled by default until the user removes the .disabled suffix.
 list_plugin_hooks() {
   local suffix="${1}" root;
   {
@@ -68,6 +73,9 @@ list_plugin_hooks() {
       ls "${root}"/plugins/*/*"${suffix}" 2>/dev/null;
     done < <(_ell_search_roots)
   } | awk -F/ '
+    # Skip disabled hooks: any path component containing ".disabled".
+    $0 ~ /\.disabled(\/|$)/ { next; }
+    $NF ~ /\.disabled/ { next; }
     {
       key = $(NF-1) "/" $NF;
       if (!(key in seen)) {

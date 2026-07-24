@@ -16,7 +16,11 @@ set -o posix;
 DIR="$(dirname "${0}")";
 . "${DIR}/../../tests/assert.sh";
 
-REDACT="${DIR}/50_post_input.sh";
+# The redaction plugin ships disabled by default (it is a best-effort control
+# and can mangle input), so its script carries a .disabled suffix and is not
+# auto-discovered by list_plugin_hooks. We still exercise its behaviour
+# directly by running the .disabled script, which is a normal executable.
+REDACT="${DIR}/50_post_input.sh.disabled";
 
 # redact <text>: run one line of input through the redaction plugin and print
 # the result. stderr (plugin info logs) is discarded so it doesn't pollute the

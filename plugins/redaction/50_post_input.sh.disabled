@@ -3,10 +3,12 @@
 . "$(dirname "${0}")/../../helpers/logging.sh";
 
 # On most Linux systems, sed is GNU sed and supports the -z option since 4.2.2 (released on 2012-12-22). In case of OS X and busybox, the -z option is not supported.
+# Without sed there is nothing this plugin can redact, so pass the input
+# through untouched and stop. Falling through here would call sed anyway below.
 if ! command -v sed >/dev/null 2>&1; then
-  logging_info "sed is required for redaction";
-  logging_info "GNU sed >= 4.2.2 is required for multiline redaction";
+  logging_info "sed is required for redaction; passing input through unredacted";
   cat;
+  exit 0;
 fi
 
 redact_high_entropy_strings() (
