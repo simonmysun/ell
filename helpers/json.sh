@@ -58,10 +58,23 @@ _json_skip_ws() {
 # leave the fully decoded value in _JSON_STR. Advances the cursor past the
 # closing quote.
 _json_parse_string() {
-  local out="" c hex code
+  local out="" c hex code rest chunk
   # Skip the opening quote.
   _JSON_I=$((_JSON_I + 1));
   while [ "${_JSON_I}" -lt "${_JSON_N}" ]; do
+    # Fast path: copy the whole run of ordinary characters up to the next '"'
+    # or '\' in one operation instead of appending one character per loop
+    # iteration (which is O(n^2) for long string values). ${rest%%[\"\\]*}
+    # yields everything before the first quote or backslash.
+    rest="${_JSON_S:${_JSON_I}}";
+    chunk="${rest%%[\"\\]*}";
+    if [ -n "${chunk}" ]; then
+      out="${out}${chunk}";
+      _JSON_I=$((_JSON_I + ${#chunk}));
+      if [ "${_JSON_I}" -ge "${_JSON_N}" ]; then
+        break;
+      fi
+    fi
     c="${_JSON_S:${_JSON_I}:1}";
     if [ "${c}" = '"' ]; then
       _JSON_I=$((_JSON_I + 1));
@@ -203,12 +216,15 @@ _json_parse_number() {
 # arrays cannot use an empty subscript, so the empty path maps to this key.
 _JSON_ROOT=$'\001root';
 
-# _json_key: translate a logical path ("" for root) into a storage key.
+# _json_key: translate a logical path ("" for root) into a storage key, leaving
+# the result in _JSON_KEY. This deliberately avoids command substitution
+# ($(_json_key ...)) which forked a subshell on every value/lookup and was a
+# dominant cost when parsing many small objects.
 _json_key() {
   if [ -z "${1}" ]; then
-    printf '%s' "${_JSON_ROOT}";
+    _JSON_KEY="${_JSON_ROOT}";
   else
-    printf '%s' "${1}";
+    _JSON_KEY="${1}";
   fi
 }
 
@@ -216,7 +232,7 @@ _json_key() {
 _json_parse_value() {
   local path key c;
   path="${1}";
-  key="$(_json_key "${path}")";
+  _json_key "${path}"; key="${_JSON_KEY}";
   _json_skip_ws;
   if [ "${_JSON_I}" -ge "${_JSON_N}" ]; then
     _json_error "unexpected end of input";
@@ -342,7 +358,7 @@ json_parse() {
 # json_get: print the value at <path>, or return non-zero if missing.
 json_get() {
   local key;
-  key="$(_json_key "${1}")";
+  _json_key "${1}"; key="${_JSON_KEY}";
   if [ -z "${JSON_TYPE[${key}]+x}" ]; then
     return 1;
   fi
@@ -353,7 +369,7 @@ json_get() {
 # json_has: succeed if <path> exists and is not null.
 json_has() {
   local key;
-  key="$(_json_key "${1}")";
+  _json_key "${1}"; key="${_JSON_KEY}";
   if [ -z "${JSON_TYPE[${key}]+x}" ]; then
     return 1;
   fi

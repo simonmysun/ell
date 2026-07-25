@@ -77,4 +77,24 @@ assert_failure "rejects incomplete exp"   json_is_valid '1e';
 assert_failure "rejects unterminated str" json_is_valid '{"a":"oops}';
 assert_failure "rejects empty input"      json_is_valid '';
 
+# --- Long / mixed string values (exercise the bulk-copy fast path) ----------
+# The string parser copies runs of ordinary characters in one operation rather
+# than one character at a time. These cases guard that the fast path preserves
+# long values and still interleaves escapes / unicode correctly.
+
+# A long run of ordinary characters round-trips intact.
+long="$(printf 'a%.0s' $(seq 1 2000))";
+assert_success "parses a long plain string" json_parse "{\"s\":\"${long}\"}";
+assert_equals  "long plain string preserved" "${long}" "$(json_get s)";
+
+# Ordinary runs interleaved with escapes and a surrogate-pair emoji.
+assert_success "parses mixed string" \
+  json_parse '{"t":"hi \"q\" \u0041 \n x \ud83d\ude00 end"}';
+assert_equals  "mixed string decoded correctly" \
+  "$(printf 'hi "q" A \n x \360\237\230\200 end')" "$(json_get t)";
+
+# A string that begins immediately with an escape (empty leading ordinary run).
+assert_success "parses leading-escape string" json_parse '{"t":"\n after"}';
+assert_equals  "leading-escape decoded" "$(printf '\n after')" "$(json_get t)";
+
 assert_summary;
