@@ -60,12 +60,20 @@ parse_arguments "${@}";
 
 . "${BASE_DIR}/llm_backends/generate_completion.sh";
 
-# Deciding where to output
-if [ "x${ELL_OUTPUT_FILE}" != "x-" ]; then
-  if [ "${ELL_RECORD}" != "xtrue" ] && [ "${ELL_INTERACTIVE}" != "xtrue" ]; then
-    logging_debug "Outputting to file: ${ELL_OUTPUT_FILE}";
-    exec 1>"${ELL_OUTPUT_FILE}";
-  fi
+# Deciding where to output. Redirect stdout to ELL_OUTPUT_FILE only when an
+# output file other than "-" was requested AND we are not in record or
+# interactive mode (in those modes stdout must stay on the terminal for the
+# recorded/interactive session).
+#
+# The 'x' prefix must be on both sides of each comparison: ELL_RECORD and
+# ELL_INTERACTIVE hold "true"/"false", never "xtrue", so the previous
+# `"${ELL_RECORD}" != "xtrue"` was always true and the redirect fired even in
+# record/interactive mode.
+if [ "x${ELL_OUTPUT_FILE}" != "x-" ] \
+   && [ "x${ELL_RECORD}" != "xtrue" ] \
+   && [ "x${ELL_INTERACTIVE}" != "xtrue" ]; then
+  logging_debug "Outputting to file: ${ELL_OUTPUT_FILE}";
+  exec 1>"${ELL_OUTPUT_FILE}";
 fi
 
 # logging_debug "Checking if we are outputting to a TTY or not";
