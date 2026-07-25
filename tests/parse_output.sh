@@ -87,4 +87,26 @@ assert_not_equals "gemini stream produced output" "" "${out}";
 assert_contains   "gemini stream parsed content"  "${out}" "Comprehensive Markdown Guide";
 assert_not_contains "gemini stream leaks no parts key" "${out}" '"parts"';
 
+# A well-formed gemini stream (finishReason "STOP") exits 0; a truncated one
+# (e.g. MAX_TOKENS) is reported as a failure. This mirrors the openai guard and
+# closes the previous openai/gemini asymmetry (there was no gemini truncated
+# fixture).
+assert_success "gemini stream stop exits 0" \
+  run_ell_fixture_status gemini true "gemini-stream.json";
+assert_failure "gemini stream truncation is detected" \
+  run_ell_fixture_status gemini true "gemini-stream-truncated.json";
+
+# The gemini streaming reader tracks JSON object boundaries by brace depth. A
+# text value containing braces, quotes and escaped quotes must not confuse that
+# tracking: the whole value must round-trip intact. This guards the object-
+# boundary parser that replaced the O(n^2) re-parse-the-whole-buffer approach.
+out="$(
+  ELL_API_STYLE=gemini ELL_LLM_MODEL=m ELL_API_STREAM=true \
+  ELL_API_URL="file://${DIR}/gemini-stream-braces.json#" ELL_API_KEY="" \
+  ELL_TEMPLATE_PATH="${DIR}/../templates/" ELL_TEMPLATE=default-gemini \
+  TO_TTY=false "${DIR}/../ell" test 2>/dev/null;
+)";
+assert_contains "gemini handles braces/quotes inside a string value" \
+  "${out}" 'if (x) { return "}"; } end';
+
 assert_summary;

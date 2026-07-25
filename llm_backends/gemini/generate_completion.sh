@@ -51,52 +51,104 @@ generate_completion() {
       --header "Content-Type: application/json" \
       --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @- | {
-      # gemni API v1beta sends a large JSON array as chunks. Here we skip the first '[' and expect the in coming chunks to be valid JSON objects until the last line;
-      read -N 1;
-      PART_FINISHED=false;
+      # The v1beta streaming endpoint sends one large pretty-printed JSON array,
+      # split across many lines. Each array element is a chunk object we want to
+      # parse.
+      #
+      # Rather than re-running json_parse on the whole accumulated buffer after
+      # every line (which is O(n^2): a chunk spans dozens of lines and each added
+      # line re-parses everything so far), track JSON object nesting depth while
+      # scanning characters once, and only json_parse a chunk when its top-level
+      # object closes (depth returns to 0). Strings and escapes are honoured so
+      # braces inside text do not affect the depth.
       BUFFER="";
+      depth=0;
+      in_string=false;
+      escaped=false;
       received=0;
       emitted=0;
       bad_stop=0;
-      while read -r line; do
+
+      # _gemini_emit_chunk: parse BUFFER (one complete JSON object) and emit its
+      # text / track finish reason and usage. Sets bad_stop and returns 1 on a
+      # non-STOP finish reason so the caller can stop.
+      _gemini_emit_chunk() {
+        json_parse "${BUFFER}" || return 0;
+        if json_has "candidates.0.content.parts.0.text"; then
+          json_get "candidates.0.content.parts.0.text";
+          emitted=1;
+        fi
+        if json_has "usageMetadata"; then
+          prompt_tokens=$(json_get "usageMetadata.promptTokenCount");
+          completion_tokens=$(json_get "usageMetadata.candidatesTokenCount");
+          total_tokens=$(json_get "usageMetadata.totalTokenCount");
+        fi
+        if json_has "candidates.0.finishReason"; then
+          stop_reason=$(json_get "candidates.0.finishReason");
+          if [ "x${stop_reason}" != "xSTOP" ]; then
+            logging_error "Unexpected stop reason: ${stop_reason}";
+            bad_stop=1;
+            return 1;
+          fi
+        fi
+        return 0;
+      }
+
+      while IFS= read -r line; do
         # Strip CR with a bash builtin instead of `echo | tr`, which forked a
         # subprocess for every streamed line.
         line="${line//$'\r'/}";
         received=1;
-        if [ "x${PART_FINISHED}" = "xtrue" ] && [ "x${line}" = "x]" ]; then
-          logging_debug "End of stream";
-          break;
-        elif [ "x${PART_FINISHED}" = "xtrue" ] && [ "x${line}" = "x," ]; then
-          logging_debug "skip comma";
-          continue;
-        elif [ "x${PART_FINISHED}" = "xtrue" ]; then
-          PART_FINISHED=false;
-          BUFFER="${line}";
-        else
-          BUFFER="${BUFFER}${line}";
-          # trying to parse the buffer as JSON
-          if json_parse "${BUFFER}"; then
-            if json_has "candidates.0.content.parts.0.text"; then
-              json_get "candidates.0.content.parts.0.text";
-              emitted=1;
-            fi
-            if json_has "candidates.0.finishReason"; then
-              stop_reason=$(json_get "candidates.0.finishReason");
-              if [ "x${stop_reason}" != "xSTOP" ]; then
-                logging_error "Unexpected stop reason: ${stop_reason}";
-                bad_stop=1;
-                break;
-              fi
-            fi
-            # check if usageMetadata is present, gemini API v1beta sends usageMetadata in every chunk
-            if json_has "usageMetadata"; then
-              prompt_tokens=$(json_get "usageMetadata.promptTokenCount");
-              completion_tokens=$(json_get "usageMetadata.candidatesTokenCount");
-              total_tokens=$(json_get "usageMetadata.totalTokenCount");
-            fi
-            PART_FINISHED=true;
-            BUFFER="";
+
+        # Scan this line character by character, tracking string state and brace
+        # depth. Accumulate characters into BUFFER only while inside an object
+        # (depth >= 1), so the surrounding array punctuation ('[', ',', ']',
+        # whitespace) is skipped.
+        i=0;
+        len="${#line}";
+        while [ "${i}" -lt "${len}" ]; do
+          ch="${line:${i}:1}";
+          i=$((i + 1));
+
+          if [ "${depth}" -ge 1 ]; then
+            BUFFER="${BUFFER}${ch}";
           fi
+
+          if [ "x${in_string}" = "xtrue" ]; then
+            if [ "x${escaped}" = "xtrue" ]; then
+              escaped=false;
+            elif [ "x${ch}" = 'x\' ]; then
+              escaped=true;
+            elif [ "x${ch}" = 'x"' ]; then
+              in_string=false;
+            fi
+            continue;
+          fi
+
+          case "${ch}" in
+            '"')
+              in_string=true;
+              ;;
+            '{')
+              if [ "${depth}" -eq 0 ]; then
+                # Start of a new top-level object; begin buffering with this '{'.
+                BUFFER="{";
+              fi
+              depth=$((depth + 1));
+              ;;
+            '}')
+              depth=$((depth - 1));
+              if [ "${depth}" -eq 0 ]; then
+                # A complete top-level object is in BUFFER: parse it once.
+                _gemini_emit_chunk || break;
+                BUFFER="";
+              fi
+              ;;
+          esac
+        done
+        # Stop the outer loop too if a bad finish reason was seen.
+        if [ "${bad_stop}" -ne 0 ]; then
+          break;
         fi
       done
       logging_debug "Buffer: ${BUFFER}";
