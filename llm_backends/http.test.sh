@@ -115,6 +115,44 @@ else
 fi
 unset ELL_CURL_AUTH_HEADER;
 
+# --- Refuse credentials over a plaintext remote URL -------------------------
+# _ell_url_is_secure classifies where it is safe to send a credential.
+assert_success "https is secure"           _ell_url_is_secure "https://api.openai.com/v1";
+assert_success "file is secure"            _ell_url_is_secure "file:///tmp/x.json";
+assert_success "http loopback is secure"   _ell_url_is_secure "http://localhost:8080/v1";
+assert_success "http 127.0.0.1 is secure"  _ell_url_is_secure "http://127.0.0.1/v1";
+assert_failure "http remote is insecure"   _ell_url_is_secure "http://api.example.com/v1";
+
+# With an auth header and a plaintext remote URL, ell_curl must refuse and NOT
+# invoke curl (so the key is never sent in cleartext).
+insecure_ran=0;
+curl() { insecure_ran=1; return 0; }
+ELL_CURL_AUTH_HEADER="Authorization: Bearer sk-INSECURE" \
+  ell_curl "http://api.example.com/v1" --data-binary @- </dev/null >/dev/null 2>&1;
+insecure_status="${?}";
+assert_not_equals "refuses credential over remote http" "0" "${insecure_status}";
+assert_equals     "curl not invoked when refused" "0" "${insecure_ran}";
+
+# The explicit opt-out allows it.
+optout_ran=0;
+curl() { optout_ran=1; return 0; }
+ELL_ALLOW_INSECURE_URL=true ELL_CURL_AUTH_HEADER="Authorization: Bearer sk-INSECURE" \
+  ell_curl "http://api.example.com/v1" --data-binary @- </dev/null >/dev/null 2>&1;
+assert_equals "opt-out allows insecure send" "1" "${optout_ran}";
+unset ELL_ALLOW_INSECURE_URL ELL_CURL_AUTH_HEADER;
+
+# Without a credential, a plaintext remote URL is allowed (nothing to leak).
+noauth_ran=0;
+curl() { noauth_ran=1; return 0; }
+ell_curl "http://api.example.com/v1" --data-binary @- </dev/null >/dev/null 2>&1;
+assert_equals "no-auth plaintext URL is allowed" "1" "${noauth_ran}";
+
+# Restore the recording stub for any later assertions.
+curl() {
+  printf '%s\n' "${@}" > "${ARGS_FILE}";
+  return 0;
+}
+
 # --- Real timeout against an unreachable address ----------------------------
 # Drop the stub so the real curl runs.
 unset -f curl;

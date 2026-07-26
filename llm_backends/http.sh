@@ -21,6 +21,10 @@
 #                        that must NOT appear on curl's command line. It is fed
 #                        to curl through a --config file so the secret is not
 #                        visible in `ps` / /proc/<pid>/cmdline.
+#   ELL_ALLOW_INSECURE_URL  set to "true" to permit sending an auth header over
+#                        a plaintext http:// URL (otherwise refused, to avoid
+#                        leaking the credential in cleartext). Loopback hosts
+#                        (localhost/127.0.0.1/::1) are always allowed.
 
 # Detect whether this curl supports --fail-with-body (curl >= 7.76). It makes
 # curl exit non-zero on HTTP >= 400 while still printing the response body, so
@@ -38,6 +42,29 @@ _ell_curl_fail_opt() {
     fi
   fi
   printf '%s' "${_ELL_CURL_FAIL_OPT}";
+}
+
+# _ell_url_is_secure <url>: return 0 if it is safe to send a credential to
+# <url>. https:// and file:// are safe; http:// is only safe for loopback hosts
+# (localhost / 127.0.0.1 / ::1). Any other scheme is treated as safe so this
+# check only ever blocks the clear risk: an explicit plaintext http:// remote.
+_ell_url_is_secure() {
+  local url="${1}" host rest;
+  case "${url}" in
+    https://*|HTTPS://*) return 0 ;;
+    file://*|FILE://*)   return 0 ;;
+    http://*|HTTP://*)
+      # Strip scheme, then take the authority up to the first '/', '?' or ':'.
+      rest="${url#*://}";
+      host="${rest%%[/?]*}";
+      host="${host%%:*}";
+      case "${host}" in
+        localhost|127.0.0.1|'[::1]'|::1) return 0 ;;
+        *) return 1 ;;
+      esac
+      ;;
+    *) return 0 ;;
+  esac
 }
 
 # ell_curl <url> [extra curl args...]
@@ -70,6 +97,18 @@ ell_curl() {
     opts+=(${ELL_CURL_EXTRA_OPTS});
   fi
 
+  # Refuse to send credentials over a plaintext http:// URL (the key would go
+  # out in cleartext). https://, file:// and loopback http hosts are fine, and
+  # ELL_ALLOW_INSECURE_URL=true is an explicit opt-out.
+  if [ -n "${ELL_CURL_AUTH_HEADER}" ] && ! _ell_url_is_secure "${url}"; then
+    if [ "x${ELL_ALLOW_INSECURE_URL}" != "xtrue" ]; then
+      logging_fatal "Refusing to send credentials to a non-HTTPS URL: ${url}";
+      logging_fatal "Use https://, or set ELL_ALLOW_INSECURE_URL=true to override.";
+      return 1;
+    fi
+    logging_warn "Sending credentials over an insecure URL (ELL_ALLOW_INSECURE_URL=true): ${url}";
+  fi
+
   local auth_cfg="" status;
   if [ -n "${ELL_CURL_AUTH_HEADER}" ]; then
     auth_cfg="$(mktemp)" || {
@@ -93,4 +132,5 @@ ell_curl() {
 }
 
 export -f _ell_curl_fail_opt;
+export -f _ell_url_is_secure;
 export -f ell_curl;
