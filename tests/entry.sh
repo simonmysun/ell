@@ -102,6 +102,8 @@ run_test tests/record_launcher.sh;
 run_test tests/error_paths.sh;
 run_test tests/launcher.sh;
 run_test tests/hooks.sh;
+run_test tests/bash_version.sh;
+run_test tests/terminal_size.sh;
 
 # Propagate the suite status: fail if any test above failed, so a regression in
 # any test fails CI.
