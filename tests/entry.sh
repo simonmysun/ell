@@ -98,6 +98,7 @@ run_test tests/templating.sh;
 run_test tests/parse_output.sh;
 run_test tests/interactive.sh;
 run_test tests/output_redirect.sh;
+run_test tests/record_launcher.sh;
 
 # Propagate the suite status: fail if any test above failed, so a regression in
 # any test fails CI.

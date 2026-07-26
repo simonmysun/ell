@@ -15,7 +15,14 @@ ELL_VERSION="0.1.1";
 
 : "${ELL_LOG_LEVEL:=2}";
 
-BASE_DIR=$(dirname "${0}");
+# Resolve BASE_DIR to an absolute path. `dirname "${0}"` can be relative (e.g.
+# "." when run as ./ell.sh); record mode re-execs ell via `script -c` in a
+# shell that may have a different working directory, so a relative BASE_DIR
+# would not resolve there. An absolute path is safe everywhere.
+BASE_DIR=$(cd "$(dirname "${0}")" >/dev/null 2>&1 && pwd);
+if [ -z "${BASE_DIR}" ]; then
+  BASE_DIR=$(dirname "${0}");
+fi
 
 # logging_debug "Importing helper functions";
 . "${BASE_DIR}/helpers/logging.sh";
@@ -120,7 +127,13 @@ if [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ] && [ "x
   export ELL_RECORD=true;
   logging_info "Session being recorded to ${ELL_TMP_SHELL_LOG}";
   if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
-    script -q -f -c "ell -i" "${ELL_TMP_SHELL_LOG}";
+    # Re-exec this ell via its launcher using an absolute, shell-quoted path
+    # rather than a bare `ell`: the command string is run by `script` through a
+    # shell, and relying on `ell` being on PATH breaks when ell is run in place
+    # (e.g. ./ell.sh) or is not installed. printf %q keeps paths with spaces or
+    # other special characters intact.
+    printf -v _ell_record_cmd '%q -i' "${BASE_DIR}/ell";
+    script -q -f -c "${_ell_record_cmd}" "${ELL_TMP_SHELL_LOG}";
   else
     script -q -f -c "bash -i" "${ELL_TMP_SHELL_LOG}";
   fi
