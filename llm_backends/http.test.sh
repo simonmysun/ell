@@ -71,6 +71,49 @@ assert_success "default connect-timeout (10) applied" has_arg "10";
 ELL_CURL_EXTRA_OPTS="--proto =https" ell_curl "https://example.com" </dev/null;
 assert_success "extra opt --proto passed"  has_arg "--proto";
 assert_success "extra opt value passed"    has_arg "=https";
+unset ELL_CURL_EXTRA_OPTS;
+
+# --- Auth header is not exposed on the command line -------------------------
+# ELL_CURL_AUTH_HEADER must be passed via a --config file, never as an argv
+# element, so the secret is not visible in ps / /proc/<pid>/cmdline. Use a stub
+# that records argv and captures the --config file's contents.
+CFG_FILE="$(mktemp)";
+trap 'rm -f "${ARGS_FILE}" "${CFG_FILE}"' EXIT;
+curl() {
+  printf '%s\n' "${@}" > "${ARGS_FILE}";
+  local prev="";
+  for a in "${@}"; do
+    [ "${prev}" = "--config" ] && cp "${a}" "${CFG_FILE}" 2>/dev/null;
+    prev="${a}";
+  done
+  return 0;
+}
+
+secret="Authorization: Bearer sk-DO-NOT-LEAK-123";
+ELL_CURL_AUTH_HEADER="${secret}" ell_curl "https://example.com" --data-binary @- </dev/null;
+
+# The secret must NOT appear anywhere in the argv the stub received.
+if grep -qF -- "sk-DO-NOT-LEAK-123" "${ARGS_FILE}"; then
+  _assert_fail "auth header value is not on the command line";
+else
+  _assert_pass "auth header value is not on the command line";
+fi
+# --config must be present, and the config file must carry the header.
+assert_success "auth header passed via --config" has_arg "--config";
+if grep -qF -- "sk-DO-NOT-LEAK-123" "${CFG_FILE}"; then
+  _assert_pass "auth header delivered through the config file";
+else
+  _assert_fail "auth header delivered through the config file";
+fi
+# The temp config file curl was pointed at must be removed after the call.
+cfg_path="$(awk '/^--config$/{getline; print; exit}' "${ARGS_FILE}")";
+if [ -n "${cfg_path}" ] && [ -e "${cfg_path}" ]; then
+  _assert_fail "temp auth config is cleaned up";
+  echo "  still present: ${cfg_path}";
+else
+  _assert_pass "temp auth config is cleaned up";
+fi
+unset ELL_CURL_AUTH_HEADER;
 
 # --- Real timeout against an unreachable address ----------------------------
 # Drop the stub so the real curl runs.

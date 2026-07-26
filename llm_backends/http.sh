@@ -17,6 +17,10 @@
 #                        (default 0, so long streaming completions are not
 #                        killed mid-response)
 #   ELL_CURL_EXTRA_OPTS  extra curl options, word-split, for advanced users
+#   ELL_CURL_AUTH_HEADER a single HTTP header (e.g. "Authorization: Bearer X")
+#                        that must NOT appear on curl's command line. It is fed
+#                        to curl through a --config file so the secret is not
+#                        visible in `ps` / /proc/<pid>/cmdline.
 
 # Detect whether this curl supports --fail-with-body (curl >= 7.76). It makes
 # curl exit non-zero on HTTP >= 400 while still printing the response body, so
@@ -40,6 +44,11 @@ _ell_curl_fail_opt() {
 # Invoke curl with ell's shared options plus any per-call arguments (headers,
 # --data-binary, etc.). Reads the request body from stdin when the caller
 # passes --data-binary @-. Returns curl's exit status.
+#
+# If ELL_CURL_AUTH_HEADER is set, that header is passed to curl via a --config
+# file (not on the command line), so the credential is not exposed in the
+# process table. A temporary config file with 0600 permissions is used and
+# removed immediately; it holds only the header line.
 ell_curl() {
   local url="${1}";
   shift;
@@ -60,7 +69,27 @@ ell_curl() {
     # shellcheck disable=SC2206
     opts+=(${ELL_CURL_EXTRA_OPTS});
   fi
+
+  local auth_cfg="" status;
+  if [ -n "${ELL_CURL_AUTH_HEADER}" ]; then
+    auth_cfg="$(mktemp)" || {
+      logging_error "Failed to create temp file for auth header";
+      return 1;
+    };
+    chmod 600 "${auth_cfg}";
+    # curl config syntax: header = "NAME: value". Quote and escape the value so
+    # a header containing quotes/backslashes is passed intact.
+    printf 'header = "%s"\n' "${ELL_CURL_AUTH_HEADER//\"/\\\"}" > "${auth_cfg}";
+    opts+=(--config "${auth_cfg}");
+  fi
+
   curl "${url}" "${opts[@]}" "${@}";
+  status="${?}";
+
+  if [ -n "${auth_cfg}" ]; then
+    rm -f "${auth_cfg}";
+  fi
+  return "${status}";
 }
 
 export -f _ell_curl_fail_opt;

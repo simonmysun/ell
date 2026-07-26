@@ -4,11 +4,14 @@
 
 generate_completion() {
   local response curl_status prompt_tokens completion_tokens total_tokens line json_chunk stop_reason;
+  # Pass the API key to curl via ELL_CURL_AUTH_HEADER (ell_curl feeds it through
+  # a --config file) so it never appears on curl's command line / process table.
+  local ELL_CURL_AUTH_HEADER="Authorization: Bearer ${ELL_API_KEY}";
+  export ELL_CURL_AUTH_HEADER;
   if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
     response=$(ell_curl "${ELL_API_URL}" \
       --header "Content-Type: application/json" \
-      --header "Authorization: Bearer ${ELL_API_KEY}" \
       --data-binary @-);
     curl_status="${?}";
     # Check if curl was successful
@@ -46,7 +49,6 @@ generate_completion() {
     local curl_pipe_status stream_status;
     ell_curl "${ELL_API_URL}" \
       --header "Content-Type: application/json" \
-      --header "Authorization: Bearer ${ELL_API_KEY}" \
       --data-binary @- | {
       # Track whether the response carried any data chunks at all, and whether
       # we managed to emit any content. This lets us report a clear error

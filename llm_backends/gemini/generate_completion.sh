@@ -4,11 +4,14 @@
 
 generate_completion() {
   local response curl_status prompt_tokens completion_tokens total_tokens line stop_reason;
+  # Pass the API key to curl via ELL_CURL_AUTH_HEADER (ell_curl feeds it through
+  # a --config file) so it never appears on curl's command line / process table.
+  local ELL_CURL_AUTH_HEADER="x-goog-api-key: ${ELL_API_KEY}";
+  export ELL_CURL_AUTH_HEADER;
   if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     logging_debug "Streaming disabled";
     response=$(ell_curl "${ELL_API_URL}${ELL_LLM_MODEL}:generateContent" \
       --header "Content-Type: application/json" \
-      --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @-);
     curl_status="${?}";
     # Check if curl was successful
@@ -49,7 +52,6 @@ generate_completion() {
     total_tokens="";
     ell_curl "${ELL_API_URL}${ELL_LLM_MODEL}:streamGenerateContent" \
       --header "Content-Type: application/json" \
-      --header "x-goog-api-key: ${ELL_API_KEY}" \
       --data-binary @- | {
       # The v1beta streaming endpoint sends one large pretty-printed JSON array,
       # split across many lines. Each array element is a chunk object we want to
