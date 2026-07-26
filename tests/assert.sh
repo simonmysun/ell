@@ -25,6 +25,30 @@
 _ASSERT_PASS=0;
 _ASSERT_FAIL=0;
 
+# ell_timeout <seconds> <command...>
+# Run <command...> under `timeout`, scaling the wall-clock budget by
+# ELL_TEST_TIMEOUT_SCALE (default 1). Tests use short fixed budgets purely to
+# catch hangs (infinite loops / EOF regressions), not to measure speed, so on a
+# slow or heavily-loaded runner a genuinely-working path could otherwise exceed
+# the budget and fail with 124. Set e.g. ELL_TEST_TIMEOUT_SCALE=3 there to widen
+# every budget at once. If `timeout` is unavailable, the command is run directly
+# (no hang protection, but the suite still works).
+ell_timeout() {
+  local secs="${1}";
+  shift;
+  local scale="${ELL_TEST_TIMEOUT_SCALE:-1}";
+  # Integer-multiply the budget by the scale (both are plain integers).
+  case "${scale}${secs}" in
+    *[!0-9]*) scale=1 ;;  # non-integer scale/secs: fall back to no scaling
+  esac
+  local budget=$(( secs * scale ));
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${budget}" "${@}";
+  else
+    "${@}";
+  fi
+}
+
 # _assert_show: render a value with control characters made visible.
 _assert_show() {
   printf '%s' "${1}" | cat -v;

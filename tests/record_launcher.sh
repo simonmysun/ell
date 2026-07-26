@@ -59,7 +59,7 @@ fi
 # behaviour cannot hang the suite. Run with the ell-free PATH.
 (
   cd "${SPACED}/repo" || exit 1;
-  printf 'RECORD_LAUNCH_XYZ\n' | timeout 12 \
+  printf 'RECORD_LAUNCH_XYZ\n' | ell_timeout 12 \
     env PATH="${SAFE_PATH}" ELL_TEMPLATE_PATH="${SPACED}/repo/templates/" \
     ./ell.sh --api-style ell_echo -m gpt-4o --api-disable-streaming -r -i \
     >"${out_file}" 2>"${err_file}";

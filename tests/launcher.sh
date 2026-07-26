@@ -27,7 +27,7 @@ run_launcher() {
   local launcher="${1}" marker="${2}" workdir="${3:-${DIR}}";
   (
     cd "${workdir}" || exit 1;
-    printf '' | timeout 8 env TO_TTY=false ELL_TEMPLATE_PATH="${DIR}/../templates/" \
+    printf '' | ell_timeout 8 env TO_TTY=false ELL_TEMPLATE_PATH="${DIR}/../templates/" \
       "${launcher}" --api-style ell_echo -m gpt-4o --api-disable-streaming "${marker}" \
       2>/dev/null;
   );

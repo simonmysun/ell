@@ -88,7 +88,7 @@ missing_arg_status() {
   # Run parse_arguments with the given args in a subshell, bounded by timeout,
   # and print its exit status. A timeout (124) indicates the infinite-loop
   # regression.
-  timeout 5 bash -c '
+  ell_timeout 5 bash -c '
     set -o posix;
     ELL_LOG_LEVEL=0;
     . "'"${DIR}"'/logging.sh";

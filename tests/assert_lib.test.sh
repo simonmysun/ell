@@ -54,4 +54,32 @@ assert_equals "exits: works without --" "PASS" \
 assert_equals "exits: exact non-zero status" "PASS" \
   "$(run_assert assert_exits n 3 -- sh -c 'exit 3')";
 
+# --- ell_timeout ------------------------------------------------------------
+# Only run these where `timeout` exists (ell_timeout runs the command directly
+# otherwise, which would make the "budget too small" case hang).
+#
+# A timed-out command exits non-zero, but the exact code differs: GNU coreutils
+# `timeout` returns 124, while busybox `timeout` (alpine) kills with SIGTERM and
+# returns 143. So "timed out" is asserted as "non-zero", and completion within
+# budget as the command's own status.
+if command -v timeout >/dev/null 2>&1; then
+  # Budget too small: a 2s sleep under a 1s budget times out (non-zero).
+  ELL_TEST_TIMEOUT_SCALE=1 ell_timeout 1 sleep 2 >/dev/null 2>&1;
+  assert_not_equals "ell_timeout enforces the budget" "0" "${?}";
+
+  # Scaling widens the budget: the same sleep under 1s*3 completes (0).
+  ELL_TEST_TIMEOUT_SCALE=3 ell_timeout 1 sleep 2 >/dev/null 2>&1;
+  assert_equals "ELL_TEST_TIMEOUT_SCALE widens the budget" "0" "${?}";
+
+  # A non-integer scale falls back to no scaling (budget stays 1s -> times out).
+  ELL_TEST_TIMEOUT_SCALE=abc ell_timeout 1 sleep 2 >/dev/null 2>&1;
+  assert_not_equals "invalid scale falls back to 1" "0" "${?}";
+
+  # A command that finishes within budget returns its own status.
+  ell_timeout 5 sh -c 'exit 7' >/dev/null 2>&1;
+  assert_equals "ell_timeout preserves the command's status" "7" "${?}";
+else
+  echo "SKIP: ell_timeout budget tests (timeout not available)";
+fi
+
 assert_summary;

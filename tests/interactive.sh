@@ -30,7 +30,7 @@ trap 'rm -f "${SHELL_LOG}"' EXIT;
 # run_interactive <stdin-text>: feed text to the interactive read loop (bounded
 # by a timeout) and print the output.
 run_interactive() {
-  printf '%s' "${1}" | timeout 10 \
+  printf '%s' "${1}" | ell_timeout 10 \
     env ELL_TEMPLATE_PATH="${DIR}/../templates/" TO_TTY=false \
     ELL_TMP_SHELL_LOG="${SHELL_LOG}" \
     "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming -i \
@@ -41,7 +41,7 @@ run_interactive() {
 # (discarding output). A status of 124 means timeout, i.e. the infinite-loop
 # regression.
 run_status() {
-  printf '%s' "${1}" | timeout 10 \
+  printf '%s' "${1}" | ell_timeout 10 \
     env ELL_TEMPLATE_PATH="${DIR}/../templates/" TO_TTY=false \
     ELL_TMP_SHELL_LOG="${SHELL_LOG}" \
     "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming -i \
@@ -77,7 +77,7 @@ assert_equals "unterminated line then EOF exits (no hang)" "0" "${status}";
 # shown at info (>= 4). When shown, it must name the correct exit key -- Ctrl-D,
 # since the loop exits on EOF, not Ctrl-C.
 hint="$(
-  printf '' | timeout 10 \
+  printf '' | ell_timeout 10 \
     env ELL_TEMPLATE_PATH="${DIR}/../templates/" TO_TTY=false ELL_LOG_LEVEL=4 \
     ELL_TMP_SHELL_LOG="${SHELL_LOG}" \
     "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming -i \
@@ -88,7 +88,7 @@ assert_not_contains "entry hint does not say ^C"            "${hint}" "^C";
 
 # It stays quiet at the default log level (info is not shown there).
 hint_default="$(
-  printf '' | timeout 10 \
+  printf '' | ell_timeout 10 \
     env ELL_TEMPLATE_PATH="${DIR}/../templates/" TO_TTY=false \
     ELL_TMP_SHELL_LOG="${SHELL_LOG}" \
     "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming -i \

@@ -49,7 +49,7 @@ assert_contains "no -o writes completion to stdout" "${stdout}" "UNIQUE_STDOUT_X
 shell_log="${WORK}/shelllog";
 : > "${shell_log}";
 redirect_file="${WORK}/should_stay_empty.json";
-stdout="$(printf 'INTERACTIVE_XYZ\n' | timeout 10 env "${COMMON_ENV[@]}" \
+stdout="$(printf 'INTERACTIVE_XYZ\n' | ell_timeout 10 env "${COMMON_ENV[@]}" \
   ELL_TMP_SHELL_LOG="${shell_log}" \
   "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming \
   -o "${redirect_file}" -i 2>/dev/null)";
