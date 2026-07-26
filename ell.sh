@@ -134,7 +134,15 @@ generate_completion() {
 }
 
 # Logging_debug "Checking if we are going to enter record mode";
-if [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ] && [ "x${ELL_TMP_SHELL_LOG}" != "x-" ] && [ ! -f "${ELL_TMP_SHELL_LOG}" ]; then
+# Enter record mode when we are recording OR interactive, AND the shell log is
+# not "-" and does not already exist (i.e. we have not already re-exec'd under
+# `script`). The (record OR interactive) part is grouped explicitly: `&&` and
+# `||` share precedence and left-associate, so without the braces this reads as
+# `((record || interactive) && ...)` -- correct today only by accident, and
+# fragile to edit.
+if { [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ]; } \
+   && [ "x${ELL_TMP_SHELL_LOG}" != "x-" ] \
+   && [ ! -f "${ELL_TMP_SHELL_LOG}" ]; then
   if [ "x${ELL_OUTPUT_FILE}" != "x-" ]; then
     export ELL_TMP_SHELL_LOG="${ELL_OUTPUT_FILE}";
   else
