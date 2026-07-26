@@ -92,9 +92,6 @@ parse_arguments() {
         ;;
       -r|--record)
         logging_debug "\"-r\" present in args, setting ELL_RECORD to true";
-        # The 'x' prefix must be on both sides: ELL_RECORD holds "true"/"false",
-        # never "xtrue", so `"${ELL_RECORD}" = "xtrue"` never matched and this
-        # "already enabled" guard was dead code.
         if [ "x${ELL_RECORD}" = "xtrue" ]; then
           logging_fatal "Record mode already enabled";
           exit 1;
