@@ -78,12 +78,18 @@ unset ELL_CURL_EXTRA_OPTS;
 # element, so the secret is not visible in ps / /proc/<pid>/cmdline. Use a stub
 # that records argv and captures the --config file's contents.
 CFG_FILE="$(mktemp)";
-trap 'rm -f "${ARGS_FILE}" "${CFG_FILE}"' EXIT;
+PERM_FILE="$(mktemp)";
+trap 'rm -f "${ARGS_FILE}" "${CFG_FILE}" "${PERM_FILE}"' EXIT;
 curl() {
   printf '%s\n' "${@}" > "${ARGS_FILE}";
   local prev="";
   for a in "${@}"; do
-    [ "${prev}" = "--config" ] && cp "${a}" "${CFG_FILE}" 2>/dev/null;
+    if [ "${prev}" = "--config" ]; then
+      cp "${a}" "${CFG_FILE}" 2>/dev/null;
+      # Capture the permission bits while the file still exists (ell_curl removes
+      # it after this call). GNU stat then BSD/macOS stat.
+      { stat -c '%a' "${a}" 2>/dev/null || stat -f '%Lp' "${a}" 2>/dev/null; } > "${PERM_FILE}";
+    fi
     prev="${a}";
   done
   return 0;
@@ -105,6 +111,13 @@ if grep -qF -- "sk-DO-NOT-LEAK-123" "${CFG_FILE}"; then
 else
   _assert_fail "auth header delivered through the config file";
 fi
+# The temp config file must be mode 0600 (only the owner can read the secret).
+# The last two octal digits (group, other) must be 0; strip any leading digit.
+cfg_perms="$(cat "${PERM_FILE}" 2>/dev/null)";
+case "${cfg_perms}" in
+  600|0600) _assert_pass "temp auth config is mode 0600" ;;
+  *) _assert_fail "temp auth config is mode 0600"; echo "  perms: ${cfg_perms}" ;;
+esac
 # The temp config file curl was pointed at must be removed after the call.
 cfg_path="$(awk '/^--config$/{getline; print; exit}' "${ARGS_FILE}")";
 if [ -n "${cfg_path}" ] && [ -e "${cfg_path}" ]; then
