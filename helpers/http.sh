@@ -131,6 +131,26 @@ ell_curl() {
   return "${status}";
 }
 
+# ell_curl_strerror <exit-code>: print a human-readable, actionable explanation
+# for a curl exit code. Falls back to a generic message for codes not listed.
+# See `man curl` (EXIT CODES) for the full list; only the ones users actually
+# hit are spelled out here.
+ell_curl_strerror() {
+  case "${1}" in
+    6)  printf 'could not resolve host (check ELL_API_URL and your network/DNS)' ;;
+    7)  printf 'failed to connect (server down or wrong host/port in ELL_API_URL?)' ;;
+    22) printf 'server returned an HTTP error (>= 400); check ELL_API_KEY, the model, and ELL_API_URL' ;;
+    28) printf 'request timed out (raise ELL_MAX_TIME / ELL_CONNECT_TIMEOUT, or check the network)' ;;
+    35) printf 'TLS handshake failed (check the endpoint supports HTTPS)' ;;
+    52) printf 'empty reply from server' ;;
+    56) printf 'network error while receiving data' ;;
+    60) printf 'TLS certificate problem (untrusted or invalid certificate)' ;;
+    3)  printf 'malformed URL (is ELL_API_URL set correctly?)' ;;
+    *)  printf 'curl error' ;;
+  esac
+}
+
 export -f _ell_curl_fail_opt;
 export -f _ell_url_is_secure;
 export -f ell_curl;
+export -f ell_curl_strerror;

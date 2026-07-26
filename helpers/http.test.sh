@@ -171,4 +171,13 @@ else
   echo "SKIP: real timeout check (curl not installed)";
 fi
 
+# --- ell_curl_strerror translates curl exit codes ---------------------------
+# Common curl exit codes must map to a readable, actionable message rather than
+# a bare number; unknown codes fall back to a generic message.
+assert_contains "code 6 mentions host resolution"  "$(ell_curl_strerror 6)"  "resolve host";
+assert_contains "code 7 mentions connect failure"  "$(ell_curl_strerror 7)"  "connect";
+assert_contains "code 28 mentions timeout"         "$(ell_curl_strerror 28)" "timed out";
+assert_contains "code 60 mentions certificate"     "$(ell_curl_strerror 60)" "certificate";
+assert_equals   "unknown code falls back"          "curl error" "$(ell_curl_strerror 250)";
+
 assert_summary;

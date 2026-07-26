@@ -17,7 +17,7 @@ generate_completion() {
     curl_status="${?}";
     # Check if curl was successful
     if [ "${curl_status}" -ne 0 ]; then
-      logging_fatal "Failed to generate completion: curl exited with ${curl_status}";
+      logging_fatal "Failed to generate completion: $(ell_curl_strerror "${curl_status}") (curl exit ${curl_status})";
       logging_debug "Response: ${response}";
       return 1;
     else
@@ -183,7 +183,7 @@ generate_completion() {
     # Preserve the distinct exit codes so callers can tell a curl failure (the
     # curl exit code) from a stream-parse failure (exit 3 from the reader).
     if [ "${curl_pipe_status}" -ne 0 ]; then
-      logging_fatal "Failed to generate completion: curl exited with ${curl_pipe_status}";
+      logging_fatal "Failed to generate completion: $(ell_curl_strerror "${curl_pipe_status}") (curl exit ${curl_pipe_status})";
       return "${curl_pipe_status}";
     fi
     if [ "${stream_status}" -ne 0 ]; then
