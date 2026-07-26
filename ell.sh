@@ -125,9 +125,13 @@ export COLUMNS;
 eval "orig_$(declare -f generate_completion)";
 generate_completion() {
   local pre_llm_hooks post_llm_hooks backend_status;
-  mapfile -t pre_llm_hooks < <(list_plugin_hooks _pre_llm.sh);
+  # Use a here-string, not process substitution (`< <(...)`): the latter is a
+  # parse error under `set -o posix` on bash 4.1, the oldest version ell
+  # supports (see CONTRIBUTING.md). An empty result yields a single empty
+  # element, which piping() treats as "no pipes" (its `[ "${1}" = '' ]` guard).
+  mapfile -t pre_llm_hooks <<< "$(list_plugin_hooks _pre_llm.sh)";
   logging_debug "Pre LLM hooks: ${pre_llm_hooks[*]}";
-  mapfile -t post_llm_hooks < <(list_plugin_hooks _post_llm.sh);
+  mapfile -t post_llm_hooks <<< "$(list_plugin_hooks _post_llm.sh)";
   logging_debug "Post LLM hooks: ${post_llm_hooks[*]}";
   piping "${pre_llm_hooks[@]}" \
   | orig_generate_completion \
@@ -204,9 +208,11 @@ if [ -n "${ELL_INPUT_FILE}" ]; then
 fi
 
 # logging_debug "Loading the post_input and pre_output hooks";
-mapfile -t post_input_hooks < <(list_plugin_hooks _post_input.sh);
+# Here-string rather than process substitution: see the note in
+# generate_completion() above (posix + bash 4.1 compatibility).
+mapfile -t post_input_hooks <<< "$(list_plugin_hooks _post_input.sh)";
 logging_debug "Post input hooks: ${post_input_hooks[*]}";
-mapfile -t pre_output_hooks < <(list_plugin_hooks _pre_output.sh);
+mapfile -t pre_output_hooks <<< "$(list_plugin_hooks _pre_output.sh)";
 logging_debug "Pre output hooks: ${pre_output_hooks[*]}";
 
 # logging_debug "Checking if we are using terminal output as context";
