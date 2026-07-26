@@ -1,0 +1,15 @@
+[{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "This answer was cut"
+          }
+        ]
+      },
+      "finishReason": "MAX_TOKENS"
+    }
+  ]
+}
+]

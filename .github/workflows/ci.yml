@@ -11,10 +11,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Static analysis: shellcheck every shell script. The `error` severity gate
-  # is a hard failure (the repo is clean at this level today). Warnings are
-  # reported separately and do not fail the build, so they can be cleaned up
-  # incrementally without blocking merges.
+  # Static analysis: shellcheck every shell script. The repo is clean at both
+  # `error` and `warning` severity, so both are hard gates -- this ratchets the
+  # warning count at zero, preventing warnings from silently accumulating.
+  # Genuinely-unavoidable findings are silenced locally with a `# shellcheck
+  # disable=SCxxxx` directive (with a justification) rather than by lowering the
+  # gate. The test jobs `needs: shellcheck`, so a lint failure short-circuits the
+  # (more expensive) matrix instead of running it in parallel regardless.
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
@@ -24,25 +27,19 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
-      - name: Collect shell scripts
-        id: collect
+      - name: ShellCheck (warning severity, blocking)
         run: |
           # ell and the launcher have no .sh extension; include them explicitly.
-          files="$(git ls-files '*.sh' 'ell' | tr '\n' ' ')"
-          echo "files=${files}" >> "${GITHUB_OUTPUT}"
-          echo "Scripts to check: ${files}"
-
-      - name: ShellCheck (errors, blocking)
-        run: shellcheck -S error ${{ steps.collect.outputs.files }}
-
-      - name: ShellCheck (warnings, non-blocking)
-        continue-on-error: true
-        run: shellcheck -S warning ${{ steps.collect.outputs.files }}
+          # Use NUL-delimited paths piped to xargs -0 so filenames containing
+          # spaces or newlines are handled correctly (rather than word-splitting
+          # an unquoted, space-joined list).
+          git ls-files -z '*.sh' 'ell' | xargs -0 shellcheck -S warning
 
   # Run the full test suite across the oldest and current supported bash
   # versions using the project's own containerised entry point.
   tests:
     name: Tests (bash ${{ matrix.bash }})
+    needs: shellcheck
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -55,5 +52,134 @@ jobs:
 
       # entry.sh derives all paths from its own location and best-effort installs
       # curl and a global launcher, so no extra setup is needed here.
+      - name: Run test suite
+        run: bash tests/entry.sh
+
+  # Run the suite with mawk as `awk`. Debian/Ubuntu default to mawk (not the
+  # gawk/busybox awk the container jobs use), and render_to_text.awk is written
+  # to be portable across awk implementations -- this actually exercises that.
+  tests-mawk:
+    name: Tests (mawk)
+    needs: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mawk and make it the default awk
+        run: |
+          sudo apt-get update && sudo apt-get install -y mawk
+          # Point /usr/bin/awk at mawk for this run.
+          sudo update-alternatives --set awk /usr/bin/mawk
+          awk -W version 2>&1 | head -1 || awk --version 2>&1 | head -1 || true
+
+      - name: Run test suite
+        run: bash tests/entry.sh
+
+  # Run the suite on macOS to exercise the BSD toolchain (BSD awk/sed/stat/
+  # mktemp, macOS curl) the code is written to support. macOS ships bash 3.2,
+  # which ell rejects, so install a supported bash; GNU `timeout` is absent on
+  # BSD, so provide it from coreutils (as gtimeout) for the test harness.
+  tests-macos:
+    name: Tests (macOS / BSD tools)
+    needs: shellcheck
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bash and coreutils (for timeout)
+        run: |
+          brew install bash coreutils
+          # Expose gtimeout as `timeout` for the test harness, on PATH ahead of
+          # anything else. The suite otherwise uses the system BSD tools.
+          mkdir -p "${HOME}/bin"
+          ln -sf "$(brew --prefix coreutils)/libexec/gnubin/timeout" "${HOME}/bin/timeout"
+          echo "${HOME}/bin" >> "${GITHUB_PATH}"
+          # Put the newer bash ahead of the system 3.2.
+          echo "$(brew --prefix)/bin" >> "${GITHUB_PATH}"
+
+      - name: Show tool versions
+        run: |
+          bash --version | head -1
+          command -v timeout && timeout --version | head -1
+          awk --version 2>/dev/null | head -1 || echo "awk: BSD (no --version)"
+
+      - name: Run test suite
+        run: bash tests/entry.sh
+
+  # Run the suite on Windows under a real MSYS2 environment (not Git Bash).
+  # MSYS2 provides a fuller POSIX runtime than Git Bash -- consistent msys-2.0
+  # runtime, ACL-backed permissions, real symlinks, and util-linux (script) --
+  # so more of the suite is expected to work here than under Git Bash. Tools are
+  # installed via pacman. This is currently informational (continue-on-error)
+  # until it is proven stable, then it can become a hard gate.
+  tests-msys2:
+    name: Tests (Windows / MSYS2)
+    needs: shellcheck
+    runs-on: windows-latest
+    continue-on-error: true
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          update: true
+          # bash comes with MSYS2; add the tools the suite uses. coreutils
+          # provides `timeout`; util-linux provides `script` for record tests;
+          # python is used by the real-PTY record test. 
+          install: >-
+            bash
+            coreutils
+            curl
+            gawk
+            sed
+            grep
+            util-linux
+            python
+
+      - name: Show tool versions
+        run: |
+          bash --version | head -1
+          command -v timeout && timeout --version | head -1
+          command -v script && echo "script: present"
+          awk --version 2>/dev/null | head -1 || true
+
+      - name: Run test suite
+        run: bash tests/entry.sh
+
+  # Run the suite on Windows under Git Bash (the default `shell: bash` on the
+  # windows runner). Git Bash is a deliberately limited environment: over NTFS
+  # it cannot create genuinely group/world-writable files or (by default) real
+  # symlinks, and it ships no `script`. Tests that depend on those capabilities
+  # detect the limitation at runtime and SKIP (see docs/Configuration.md,
+  # "Windows"); for a fuller POSIX environment use the tests-msys2 job above.
+  # This job stays informational: it reports what works rather than blocking.
+  tests-windows:
+    name: Tests (Windows / Git Bash, informational)
+    needs: shellcheck
+    runs-on: windows-latest
+    continue-on-error: true
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show environment
+        run: |
+          bash --version | head -1
+          uname -a || true
+          for t in curl awk sed stat mktemp script stty tty date chmod; do
+            if command -v "${t}" >/dev/null 2>&1; then
+              printf '%-8s %s\n' "${t}" "$(command -v "${t}")"
+            else
+              printf '%-8s MISSING\n' "${t}"
+            fi
+          done
+
       - name: Run test suite
         run: bash tests/entry.sh

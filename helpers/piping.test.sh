@@ -49,4 +49,19 @@ assert_equals "sort then uppercase" "$(printf 'A\nB\nC')" "${out}";
 out="$(head -c 256 < /dev/zero | tr '\0' '0' | piping inc inc inc inc inc inc inc inc inc inc inc inc)";
 assert_equals "12 stages over 256 zeros" "$(head -c 256 < /dev/zero | tr '\0' '2')" "${out}";
 
+# A plugin-hook stage whose PATH contains spaces (list_plugin_hooks supports
+# such paths) must be run as one command, not word-split. This is the regression
+# guard for piping() shell-quoting existing-executable stages.
+WORK="$(mktemp -d)";
+trap 'rm -rf "${WORK}"' EXIT;
+mkdir -p "${WORK}/dir with space";
+HOOK="${WORK}/dir with space/hook.sh";
+printf '#!/usr/bin/env bash\nsed "s/$/ HOOKED/"\n' > "${HOOK}";
+chmod +x "${HOOK}";
+out="$(printf 'x\n' | piping "${HOOK}")";
+assert_equals "hook path with spaces runs as one stage" "x HOOKED" "${out}";
+# Mixed with a command-fragment stage (which must stay unquoted / word-split).
+out="$(printf 'x\n' | piping "${HOOK}" 'tr a-z A-Z')";
+assert_equals "spaced hook then command fragment" "X HOOKED" "${out}";
+
 assert_summary;

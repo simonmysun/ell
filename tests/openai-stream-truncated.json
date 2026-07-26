@@ -1,0 +1,8 @@
+data: {"id":"chatcmpl-trunc","object":"chat.completion.chunk","created":1723855353,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{"role":"assistant","content":""},"logprobs":null,"finish_reason":null}]}
+
+data: {"id":"chatcmpl-trunc","object":"chat.completion.chunk","created":1723855353,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{"content":"This answer was cut"},"logprobs":null,"finish_reason":null}]}
+
+data: {"id":"chatcmpl-trunc","object":"chat.completion.chunk","created":1723855353,"model":"gpt-4o-mini","choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"length"}]}
+
+data: [DONE]
+

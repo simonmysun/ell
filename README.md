@@ -65,6 +65,25 @@ unless Developer Mode or administrator rights are available. No extra setup is
 required; clone the repository and add its directory to your `PATH` as shown
 above. You invoke it the same way, e.g. `ell "your prompt"`.
 
+**Environment differences and limitations.** The Bash environments differ in how
+faithfully they emulate a POSIX system, and a few features degrade accordingly:
+
+- **WSL** behaves like Linux; everything works.
+- **MSYS2** and **Cygwin** provide a fairly complete POSIX layer (ACL-backed
+  file permissions, real symbolic links, `script(1)`), so the whole feature set
+  works.
+- **Git Bash** is intentionally minimal. Over NTFS it cannot create genuinely
+  group/world-writable files, so the config-file permission check in
+  `load_config` (which refuses to source a world-writable `.ellrc`) and the
+  `chmod 600` on the temporary auth-header file **cannot be enforced**; it also
+  lacks `script(1)` (record mode) and, by default, real symlinks. ell still
+  runs, but on a multi-user machine treat these as **security limitations** —
+  see [Configuration → Windows](docs/Configuration.md#windows) for details and
+  the safer alternatives (MSYS2 / WSL).
+
+For the most complete experience on Windows, prefer **WSL** or **MSYS2** over
+Git Bash.
+
 ## Configuration
 
 See [Configuration](docs/Configuration.md).
@@ -165,6 +184,20 @@ See [Plugins](docs/Plugins.md).
 
 The term "Plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers is not included here. Please refer to [Templates](docs/Templates.md).
 
+## Backends
+
+See [Backends](docs/Backends.md).
+
+A backend adapts ell to an LLM API "style" (selected with `--api-style` /
+`ELL_API_STYLE`). OpenAI and Gemini are supported out of the box, and you can
+add your own.
+
+## Architecture
+
+See [Architecture](docs/Architecture.md) for how ell is put together: the
+startup sequence, configuration precedence, the request pipeline and its four
+hook stages, backends, and record mode.
+
 ## Risks to consider
 
 See [Risks Consideration](docs/Risk_Consideration.md).
@@ -199,86 +232,21 @@ See [Risks Consideration](docs/Risk_Consideration.md).
 
 ## Testing
 
-The tests are self-checking Bash scripts: each asserts expected values and
-exits non-zero on any failure, so they can gate CI without human inspection.
-They use a tiny built-in assertion helper (`tests/assert.sh`) rather than an
-external framework, keeping the project dependency-free. The LLM backends are
-exercised offline via the `ell_echo` dummy backend and `file://` JSON fixtures,
-so no network or API key is required.
-
-### Layout
-
-Tests come in two flavours:
-
-- **Unit tests live next to the source they cover**, named `<source>.test.sh`,
-  so a file's tests are easy to find right beside it:
-
-  ```
-  helpers/json.sh                        helpers/json.test.sh
-  helpers/logging.sh                     helpers/logging.test.sh
-  helpers/piping.sh                      helpers/piping.test.sh
-  helpers/render_to_text.awk             helpers/render_to_text.test.sh
-  plugins/redaction/50_post_input.sh     plugins/redaction/50_post_input.test.sh
-  ```
-
-- **End-to-end tests that drive the whole `ell` pipeline** (and their JSON
-  fixtures) live in `tests/`: `tests/templating.sh` and `tests/parse_output.sh`,
-  alongside the shared assertion helper `tests/assert.sh`.
-
-### Running
-
-Run the whole suite once, on your host:
-
-```bash
-bash tests/entry.sh
-```
-
-Or run it against the oldest and current supported Bash versions in Docker:
-
-```bash
-bash tests/docker.sh
-```
-
-`tests/entry.sh` auto-discovers every `*.test.sh` in the repository and then
-runs the end-to-end tests. `docker.sh` runs it inside `bash:4.1` and `bash:5.2`
-containers and fails if the suite fails under either version.
-
-### Continuous integration
-
-`.github/workflows/ci.yml` runs on every push and pull request:
-
-- **ShellCheck** over all shell scripts. Findings at `error` severity block the
-  build; warnings are reported but non-blocking so they can be cleaned up
-  incrementally.
-- **Tests** across a `bash:4.1` and `bash:5.2` matrix.
-
-### Adding a test
-
-For a unit test, create `<source>.test.sh` next to the file it covers, source
-the assertion helper (via a path relative to that location), write assertions,
-and end with `assert_summary`. It is picked up automatically by `entry.sh` —
-no registration needed:
-
-```bash
-#!/usr/bin/env bash
-set -o posix;
-DIR="$(dirname "${0}")";
-# From helpers/ this is ../tests/assert.sh; adjust the depth for other dirs.
-. "${DIR}/../tests/assert.sh";
-. "${DIR}/my_helper.sh";
-
-assert_equals "adds up" "3" "$((1 + 2))";
-
-assert_summary;
-```
-
-End-to-end tests that need JSON fixtures or the full pipeline go in `tests/`
-(sourcing `"${DIR}/assert.sh"`) and are registered with an explicit
-`run_test tests/<name>.sh` line in `tests/entry.sh`.
+Run the whole suite on your host with `bash tests/entry.sh`, or across the
+supported Bash versions in Docker with `bash tests/docker.sh`. The tests are
+self-checking and dependency-free (the LLM backends are exercised offline via
+the `ell_echo` backend and `file://` fixtures, so no network or API key is
+needed). See [CONTRIBUTING.md](CONTRIBUTING.md) for the layout and how to add a
+test.
 
 ## Contributing
 
-Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request.
+Contributions are welcome! Please open an issue or submit a pull request. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for coding conventions and the test suite.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for notable changes.
 
 ## License
 

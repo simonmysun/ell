@@ -3,17 +3,22 @@
 
 The plugin system is designed to enrich the user experience and extend the functionality of ell, while keeping the code modular and flexible.
 
-The term "plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers are not included here. Please refer to [Templates](docs/Templates.md).
+The term "plugin" here means a script that can be called by ell. It can be used to extend ell's functionality. The plugins supported by LLM providers are not included here. Please refer to [Templates](Templates.md).
 
 ## Built-in Plugins
 
 Built-in plugins are available in the `./plugins` directory of the ell repository: 
 
 - **redaction**: Redacts sensitive information.
-- **aginator**: Paginates the output.
+- **paginator**: Paginates the output.
 - **syntax_highlight**: Syntax highlights the output.
 
-The "redaction" plugin is disabled by default. To enable it, remove the `.disabled` extension from the plugin script name.
+The "redaction" plugin is disabled by default because it is a best-effort
+control that can also mangle legitimate input. Its hook script therefore ships
+as `plugins/redaction/50_post_input.sh.disabled`. Any hook script whose name
+contains `.disabled` is ignored by the plugin loader, so to enable redaction
+remove the `.disabled` suffix (rename it back to `50_post_input.sh`); to disable
+any other plugin, add a `.disabled` suffix to its hook script.
 
 ## Writing Plugins
 

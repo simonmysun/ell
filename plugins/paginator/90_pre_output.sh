@@ -6,7 +6,7 @@ get_current_column() {
   exec < /dev/tty;
   oldstty="$(stty -g)";
   stty raw -echo min 0;
-  echo -ne "\e[6n" > /dev/tty;
+  printf '\e[6n' > /dev/tty;
   # tput u7 > /dev/tty    # when TERM=xterm (and relatives)
   IFS=';' read -r -d R -a pos;
   stty "${oldstty}";
@@ -21,16 +21,16 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
   LENGTH=$((COLUMNS - CURR_COL));
   LINE_NUM=1;
   while IFS= read -r -N 1 char; do
-    if [ "x${char}" = "$(printf 'x\e')" ]; then
+    if [[ "${char}" == $'\e' ]]; then
       # logging_debug "Consuming escape sequence";
       esc_seq="${char}";
       read -r -N 1 char;
       esc_seq="${esc_seq}${char}";
-      if echo "x${char}" | grep -q -E '^x(\[|\()$'; then
+      if [[ "${char}" == '[' || "${char}" == '(' ]]; then
         while true; do
           read -r -N 1 char;
           esc_seq="${esc_seq}${char}";
-          echo "${char}" | grep -q -E '[a-zA-Z]' && break;
+          [[ "${char}" == [a-zA-Z] ]] && break;
         done
       fi
       BUFFER="${BUFFER}${esc_seq}";

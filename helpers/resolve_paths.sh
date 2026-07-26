@@ -29,23 +29,41 @@ _ell_search_roots() {
 # set explicitly (e.g. via -T / --template-path) it is treated as a single
 # directory and takes precedence, preserving the previous behaviour.
 # Returns non-zero if no template file is found.
+#
+# The name is validated as a single path segment (no "/", not "." or ".."), so
+# it cannot traverse out of the template directories (e.g. -t ../../secret).
 resolve_template() {
-  local name="${1}" root candidate;
+  local name="${1}" root candidate dir;
+
+  case "${name}" in
+    */*|""|.|..)
+      logging_error "Invalid template name: '${name}' (must be a simple name without '/')";
+      return 1;
+      ;;
+  esac
+
   if [ -n "${ELL_TEMPLATE_PATH}" ]; then
-    candidate="${ELL_TEMPLATE_PATH}${name}.json";
+    # Normalise the directory so a trailing slash is optional: "-T dir" and
+    # "-T dir/" both work (previously only a trailing slash resolved).
+    dir="${ELL_TEMPLATE_PATH%/}";
+    candidate="${dir}/${name}.json";
     if [ -f "${candidate}" ]; then
       printf '%s' "${candidate}";
       return 0;
     fi
     return 1;
   fi
+  # Use a here-string (command substitution) rather than `< <(process
+  # substitution)`: under `set -o posix` (as the test harness sets) bash 4.1
+  # rejects process substitution as a syntax error. A here-string keeps the
+  # loop in the current shell so `return` still exits the function.
   while IFS= read -r root; do
     candidate="${root}/templates/${name}.json";
     if [ -f "${candidate}" ]; then
       printf '%s' "${candidate}";
       return 0;
     fi
-  done < <(_ell_search_roots)
+  done <<< "$(_ell_search_roots)";
   return 1;
 }
 
@@ -61,13 +79,31 @@ resolve_template() {
 # The surviving hooks are ordered by "<plugin-dir>/<hook-file>" so the numeric
 # ordering prefix (e.g. 90_pre_output.sh) is respected regardless of which
 # root a plugin lives in.
+#
+# A hook whose filename contains ".disabled" is skipped, so a plugin can be
+# turned off by renaming its script (e.g. 50_post_input.sh -> the same name
+# with a .disabled suffix). This is how the bundled redaction plugin ships:
+# disabled by default until the user removes the .disabled suffix.
 list_plugin_hooks() {
-  local suffix="${1}" root;
+  local suffix="${1}" root hook;
+  # Enable nullglob so a non-matching glob expands to nothing instead of the
+  # literal pattern, and iterate the glob directly rather than parsing `ls`
+  # output (which breaks on paths containing spaces or newlines).
+  local nullglob_was_set=0;
+  shopt -q nullglob && nullglob_was_set=1;
+  shopt -s nullglob;
   {
+    # here-string, not process substitution: bash 4.1 under `set -o posix`
+    # rejects `< <(...)` as a syntax error.
     while IFS= read -r root; do
-      ls "${root}"/plugins/*/*"${suffix}" 2>/dev/null;
-    done < <(_ell_search_roots)
+      for hook in "${root}"/plugins/*/*"${suffix}"; do
+        printf '%s\n' "${hook}";
+      done
+    done <<< "$(_ell_search_roots)";
   } | awk -F/ '
+    # Skip disabled hooks: any path component containing ".disabled".
+    $0 ~ /\.disabled(\/|$)/ { next; }
+    $NF ~ /\.disabled/ { next; }
     {
       key = $(NF-1) "/" $NF;
       if (!(key in seen)) {
@@ -76,6 +112,10 @@ list_plugin_hooks() {
       }
     }
   ' | sort | cut -f2-;
+  # Restore nullglob to its previous state so we do not change it globally.
+  if [ "${nullglob_was_set}" -eq 0 ]; then
+    shopt -u nullglob;
+  fi
 }
 
 export -f _ell_search_roots resolve_template list_plugin_hooks 2>/dev/null;

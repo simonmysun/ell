@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+. "$(dirname "${0}")/../../helpers/logging.sh";
+
+# On most Linux systems, sed is GNU sed and supports the -z option since 4.2.2 (released on 2012-12-22). In case of OS X and busybox, the -z option is not supported.
+# Without sed there is nothing this plugin can redact, so pass the input
+# through untouched and stop. Falling through here would call sed anyway below.
+if ! command -v sed >/dev/null 2>&1; then
+  logging_info "sed is required for redaction; passing input through unredacted";
+  cat;
+  exit 0;
+fi
+
+redact_high_entropy_strings() (
+  while IFS= read -r line; do
+    for word in ${line}; do
+      # Minimum length to consider
+      if [ "${#word}" -lt 16 ]; then
+        continue;
+      fi
+      ENTROPY_THRESHOLD=4.0 # Threshold for high entropy (typical for encryption keys, tokens)
+      # Calculate entropy using Shannon's formula
+      entropy=$(echo "${word}" | awk '
+        BEGIN { FS="" }
+        {
+          for(i=1; i<=NF; i++) freq[$i]++
+          total=NF
+        }
+        END {
+          entropy=0
+          for(char in freq) {
+              p = freq[char]/total
+              entropy -= p * log(p)/log(2)
+          }
+          print entropy
+        }
+      ');
+      # logging_debug "Entropy for ${word}: ${entropy}";
+      if awk "BEGIN {exit !(${entropy} <= ${ENTROPY_THRESHOLD})}"; then
+        continue;
+      fi
+      line=$(echo "${line}" | sed -E "s/$(printf '%s\n' "${word}" | sed -e 's/[]\/$*.^[+]/\\&/g')/[HIGH ENTROPY STRING REDACTED]/g");
+    done
+    echo "$line";
+  done
+) 
+
+# Word-boundary syntax differs between sed implementations: GNU sed uses "\b",
+# while BSD/macOS sed uses "[[:<:]]" (start) and "[[:>:]]" (end) and treats "\b"
+# as a literal backspace, so the patterns below would never match. Probe once
+# and pick the tokens the running sed actually understands.
+if printf 'x' | sed -E 's/\bx\b/Y/' 2>/dev/null | grep -q '^Y$'; then
+  WB_L='\b'; WB_R='\b';
+elif printf 'x' | sed -E 's/[[:<:]]x[[:>:]]/Y/' 2>/dev/null | grep -q '^Y$'; then
+  WB_L='[[:<:]]'; WB_R='[[:>:]]';
+else
+  # No usable word-boundary support; fall back to no anchoring. The patterns are
+  # specific enough (length/format constrained) that this is still useful, at the
+  # cost of occasionally matching a substring inside a longer token.
+  WB_L=''; WB_R='';
+fi
+
+# multi-line pattern matches first
+(
+  # if sed support -z
+  if sed -z '' </dev/null 2>/dev/null; then
+    sed -z 's/-----BEGIN.*PRIVATE KEY-----.*-----END.*PRIVATE KEY-----/[PRIVATE KEY REDACTED]/g' `# Redact potential SSH private keys`;
+  else
+    logging_info "GNU sed >= 4.2.2 is required for multiline redaction";
+    cat;
+  fi
+) \
+| while IFS= read -r line; do
+  echo "${line}" \
+  | sed -E "s/${WB_L}[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}${WB_R}/[UUID REDACTED]/g" `# Redact UUIDs (both with and without dashes)` \
+  | sed -E "s/${WB_L}[0-9]{4}[-. ]?[0-9]{4}[-. ]?[0-9]{4}[-. ]?[0-9]{4}${WB_R}/[CREDIT CARD REDACTED]/g" `# Redact credit card numbers` \
+  | sed -E "s|${WB_L}[A-Za-z0-9+/]{44,}={0,2}${WB_R}|[BASE64 KEY REDACTED]|g" `# Redact base64 strings (44+ characters, typical for private keys)` \
+  | sed -E "s/${WB_L}[0-9a-fA-F]{32,}${WB_R}/[POSSIBLE HEX KEY REDACTED]/g" `# Redact hex strings (32+ characters)` \
+  | sed -E "s/${WB_L}[0-9]{3}[-]?[0-9]{2}[-]?[0-9]{4}${WB_R}/[SSN REDACTED]/g" `# Redact SSN` \
+  | sed -E "s/${WB_L}(\+?1[-.]?)?\(?[0-9]{3}\)?[-. ]?[0-9]{3}[-. ]?[0-9]{4}${WB_R}/[PHONE REDACTED]/g" `# Redact phone numbers (various formats)` \
+  | sed -E "s/${WB_L}[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}${WB_R}/[EMAIL REDACTED]/g" `# Redact email addresses` \
+  | redact_high_entropy_strings;
+done

@@ -25,9 +25,51 @@
 _ASSERT_PASS=0;
 _ASSERT_FAIL=0;
 
+# ell_timeout <seconds> <command...>
+# Run <command...> under `timeout`, scaling the wall-clock budget by
+# ELL_TEST_TIMEOUT_SCALE (default 1). Tests use short fixed budgets purely to
+# catch hangs (infinite loops / EOF regressions), not to measure speed, so on a
+# slow or heavily-loaded runner a genuinely-working path could otherwise exceed
+# the budget and fail with 124. Set e.g. ELL_TEST_TIMEOUT_SCALE=3 there to widen
+# every budget at once. If `timeout` is unavailable, the command is run directly
+# (no hang protection, but the suite still works).
+ell_timeout() {
+  local secs="${1}";
+  shift;
+  local scale="${ELL_TEST_TIMEOUT_SCALE:-1}";
+  # Integer-multiply the budget by the scale (both are plain integers).
+  case "${scale}${secs}" in
+    *[!0-9]*) scale=1 ;;  # non-integer scale/secs: fall back to no scaling
+  esac
+  local budget=$(( secs * scale ));
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${budget}" "${@}";
+  else
+    "${@}";
+  fi
+}
+
 # _assert_show: render a value with control characters made visible.
 _assert_show() {
   printf '%s' "${1}" | cat -v;
+}
+
+# assert_files_equal <name> <file-a> <file-b>: byte-exact comparison of two
+# files without depending on cmp(1)/diff (diffutils), which is absent in some
+# environments (e.g. a minimal MSYS2). Appending a sentinel 'x' before the
+# command substitution preserves any trailing newlines that "$(...)" would
+# strip, keeping the comparison byte-exact.
+assert_files_equal() {
+  local name="${1}" a b;
+  a="$(cat "${2}"; printf x)";
+  b="$(cat "${3}"; printf x)";
+  if [ "${a}" = "${b}" ]; then
+    _assert_pass "${name}";
+  else
+    _assert_fail "${name}";
+    echo "  expected: $(_assert_show "$(cat "${2}")")";
+    echo "  actual  : $(_assert_show "$(cat "${3}")")";
+  fi
 }
 
 # _assert_pass / _assert_fail: record a result and print one status line.
@@ -137,6 +179,46 @@ assert_failure() {
     echo "  command unexpectedly succeeded: ${*}";
   else
     _assert_pass "${name}";
+  fi
+}
+
+# assert_matches <name> <string> <regex>
+# Succeeds if <string> matches the extended regular expression <regex>. Uses
+# bash's [[ =~ ]], so no external grep is spawned; the regex is unanchored
+# (add ^...$ yourself for a full-string match).
+assert_matches() {
+  local name="${1}" string="${2}" regex="${3}";
+  # The regex must be unquoted for [[ =~ ]] to treat it as a pattern.
+  if [[ "${string}" =~ ${regex} ]]; then
+    _assert_pass "${name}";
+  else
+    _assert_fail "${name}";
+    echo "  regex : $(_assert_show "${regex}")";
+    echo "  string: $(_assert_show "${string}")";
+  fi
+}
+
+# assert_exits <name> <expected-status> -- <command...>
+# Runs <command...> and passes if it exits with <expected-status>. Both stdout
+# and stderr are discarded. This captures the status safely (a hazard when
+# hand-written, since any command before reading $? overwrites it) and removes
+# the repeated `cmd >/dev/null 2>&1; status="${?}"` boilerplate. The literal
+# `--` separates the expected status from the command for readability.
+assert_exits() {
+  local name="${1}" expected="${2}";
+  shift 2;
+  if [ "x${1}" = "x--" ]; then
+    shift;
+  fi
+  local status;
+  "${@}" >/dev/null 2>&1;
+  status="${?}";
+  if [ "${status}" -eq "${expected}" ]; then
+    _assert_pass "${name}";
+  else
+    _assert_fail "${name}";
+    echo "  expected exit: ${expected}";
+    echo "  actual exit  : ${status} (${*})";
   fi
 }
 

@@ -24,7 +24,7 @@ If you are running ell in a relatively hostile environment, it is recommended to
 
 The following variables can be set in the configuration files, environment variables:
 
-- `ELL_LOG_LEVEL`: The log level of the logger. The default is `2`. A log level of `0` will log everything. A log level of `3` will log token usage.
+- `ELL_LOG_LEVEL`: The verbosity of the logger, from `1` (least) to `5` (most). The default is `2`. Higher values enable more output: `1` = fatal only, `2` = errors (default), `3` = warnings, `4` = info (this is the level at which token usage is logged), `5` = debug (everything). A value of `0` disables all logging.
 - `ELL_CONFIG`: An extra configuration file to load, applied last (highest precedence among files). Unset by default. The standard config files (`${XDG_CONFIG_HOME:-$HOME/.config}/ell/config`, `~/.ellrc`, `./.ellrc`) are always read regardless of this variable.
 - `ELL_LLM_MODEL`: The model to use. Default is `gpt-4o-mini`.
 - `ELL_LLM_TEMPERATURE`: The temperature of the model. The default is `0.6`.
@@ -41,11 +41,12 @@ The following variables can be set in the configuration files, environment varia
 - `ELL_API_STREAM`: Whether to stream the output. The default is `true`.
 - Plugins related variables:
   - `TO_TTY`: Force ell to output with syntax highlighting and pagination or not. 
-  - Styling related variables can be found in [Styling](docs/Styling.md).
+  - Styling related variables can be found in [Styling](Styling.md).
 
-The following variables can be set in the command line arguments:
-  -h, --help: show this help
+The following can be set in the command line arguments:
 
+- `-h, --help`: show this help and exit.
+- `-V, --version`: show the version and exit.
 - `-l, --log-level`: `ELL_LOG_LEVEL`
 - `-m, --model`: `ELL_LLM_MODEL`
 - `-T, --template-path`: `ELL_TEMPLATE_PATH`
@@ -53,12 +54,55 @@ The following variables can be set in the command line arguments:
 - `-f, --input-file`: `ELL_INPUT_FILE`
 - `-r, --record`: sets `ELL_RECORD` to true. This will ignore the prompt input or the file input.
 - `-i, --interactive`: `ELL_INTERACTIVE`.  This will ignore the prompt input or the file input.
-- `-o, --output-file`: `ELL_OUTPUT_FILE`
+- `-o, --output, --output-file`: `ELL_OUTPUT_FILE`
 - `--api-style`: `ELL_API_STYLE`
 - `--api-key`: `ELL_API_KEY`, note that in multi-user environments, other users are able to see the command line arguments.
 - `--api-url`: `ELL_API_URL`
 - `--api-disable-streaming`: sets `ELL_API_STREAM` to **false**
 - `-c, --config`: `ELL_CONFIG`
-- `-O, --option`: Other options. The format is `A=b` or `C=d,E=f`. They will be accessible in the templates.
+- `-O, --option`: Set extra environment variables for the run. The format is `A=b` or `C=d,E=f`. The key must be a valid shell variable name. These variables are exported into ell's environment (so plugins and backends can read them), but note that **they are not substituted into templates**: the template renderer only substitutes a fixed allowlist of placeholders (see [Templates](Templates.md)). Under the previous `eval`-based renderer arbitrary `-O` variables did appear in templates; that behavior was removed with the switch to safe, allowlist-only rendering.
 
-Currently, only OpenAI and Gemini style API is supported. More API styles are coming soon.
+OpenAI and Gemini style APIs are supported out of the box (plus an `ell_echo`
+debugging backend). You can add your own — see [Backends](Backends.md).
+
+## Windows
+
+ell runs on Windows from any Bash environment (Git Bash, MSYS2, Cygwin, WSL),
+but these environments emulate a POSIX system to different degrees. Two behaviors
+depend on facilities that **Git Bash does not provide over NTFS**, and they
+degrade there:
+
+### Config file trust check (security limitation)
+
+Config files (`${XDG_CONFIG_HOME:-$HOME/.config}/ell/config`, `~/.ellrc`,
+`$PWD/.ellrc`, `$ELL_CONFIG`) are **sourced**, i.e. executed as shell code. To
+avoid running attacker-controlled code, `load_config` refuses to source a file
+that is not owned by the current user/root or that is writable by group or
+others (see [Risk Consideration](Risk_Consideration.md)).
+
+This check relies on POSIX ownership and permission bits. On **Git Bash** over
+NTFS, `chmod` cannot create genuinely group/world-writable files and `stat` does
+not report reliable permission bits, so **the check cannot distinguish a safe
+config from an insecure one and effectively cannot protect you there**. On a
+shared/multi-user Windows machine, do not rely on this protection under Git Bash;
+use **WSL** or **MSYS2/Cygwin** (which back permissions with NTFS ACLs), or keep
+your config on a volume only you can write.
+
+The temporary file ell uses to pass the API key to `curl` is likewise
+`chmod 600`ed to keep the credential owner-only; that too is not enforceable
+under Git Bash.
+
+### Symbolic links and record mode
+
+- Installing `ell` by **symlink** and record mode's terminal capture
+  (`script(1)`) both require capabilities Git Bash lacks by default (real
+  symlinks need Developer Mode / admin; `script` is not shipped). ell itself is
+  a plain wrapper script, so normal use does not need symlinks; MSYS2 and WSL
+  provide both when you need them.
+
+### Test suite
+
+The test suite detects these limitations at runtime and prints `SKIP:` for the
+affected checks under Git Bash rather than failing, so the informational Windows
+CI run stays meaningful. CI also runs the suite under a fuller **MSYS2**
+environment, where these features are available and the checks run normally.
