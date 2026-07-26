@@ -11,7 +11,7 @@ else
   exit 69;
 fi
 
-ELL_VERSION="0.1.1";
+ELL_VERSION="0.2.0";
 
 : "${ELL_LOG_LEVEL:=2}";
 
