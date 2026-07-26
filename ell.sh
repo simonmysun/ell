@@ -161,16 +161,28 @@ if { [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ]; } \
   fi
   export ELL_RECORD=true;
   logging_info "Session being recorded to ${ELL_TMP_SHELL_LOG}";
+  # The command to capture, as separate argv words. For an interactive session
+  # re-exec this ell via its launcher by an absolute path rather than a bare
+  # `ell`: relying on `ell` being on PATH breaks when ell is run in place (e.g.
+  # ./ell.sh) or is not installed.
   if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
-    # Re-exec this ell via its launcher using an absolute, shell-quoted path
-    # rather than a bare `ell`: the command string is run by `script` through a
-    # shell, and relying on `ell` being on PATH breaks when ell is run in place
-    # (e.g. ./ell.sh) or is not installed. printf %q keeps paths with spaces or
-    # other special characters intact.
-    printf -v _ell_record_cmd '%q -i' "${BASE_DIR}/ell";
-    script -q -f -c "${_ell_record_cmd}" "${ELL_TMP_SHELL_LOG}";
+    _ell_record_argv=("${BASE_DIR}/ell" -i);
   else
-    script -q -f -c "bash -i" "${ELL_TMP_SHELL_LOG}";
+    _ell_record_argv=(bash -i);
+  fi
+  # GNU/util-linux and BSD/macOS `script` take incompatible command syntax:
+  #   GNU:  script -q -c "CMD-STRING" LOGFILE      (command via $SHELL -c)
+  #   BSD:  script -q LOGFILE CMD [args...]         (command as argv, execvp'd)
+  # BSD script has neither -c nor -f (it errors "illegal option -- f"). Detect
+  # the flavour once (side-effect-free; no PTY, cannot hang) and build the call
+  # accordingly. On GNU, collapse the argv into one %q-quoted string for -c; on
+  # BSD, pass the words positionally after the logfile.
+  if script --version 2>/dev/null | grep -q util-linux; then
+    printf -v _ell_record_cmd '%q ' "${_ell_record_argv[@]}";
+    _ell_record_cmd="${_ell_record_cmd% }";
+    script -q -c "${_ell_record_cmd}" "${ELL_TMP_SHELL_LOG}";
+  else
+    script -q "${ELL_TMP_SHELL_LOG}" "${_ell_record_argv[@]}";
   fi
   logging_debug "Removing ${ELL_TMP_SHELL_LOG}";
   if [ "x${ELL_OUTPUT_FILE}" = "x-" ]; then
