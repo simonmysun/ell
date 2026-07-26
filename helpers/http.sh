@@ -115,6 +115,11 @@ ell_curl() {
       logging_error "Failed to create temp file for auth header";
       return 1;
     };
+    # Remove the temp credential file however this function returns (including
+    # an early return), not just at the end. chmod 600 before writing so the
+    # secret is never briefly world-readable.
+    # shellcheck disable=SC2064
+    trap "rm -f '${auth_cfg}'; trap - RETURN" RETURN;
     chmod 600 "${auth_cfg}";
     # curl config syntax: header = "NAME: value". Quote and escape the value so
     # a header containing quotes/backslashes is passed intact.
@@ -124,10 +129,6 @@ ell_curl() {
 
   curl "${url}" "${opts[@]}" "${@}";
   status="${?}";
-
-  if [ -n "${auth_cfg}" ]; then
-    rm -f "${auth_cfg}";
-  fi
   return "${status}";
 }
 

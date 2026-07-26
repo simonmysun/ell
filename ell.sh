@@ -117,8 +117,12 @@ fi
 export PAGE_SIZE;
 export COLUMNS;
 
-# Logging_debug "Decorating the generate_completion to apply hooks before and after";
-eval "$(printf "orig_"; command -V generate_completion | tail -n +2)";
+# Decorate generate_completion to apply the pre/post-LLM hooks around it: copy
+# the backend's definition to orig_generate_completion, then redefine
+# generate_completion as the wrapper below. `declare -f` prints just the
+# function definition (no localizable "is a function" description line), so
+# prefixing its output is cleaner and less fragile than splicing `command -V`.
+eval "orig_$(declare -f generate_completion)";
 generate_completion() {
   local pre_llm_hooks post_llm_hooks backend_status;
   mapfile -t pre_llm_hooks < <(list_plugin_hooks _pre_llm.sh);
@@ -134,7 +138,7 @@ generate_completion() {
   return "${backend_status}";
 }
 
-# Logging_debug "Checking if we are going to enter record mode";
+# logging_debug "Checking if we are going to enter record mode";
 # Enter record mode when we are recording OR interactive, AND the shell log is
 # not "-" and does not already exist (i.e. we have not already re-exec'd under
 # `script`). The (record OR interactive) part is grouped explicitly: `&&` and
@@ -163,7 +167,7 @@ if { [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ]; } \
     script -q -f -c "bash -i" "${ELL_TMP_SHELL_LOG}";
   fi
   logging_debug "Removing ${ELL_TMP_SHELL_LOG}";
-  if [ "z${ELL_OUTPUT_FILE}" = "z-" ]; then
+  if [ "x${ELL_OUTPUT_FILE}" = "x-" ]; then
     rm -f "${ELL_TMP_SHELL_LOG}";
   fi
   unset ELL_TMP_SHELL_LOG;
@@ -172,7 +176,7 @@ if { [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ]; } \
   exit 0;
 fi
 
-# Logging_debug "Resolving the template across the search roots";
+# logging_debug "Resolving the template across the search roots";
 ELL_TEMPLATE_FILE="$(resolve_template "${ELL_TEMPLATE}")";
 if [ -z "${ELL_TEMPLATE_FILE}" ]; then
   if [ -n "${ELL_TEMPLATE_PATH}" ]; then
@@ -184,7 +188,7 @@ if [ -z "${ELL_TEMPLATE_FILE}" ]; then
 fi
 logging_debug "Using template: ${ELL_TEMPLATE_FILE}";
 
-# Logging_debug "Checking if we are going to read from a file";
+# logging_debug "Checking if we are going to read from a file";
 if [ -n "${ELL_INPUT_FILE}" ]; then
   if [ "x${ELL_INPUT_FILE}" != "x-" ] && [ ! -f "${ELL_INPUT_FILE}" ]; then
     logging_fatal "Input file not found: ${ELL_INPUT_FILE}";
@@ -197,13 +201,13 @@ if [ -n "${ELL_INPUT_FILE}" ]; then
   fi
 fi
 
-# Logging_debug "Loading the post_input and pre_output hooks";
+# logging_debug "Loading the post_input and pre_output hooks";
 mapfile -t post_input_hooks < <(list_plugin_hooks _post_input.sh);
 logging_debug "Post input hooks: ${post_input_hooks[*]}";
 mapfile -t pre_output_hooks < <(list_plugin_hooks _pre_output.sh);
 logging_debug "Pre output hooks: ${pre_output_hooks[*]}";
 
-# Logging_debug "Checking if we are using terminal output as context";
+# logging_debug "Checking if we are using terminal output as context";
 # The captured context is kept as raw text (JSON escaping is done later by
 # render_template) and is run through the post_input hooks so that redaction and
 # other input filters apply to the terminal context too, not just USER_PROMPT.
@@ -214,7 +218,7 @@ else
   SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | piping "${post_input_hooks[@]}")";
 fi
 
-# Logging_debug "Checking if we are going to enter interactive mode";
+# logging_debug "Checking if we are going to enter interactive mode";
 if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
   # Debug/info-level hint only (kept quiet at the default log level). The loop
   # exits cleanly on Ctrl-D (EOF), so name that key rather than Ctrl-C.
