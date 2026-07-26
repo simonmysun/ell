@@ -57,3 +57,52 @@ jobs:
       # curl and a global launcher, so no extra setup is needed here.
       - name: Run test suite
         run: bash tests/entry.sh
+
+  # Run the suite with mawk as `awk`. Debian/Ubuntu default to mawk (not the
+  # gawk/busybox awk the container jobs use), and render_to_text.awk is written
+  # to be portable across awk implementations -- this actually exercises that.
+  tests-mawk:
+    name: Tests (mawk)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mawk and make it the default awk
+        run: |
+          sudo apt-get update && sudo apt-get install -y mawk
+          # Point /usr/bin/awk at mawk for this run.
+          sudo update-alternatives --set awk /usr/bin/mawk
+          awk -W version 2>&1 | head -1 || awk --version 2>&1 | head -1 || true
+
+      - name: Run test suite
+        run: bash tests/entry.sh
+
+  # Run the suite on macOS to exercise the BSD toolchain (BSD awk/sed/stat/
+  # mktemp, macOS curl) the code is written to support. macOS ships bash 3.2,
+  # which ell rejects, so install a supported bash; GNU `timeout` is absent on
+  # BSD, so provide it from coreutils (as gtimeout) for the test harness.
+  tests-macos:
+    name: Tests (macOS / BSD tools)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bash and coreutils (for timeout)
+        run: |
+          brew install bash coreutils
+          # Expose gtimeout as `timeout` for the test harness, on PATH ahead of
+          # anything else. The suite otherwise uses the system BSD tools.
+          mkdir -p "${HOME}/bin"
+          ln -sf "$(brew --prefix coreutils)/libexec/gnubin/timeout" "${HOME}/bin/timeout"
+          echo "${HOME}/bin" >> "${GITHUB_PATH}"
+          # Put the newer bash ahead of the system 3.2.
+          echo "$(brew --prefix)/bin" >> "${GITHUB_PATH}"
+
+      - name: Show tool versions
+        run: |
+          bash --version | head -1
+          command -v timeout && timeout --version | head -1
+          awk --version 2>/dev/null | head -1 || echo "awk: BSD (no --version)"
+
+      - name: Run test suite
+        run: bash tests/entry.sh
