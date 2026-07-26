@@ -16,7 +16,8 @@ jobs:
   # warning count at zero, preventing warnings from silently accumulating.
   # Genuinely-unavoidable findings are silenced locally with a `# shellcheck
   # disable=SCxxxx` directive (with a justification) rather than by lowering the
-  # gate.
+  # gate. The test jobs `needs: shellcheck`, so a lint failure short-circuits the
+  # (more expensive) matrix instead of running it in parallel regardless.
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
@@ -26,21 +27,19 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
-      - name: Collect shell scripts
-        id: collect
+      - name: ShellCheck (warning severity, blocking)
         run: |
           # ell and the launcher have no .sh extension; include them explicitly.
-          files="$(git ls-files '*.sh' 'ell' | tr '\n' ' ')"
-          echo "files=${files}" >> "${GITHUB_OUTPUT}"
-          echo "Scripts to check: ${files}"
-
-      - name: ShellCheck (warning severity, blocking)
-        run: shellcheck -S warning ${{ steps.collect.outputs.files }}
+          # Use NUL-delimited paths piped to xargs -0 so filenames containing
+          # spaces or newlines are handled correctly (rather than word-splitting
+          # an unquoted, space-joined list).
+          git ls-files -z '*.sh' 'ell' | xargs -0 shellcheck -S warning
 
   # Run the full test suite across the oldest and current supported bash
   # versions using the project's own containerised entry point.
   tests:
     name: Tests (bash ${{ matrix.bash }})
+    needs: shellcheck
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -61,6 +60,7 @@ jobs:
   # to be portable across awk implementations -- this actually exercises that.
   tests-mawk:
     name: Tests (mawk)
+    needs: shellcheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -81,6 +81,7 @@ jobs:
   # BSD, so provide it from coreutils (as gtimeout) for the test harness.
   tests-macos:
     name: Tests (macOS / BSD tools)
+    needs: shellcheck
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -112,6 +113,7 @@ jobs:
   # README's Windows section honest and to decide what, if anything, to fix.
   tests-windows:
     name: Tests (Windows / Git Bash, informational)
+    needs: shellcheck
     runs-on: windows-latest
     continue-on-error: true
     defaults:
