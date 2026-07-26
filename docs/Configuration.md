@@ -64,3 +64,45 @@ The following can be set in the command line arguments:
 
 OpenAI and Gemini style APIs are supported out of the box (plus an `ell_echo`
 debugging backend). You can add your own — see [Backends](Backends.md).
+
+## Windows
+
+ell runs on Windows from any Bash environment (Git Bash, MSYS2, Cygwin, WSL),
+but these environments emulate a POSIX system to different degrees. Two behaviors
+depend on facilities that **Git Bash does not provide over NTFS**, and they
+degrade there:
+
+### Config file trust check (security limitation)
+
+Config files (`${XDG_CONFIG_HOME:-$HOME/.config}/ell/config`, `~/.ellrc`,
+`$PWD/.ellrc`, `$ELL_CONFIG`) are **sourced**, i.e. executed as shell code. To
+avoid running attacker-controlled code, `load_config` refuses to source a file
+that is not owned by the current user/root or that is writable by group or
+others (see [Risk Consideration](Risk_Consideration.md)).
+
+This check relies on POSIX ownership and permission bits. On **Git Bash** over
+NTFS, `chmod` cannot create genuinely group/world-writable files and `stat` does
+not report reliable permission bits, so **the check cannot distinguish a safe
+config from an insecure one and effectively cannot protect you there**. On a
+shared/multi-user Windows machine, do not rely on this protection under Git Bash;
+use **WSL** or **MSYS2/Cygwin** (which back permissions with NTFS ACLs), or keep
+your config on a volume only you can write.
+
+The temporary file ell uses to pass the API key to `curl` is likewise
+`chmod 600`ed to keep the credential owner-only; that too is not enforceable
+under Git Bash.
+
+### Symbolic links and record mode
+
+- Installing `ell` by **symlink** and record mode's terminal capture
+  (`script(1)`) both require capabilities Git Bash lacks by default (real
+  symlinks need Developer Mode / admin; `script` is not shipped). ell itself is
+  a plain wrapper script, so normal use does not need symlinks; MSYS2 and WSL
+  provide both when you need them.
+
+### Test suite
+
+The test suite detects these limitations at runtime and prints `SKIP:` for the
+affected checks under Git Bash rather than failing, so the informational Windows
+CI run stays meaningful. CI also runs the suite under a fuller **MSYS2**
+environment, where these features are available and the checks run normally.

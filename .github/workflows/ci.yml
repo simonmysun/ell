@@ -106,11 +106,56 @@ jobs:
       - name: Run test suite
         run: bash tests/entry.sh
 
+  # Run the suite on Windows under a real MSYS2 environment (not Git Bash).
+  # MSYS2 provides a fuller POSIX runtime than Git Bash -- consistent msys-2.0
+  # runtime, ACL-backed permissions, real symlinks, and util-linux (script) --
+  # so more of the suite is expected to work here than under Git Bash. Tools are
+  # installed via pacman. This is currently informational (continue-on-error)
+  # until it is proven stable, then it can become a hard gate.
+  tests-msys2:
+    name: Tests (Windows / MSYS2)
+    needs: shellcheck
+    runs-on: windows-latest
+    continue-on-error: true
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          update: true
+          # bash comes with MSYS2; add the tools the suite uses. coreutils
+          # provides `timeout`; util-linux provides `script` for record tests.
+          install: >-
+            bash
+            coreutils
+            curl
+            gawk
+            sed
+            grep
+            util-linux
+
+      - name: Show tool versions
+        run: |
+          bash --version | head -1
+          command -v timeout && timeout --version | head -1
+          command -v script && echo "script: present"
+          awk --version 2>/dev/null | head -1 || true
+
+      - name: Run test suite
+        run: bash tests/entry.sh
+
   # Run the suite on Windows under Git Bash (the default `shell: bash` on the
-  # windows runner is Git Bash / MSYS2). ell is a bash program with no native
-  # Windows support, so this is an informational probe: it reports what actually
-  # works there rather than blocking the build. Use the results to keep the
-  # README's Windows section honest and to decide what, if anything, to fix.
+  # windows runner). Git Bash is a deliberately limited environment: over NTFS
+  # it cannot create genuinely group/world-writable files or (by default) real
+  # symlinks, and it ships no `script`. Tests that depend on those capabilities
+  # detect the limitation at runtime and SKIP (see docs/Configuration.md,
+  # "Windows"); for a fuller POSIX environment use the tests-msys2 job above.
+  # This job stays informational: it reports what works rather than blocking.
   tests-windows:
     name: Tests (Windows / Git Bash, informational)
     needs: shellcheck

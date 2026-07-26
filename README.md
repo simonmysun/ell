@@ -65,6 +65,25 @@ unless Developer Mode or administrator rights are available. No extra setup is
 required; clone the repository and add its directory to your `PATH` as shown
 above. You invoke it the same way, e.g. `ell "your prompt"`.
 
+**Environment differences and limitations.** The Bash environments differ in how
+faithfully they emulate a POSIX system, and a few features degrade accordingly:
+
+- **WSL** behaves like Linux; everything works.
+- **MSYS2** and **Cygwin** provide a fairly complete POSIX layer (ACL-backed
+  file permissions, real symbolic links, `script(1)`), so the whole feature set
+  works.
+- **Git Bash** is intentionally minimal. Over NTFS it cannot create genuinely
+  group/world-writable files, so the config-file permission check in
+  `load_config` (which refuses to source a world-writable `.ellrc`) and the
+  `chmod 600` on the temporary auth-header file **cannot be enforced**; it also
+  lacks `script(1)` (record mode) and, by default, real symlinks. ell still
+  runs, but on a multi-user machine treat these as **security limitations** —
+  see [Configuration → Windows](docs/Configuration.md#windows) for details and
+  the safer alternatives (MSYS2 / WSL).
+
+For the most complete experience on Windows, prefer **WSL** or **MSYS2** over
+Git Bash.
+
 ## Configuration
 
 See [Configuration](docs/Configuration.md).

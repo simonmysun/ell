@@ -22,6 +22,23 @@ export ELL_LOG_LEVEL;
 echo "http / ell_curl tests";
 echo "=====================";
 
+# The temp auth-config file is chmod 600 so the credential is owner-only. On
+# platforms where POSIX permission bits are not trustworthy (Windows Git Bash /
+# MSYS over NTFS), chmod is effectively a no-op and stat cannot confirm 0600, so
+# that specific assertion is SKIPped (see docs/Configuration.md, "Windows").
+# Probe by setting a distinctive mode (world-writable) and checking it sticks:
+# if chmod cannot actually change the group/other bits, POSIX perms are not
+# trustworthy here and the 0600 assertion below is not meaningful.
+perms_trustworthy() {
+  local probe p;
+  probe="$(mktemp 2>/dev/null)" || return 1;
+  chmod 666 "${probe}" 2>/dev/null || { rm -f "${probe}"; return 1; }
+  p="$(stat -c '%a' "${probe}" 2>/dev/null || stat -f '%Lp' "${probe}" 2>/dev/null)";
+  rm -f "${probe}";
+  case "${p}" in *[2367][2367]) return 0 ;; *) return 1 ;; esac
+}
+if perms_trustworthy; then PERMS_OK=true; else PERMS_OK=false; fi
+
 # Stub curl: print every argument on its own line so we can inspect them.
 ARGS_FILE="$(mktemp)";
 trap 'rm -f "${ARGS_FILE}"' EXIT;
@@ -114,10 +131,14 @@ fi
 # The temp config file must be mode 0600 (only the owner can read the secret).
 # The last two octal digits (group, other) must be 0; strip any leading digit.
 cfg_perms="$(cat "${PERM_FILE}" 2>/dev/null)";
-case "${cfg_perms}" in
-  600|0600) _assert_pass "temp auth config is mode 0600" ;;
-  *) _assert_fail "temp auth config is mode 0600"; echo "  perms: ${cfg_perms}" ;;
-esac
+if [ "${PERMS_OK}" = "true" ]; then
+  case "${cfg_perms}" in
+    600|0600) _assert_pass "temp auth config is mode 0600" ;;
+    *) _assert_fail "temp auth config is mode 0600"; echo "  perms: ${cfg_perms}" ;;
+  esac
+else
+  echo "SKIP: temp auth config is mode 0600 (POSIX perms not trustworthy here)";
+fi
 # The temp config file curl was pointed at must be removed after the call.
 cfg_path="$(awk '/^--config$/{getline; print; exit}' "${ARGS_FILE}")";
 if [ -n "${cfg_path}" ] && [ -e "${cfg_path}" ]; then

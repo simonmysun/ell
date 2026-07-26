@@ -19,6 +19,22 @@ DIR="$(cd "$(dirname "${0}")" && pwd)";
 WORK="$(mktemp -d)";
 trap 'rm -rf "${WORK}"' EXIT;
 
+# The symlink cases require real symbolic links. On Windows Git Bash `ln -s`
+# usually degrades to a copy (unless MSYS=winsymlinks:nativestrict and the user
+# can create links), so those cases cannot be exercised there and are SKIPped
+# (see docs/Configuration.md, "Windows"). Probe once: make a link and confirm
+# the OS reports it as a symlink whose target reads back.
+symlinks_supported() {
+  local t="${WORK}/.link_probe" l="${WORK}/.link_probe_ln";
+  printf '' > "${t}";
+  rm -f "${l}";
+  ln -s "${t}" "${l}" 2>/dev/null || { rm -f "${t}" "${l}"; return 1; }
+  if [ -L "${l}" ]; then rm -f "${t}" "${l}"; return 0; fi
+  rm -f "${t}" "${l}";
+  return 1;
+}
+if symlinks_supported; then SYMLINKS_OK=true; else SYMLINKS_OK=false; fi
+
 # run_launcher <path-to-launcher> <marker> [workdir]
 # Invoke the launcher (optionally from <workdir>) against the ell_echo backend
 # and print its output. The marker is the prompt, which ell_echo echoes back in
@@ -40,23 +56,29 @@ echo "==============";
 out="$(run_launcher "$(cd "${DIR}/.." && pwd)/ell" MARK_ABS)";
 assert_contains "launcher runs via absolute path" "${out}" "MARK_ABS";
 
-# Symlink in another directory pointing at the launcher (absolute target).
-ln -s "$(cd "${DIR}/.." && pwd)/ell" "${WORK}/ell_abs_link";
-out="$(run_launcher "${WORK}/ell_abs_link" MARK_SYMLINK)";
-assert_contains "launcher runs via absolute symlink" "${out}" "MARK_SYMLINK";
+if [ "${SYMLINKS_OK}" = "true" ]; then
+  # Symlink in another directory pointing at the launcher (absolute target).
+  ln -s "$(cd "${DIR}/.." && pwd)/ell" "${WORK}/ell_abs_link";
+  out="$(run_launcher "${WORK}/ell_abs_link" MARK_SYMLINK)";
+  assert_contains "launcher runs via absolute symlink" "${out}" "MARK_SYMLINK";
 
-# Relative symlink invoked from its own directory (exercises the relative
-# link-target resolution in the launcher).
-(
-  cd "${WORK}" || exit 1;
-  ln -s "ell_abs_link" "ell_rel_link";
-);
-out="$(run_launcher "./ell_rel_link" MARK_REL "${WORK}")";
-assert_contains "launcher runs via relative symlink" "${out}" "MARK_REL";
+  # Relative symlink invoked from its own directory (exercises the relative
+  # link-target resolution in the launcher).
+  (
+    cd "${WORK}" || exit 1;
+    ln -s "ell_abs_link" "ell_rel_link";
+  );
+  out="$(run_launcher "./ell_rel_link" MARK_REL "${WORK}")";
+  assert_contains "launcher runs via relative symlink" "${out}" "MARK_REL";
 
-# A chain of symlinks resolves to the real ell.sh.
-ln -s "${WORK}/ell_rel_link" "${WORK}/ell_chain";
-out="$(run_launcher "${WORK}/ell_chain" MARK_CHAIN)";
-assert_contains "launcher runs via a symlink chain" "${out}" "MARK_CHAIN";
+  # A chain of symlinks resolves to the real ell.sh.
+  ln -s "${WORK}/ell_rel_link" "${WORK}/ell_chain";
+  out="$(run_launcher "${WORK}/ell_chain" MARK_CHAIN)";
+  assert_contains "launcher runs via a symlink chain" "${out}" "MARK_CHAIN";
+else
+  echo "SKIP: launcher runs via absolute symlink (real symlinks unsupported here)";
+  echo "SKIP: launcher runs via relative symlink (real symlinks unsupported here)";
+  echo "SKIP: launcher runs via a symlink chain (real symlinks unsupported here)";
+fi
 
 assert_summary;
