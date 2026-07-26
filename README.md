@@ -294,6 +294,10 @@ End-to-end tests that need JSON fixtures or the full pipeline go in `tests/`
 
 Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for notable changes.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
