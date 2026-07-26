@@ -43,9 +43,10 @@ The following variables can be set in the configuration files, environment varia
   - `TO_TTY`: Force ell to output with syntax highlighting and pagination or not. 
   - Styling related variables can be found in [Styling](Styling.md).
 
-The following variables can be set in the command line arguments:
-  -h, --help: show this help
+The following can be set in the command line arguments:
 
+- `-h, --help`: show this help and exit.
+- `-V, --version`: show the version and exit.
 - `-l, --log-level`: `ELL_LOG_LEVEL`
 - `-m, --model`: `ELL_LLM_MODEL`
 - `-T, --template-path`: `ELL_TEMPLATE_PATH`
@@ -53,7 +54,7 @@ The following variables can be set in the command line arguments:
 - `-f, --input-file`: `ELL_INPUT_FILE`
 - `-r, --record`: sets `ELL_RECORD` to true. This will ignore the prompt input or the file input.
 - `-i, --interactive`: `ELL_INTERACTIVE`.  This will ignore the prompt input or the file input.
-- `-o, --output-file`: `ELL_OUTPUT_FILE`
+- `-o, --output, --output-file`: `ELL_OUTPUT_FILE`
 - `--api-style`: `ELL_API_STYLE`
 - `--api-key`: `ELL_API_KEY`, note that in multi-user environments, other users are able to see the command line arguments.
 - `--api-url`: `ELL_API_URL`
