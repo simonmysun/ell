@@ -54,7 +54,7 @@ assert_failure "0 rejected"    version_ok 0 0;
 ver_out="$("${DIR}/../ell" --version 2>&1)";
 ver_status="${?}";
 assert_equals   "ell --version exits 0 on supported bash" "0" "${ver_status}";
-assert_contains "ell --version prints the version"        "${ver_out}" "${ELL_VERSION:-0.1.1}";
+assert_contains "ell --version prints the version"        "${ver_out}" "${ELL_VERSION:-0.2.0}";
 assert_not_contains "supported bash is not rejected"      "${ver_out}" "is required to run";
 
 # The rejection message (as written in ell.sh) names 4.1, matching README/CI.
