@@ -124,18 +124,18 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
         elif echo "x${buffer}" | grep -E -q "^x#{1,}[[:blank:]]$" >/dev/null 2>&1; then
           # logging_debug "Heading mode";
           printf "%s" "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer%?}${STYLE_RESET}${STYLE_HEADING}";
-          buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+          buffer="${buffer: -1}";
           IN_HEADING=true;
           START_OF_CONTENT=true;
         elif echo "x${buffer}" | grep -E -q "^x[[:digit:]]+\.[[:space:]]$" >/dev/null 2>&1; then
           # logging_debug "Ordered list";
           printf "%s" "${STYLE_RESET}${STYLE_LIST}${buffer%?}${STYLE_RESET}";
-          buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+          buffer="${buffer: -1}";
           START_OF_CONTENT=true;
         elif [ "x${buffer}" = "x* " ] || [ "x${buffer}" = "x- " ] || [ "x${buffer}" = "x+ " ]; then
           # logging_debug "Unordered list";
           printf "%s" "${STYLE_RESET}${STYLE_LIST}${buffer%?}${STYLE_RESET}";
-          buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+          buffer="${buffer: -1}";
           START_OF_CONTENT=true;
         elif [ "x${buffer}" = "x>" ]; then
           # logging_debug "Blockquote mode";
@@ -225,7 +225,7 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
             IN_ITALIC=true;
             printf "%s" "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer%?}$(current_style)";
           fi
-          buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+          buffer="${buffer: -1}";
           dirty=true;
         elif echo "x${buffer}" | grep -E -q "^x\*\*[^\*]$|^x__[^_]$" >/dev/null 2>&1; then
           if [ "x${IN_BOLD}" = "xtrue" ]; then
@@ -237,7 +237,7 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
             IN_BOLD=true;
             printf "%s" "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer%?}$(current_style)";
           fi
-          buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+          buffer="${buffer: -1}";
           dirty=true;
         elif echo "x${buffer}" | grep -E -q "^x\*[^\*]$|^x_[^_]$" >/dev/null 2>&1; then
           if [ "x${IN_ITALIC}" = "xtrue" ]; then
@@ -249,7 +249,7 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
             IN_ITALIC=true;
             printf "%s" "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer%?}$(current_style)";
           fi
-          buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+          buffer="${buffer: -1}";
           dirty=true;
         elif echo "x${buffer}" | grep -E -q "^x~~[^~]$" >/dev/null 2>&1; then
           if [ "x${IN_STRIKETHROUGH}" = "xtrue" ]; then
@@ -261,7 +261,7 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
             IN_STRIKETHROUGH=true;
             printf "%s" "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer%?}$(current_style)";
           fi
-          buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+          buffer="${buffer: -1}";
           dirty=true;
         elif [ "x${buffer}" = "x\`" ]; then
           IN_CODE=true;
@@ -272,13 +272,13 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
             IN_LINK_TEXT=false;
             # logging_debug "Exit link text mode missing URL";
             printf "%s" "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer%?}$(current_style)";
-            buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+            buffer="${buffer: -1}";
             dirty=true;
           elif [ "x${IN_IMAGE_TEXT}" = "xtrue" ]; then
             IN_LINK_TEXT=false;
             # logging_debug "Exit link text mode missing URL";
             printf "%s" "${STYLE_RESET}${STYLE_PUNCTUATION}${buffer%?}$(current_style)";
-            buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
+            buffer="${buffer: -1}";
             dirty=true;
           else
             # logging_debug "']' in the wild";

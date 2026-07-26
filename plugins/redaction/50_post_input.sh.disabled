@@ -45,6 +45,21 @@ redact_high_entropy_strings() (
   done
 ) 
 
+# Word-boundary syntax differs between sed implementations: GNU sed uses "\b",
+# while BSD/macOS sed uses "[[:<:]]" (start) and "[[:>:]]" (end) and treats "\b"
+# as a literal backspace, so the patterns below would never match. Probe once
+# and pick the tokens the running sed actually understands.
+if printf 'x' | sed -E 's/\bx\b/Y/' 2>/dev/null | grep -q '^Y$'; then
+  WB_L='\b'; WB_R='\b';
+elif printf 'x' | sed -E 's/[[:<:]]x[[:>:]]/Y/' 2>/dev/null | grep -q '^Y$'; then
+  WB_L='[[:<:]]'; WB_R='[[:>:]]';
+else
+  # No usable word-boundary support; fall back to no anchoring. The patterns are
+  # specific enough (length/format constrained) that this is still useful, at the
+  # cost of occasionally matching a substring inside a longer token.
+  WB_L=''; WB_R='';
+fi
+
 # multi-line pattern matches first
 (
   # if sed support -z
@@ -57,12 +72,12 @@ redact_high_entropy_strings() (
 ) \
 | while IFS= read -r line; do
   echo "${line}" \
-  | sed -E 's/\b[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}\b/[UUID REDACTED]/g' `# Redact UUIDs (both with and without dashes)` \
-  | sed -E 's/\b[0-9]{4}[-. ]?[0-9]{4}[-. ]?[0-9]{4}[-. ]?[0-9]{4}\b/[CREDIT CARD REDACTED]/g' `# Redact credit card numbers` \
-  | sed -E 's/\b[A-Za-z0-9+\/]{44,}={0,2}\b/[BASE64 KEY REDACTED]/g' `# Redact base64 strings (44+ characters, typical for private keys)` \
-  | sed -E 's/\b[0-9a-fA-F]{32,}\b/[POSSIBLE HEX KEY REDACTED]/g' `# Redact hex strings (32+ characters)` \
-  | sed -E 's/\b[0-9]{3}[-]?[0-9]{2}[-]?[0-9]{4}\b/[SSN REDACTED]/g' `# Redact SSN` \
-  | sed -E 's/\b(\+?1[-.]?)?\(?[0-9]{3}\)?[-. ]?[0-9]{3}[-. ]?[0-9]{4}\b/[PHONE REDACTED]/g' `# Redact phone numbers (various formats)` \
-  | sed -E 's/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/[EMAIL REDACTED]/g' `# Redact email addresses` \
+  | sed -E "s/${WB_L}[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}${WB_R}/[UUID REDACTED]/g" `# Redact UUIDs (both with and without dashes)` \
+  | sed -E "s/${WB_L}[0-9]{4}[-. ]?[0-9]{4}[-. ]?[0-9]{4}[-. ]?[0-9]{4}${WB_R}/[CREDIT CARD REDACTED]/g" `# Redact credit card numbers` \
+  | sed -E "s|${WB_L}[A-Za-z0-9+/]{44,}={0,2}${WB_R}|[BASE64 KEY REDACTED]|g" `# Redact base64 strings (44+ characters, typical for private keys)` \
+  | sed -E "s/${WB_L}[0-9a-fA-F]{32,}${WB_R}/[POSSIBLE HEX KEY REDACTED]/g" `# Redact hex strings (32+ characters)` \
+  | sed -E "s/${WB_L}[0-9]{3}[-]?[0-9]{2}[-]?[0-9]{4}${WB_R}/[SSN REDACTED]/g" `# Redact SSN` \
+  | sed -E "s/${WB_L}(\+?1[-.]?)?\(?[0-9]{3}\)?[-. ]?[0-9]{3}[-. ]?[0-9]{4}${WB_R}/[PHONE REDACTED]/g" `# Redact phone numbers (various formats)` \
+  | sed -E "s/${WB_L}[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}${WB_R}/[EMAIL REDACTED]/g" `# Redact email addresses` \
   | redact_high_entropy_strings;
 done
