@@ -41,14 +41,29 @@ cp -r "${REPO_DIR}/." "${SPACED}/repo" 2>/dev/null;
 out_file="${WORK}/rec.out";
 err_file="${WORK}/rec.err";
 
-# Build a PATH that keeps the standard tools (script, bash, mktemp, ...) but
-# does NOT contain any installed `ell`, so the test actually proves record mode
-# does not depend on ell being on PATH. If a stray ell is still reachable the
-# test would pass trivially, so assert it is gone first.
-SAFE_PATH="";
-for d in /usr/bin /bin /usr/sbin /sbin; do
-  [ -d "${d}" ] && SAFE_PATH="${SAFE_PATH:+${SAFE_PATH}:}${d}";
+# Build a PATH that has the tools record mode needs but definitely NOT `ell`, so
+# the test proves record works without ell on PATH. Rather than guess which
+# system directories hold the tools (and risk also exposing an installed ell,
+# e.g. both bash and ell in /usr/local/bin), symlink exactly the tools we need
+# into a dedicated bin dir and use only that. Any tool that cannot be resolved
+# means we cannot isolate; skip cleanly.
+SAFE_BIN="${WORK}/safebin";
+mkdir -p "${SAFE_BIN}";
+_missing_tool="";
+for t in bash script env mktemp dirname chmod cat rm cp tail head grep awk sed printf date stty tr cut; do
+  tp="$(command -v "${t}" 2>/dev/null)";
+  if [ -n "${tp}" ]; then
+    ln -sf "${tp}" "${SAFE_BIN}/${t}";
+  fi
 done
+SAFE_PATH="${SAFE_BIN}";
+# bash and script are mandatory for record mode; if either is missing we already
+# skipped above (script) or cannot proceed.
+if [ ! -e "${SAFE_BIN}/bash" ]; then
+  echo "SKIP: record_launcher (bash not resolvable for isolated PATH)";
+  assert_summary;
+  return 0 2>/dev/null || exit 0;
+fi
 if PATH="${SAFE_PATH}" command -v ell >/dev/null 2>&1; then
   echo "SKIP: an 'ell' is reachable even on a minimal PATH; cannot isolate";
   assert_summary;
@@ -70,7 +85,12 @@ combined="$(cat "${out_file}" "${err_file}" 2>/dev/null)";
 # The inner ell must have been located and run: its echoed request payload
 # contains the prompt. If record had exec'd a bare `ell` not on PATH, we would
 # instead see a "command not found" and no payload.
-assert_contains     "record mode located and ran the inner ell" "${combined}" "RECORD_LAUNCH_XYZ";
-assert_not_contains "record mode had no command-not-found"       "${combined}" "not found";
+assert_contains "record mode located and ran the inner ell" "${combined}" "RECORD_LAUNCH_XYZ";
+# The launcher itself must resolve. Check specifically that the ell launcher
+# path was not reported as not-found, rather than matching a bare "not found"
+# (which could also come from an unrelated optional tool like stty on a minimal
+# PATH and is not what this test is about).
+assert_not_contains "record mode resolved the ell launcher" "${combined}" "ell: No such file";
+assert_not_contains "record mode did not hit ell command-not-found" "${combined}" "ell: command not found";
 
 assert_summary;

@@ -19,19 +19,21 @@ TESTS_DIR="$(cd "$(dirname "${0}")" && pwd)";
 REPO_DIR="$(cd "${TESTS_DIR}/.." && pwd)";
 
 echo "Setting up prerequisites...";
-# curl is a hard dependency of the file:// backend tests (parse_output.sh). On
-# the minimal bash:* (alpine) images it is not preinstalled, so install it via
-# apk. Do NOT swallow the outcome silently: if curl ends up missing, the backend
-# tests fail with nine confusing "produced no output" errors that look like code
-# bugs but are really a missing curl. Instead, verify curl is present and fail
-# fast with a clear message if it is not.
-if ! command -v curl >/dev/null 2>&1; then
-  if command -v apk >/dev/null 2>&1; then
-    echo "  curl not found; installing via apk...";
-    # Show apk's own output so a real install failure (network, CDN) is visible
-    # rather than hidden behind 2>/dev/null.
-    apk add curl || echo "  apk add curl failed";
-  fi
+# On the minimal bash:* (alpine) images several tools the suite needs are not
+# preinstalled. Install them via apk so the container can run the FULL suite
+# instead of skipping tests:
+#   * curl        - hard dependency of the file:// backend tests (parse_output)
+#   * sed         - GNU sed provides `sed -z`, needed by the redaction multiline
+#                   test (busybox sed lacks it)
+#   * util-linux  - provides script(1), needed by the record-mode tests
+#   * python3     - needed by the real-PTY record test (tests/pty_run.py)
+# Everything except curl is best-effort: those tests skip cleanly if their tool
+# is missing. curl, by contrast, is verified below and is a hard failure, since
+# without it the backend tests fail with confusing "produced no output" errors
+# that look like code bugs rather than a missing tool.
+if command -v apk >/dev/null 2>&1; then
+  echo "  Installing test tools via apk (curl, GNU sed, util-linux, python3)...";
+  apk add --no-cache curl sed util-linux python3 || echo "  apk add failed (some tests may skip)";
 fi
 if ! command -v curl >/dev/null 2>&1; then
   echo "ERROR: curl is required to run the test suite (file:// backend tests) but could not be installed." >&2;
@@ -58,11 +60,21 @@ echo "Running tests...";
 # so we remember the first failure instead of letting a later passing test
 # mask an earlier regression.
 suite_status=0;
+# Count skipped checks across all tests. A test prints "SKIP: <reason>" for each
+# check it cannot run (a missing tool, not a failure); we tally them so the
+# final summary shows how many were skipped rather than leaving them scattered.
+suite_skipped=0;
+_run_out="$(mktemp 2>/dev/null || echo /tmp/ell_run_out.$$)";
 
 run_test() {
   echo "Running test: ${1}";
-  bash "${1}";
-  status="${?}";
+  # Capture output to tally SKIP lines while still showing it live via tee.
+  bash "${1}" 2>&1 | tee "${_run_out}";
+  status="${PIPESTATUS[0]}";
+  # `grep -c` prints the count but exits 1 when there are no matches; capture the
+  # count and ignore the exit status (a bare number, so arithmetic is safe).
+  skipped="$(grep -c '^SKIP:' "${_run_out}" 2>/dev/null)";
+  suite_skipped=$(( suite_skipped + skipped ));
   if [ "${status}" -ne 0 ]; then
     echo "Test failed: ${1} (exit ${status})";
     suite_status=1;
@@ -108,6 +120,23 @@ run_test tests/launcher.sh;
 run_test tests/hooks.sh;
 run_test tests/bash_version.sh;
 run_test tests/terminal_size.sh;
+
+rm -f "${_run_out}";
+
+# Suite-wide summary. Skipped checks are informational (a tool was unavailable
+# in this environment, e.g. GNU sed / script / python in a minimal container),
+# not failures.
+echo "";
+if [ "${suite_skipped}" -gt 0 ]; then
+  echo "Suite: ${suite_skipped} check(s) skipped (missing optional tools in this environment).";
+else
+  echo "Suite: no checks skipped (all tools available).";
+fi
+if [ "${suite_status}" -eq 0 ]; then
+  echo "Suite: all tests passed.";
+else
+  echo "Suite: one or more tests FAILED.";
+fi
 
 # Propagate the suite status: fail if any test above failed, so a regression in
 # any test fails CI.
