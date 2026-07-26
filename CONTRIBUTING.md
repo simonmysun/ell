@@ -86,10 +86,19 @@ containers and fails if the suite fails under either version.
 
 `.github/workflows/ci.yml` runs on every push and pull request:
 
-- **ShellCheck** over all shell scripts. Findings at `error` severity block the
-  build; warnings are reported but non-blocking so they can be cleaned up
-  incrementally.
-- **Tests** across a `bash:4.1` and `bash:5.2` matrix.
+- **ShellCheck** over all shell scripts, run at `-S warning`. Both `error` and
+  `warning` findings block the build: the repo is clean at warning severity, so
+  the gate ratchets the warning count at zero to prevent warnings from silently
+  accumulating. Unavoidable findings are silenced locally with a justified
+  `# shellcheck disable=SCxxxx` directive rather than by lowering the gate.
+- **Tests** across a `bash:4.1` and `bash:5.2` container matrix.
+- **Tests (mawk)** with mawk as the default `awk`, exercising the portable
+  `render_to_text.awk`.
+- **Tests (macOS / BSD tools)** on `macos-latest`, exercising the BSD toolchain
+  (BSD awk/sed/stat/mktemp, macOS curl).
+- **Tests (Windows / Git Bash, informational)** on `windows-latest`, which is
+  `continue-on-error` and never blocks the build; it reports what works under
+  Git Bash rather than gating on it.
 
 ### Adding a test
 
