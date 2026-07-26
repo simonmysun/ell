@@ -24,7 +24,7 @@ If you are running ell in a relatively hostile environment, it is recommended to
 
 The following variables can be set in the configuration files, environment variables:
 
-- `ELL_LOG_LEVEL`: The log level of the logger. The default is `2`. A log level of `0` will log everything. A log level of `3` will log token usage.
+- `ELL_LOG_LEVEL`: The verbosity of the logger, from `1` (least) to `5` (most). The default is `2`. Higher values enable more output: `1` = fatal only, `2` = errors (default), `3` = warnings, `4` = info (this is the level at which token usage is logged), `5` = debug (everything). A value of `0` disables all logging.
 - `ELL_CONFIG`: An extra configuration file to load, applied last (highest precedence among files). Unset by default. The standard config files (`${XDG_CONFIG_HOME:-$HOME/.config}/ell/config`, `~/.ellrc`, `./.ellrc`) are always read regardless of this variable.
 - `ELL_LLM_MODEL`: The model to use. Default is `gpt-4o-mini`.
 - `ELL_LLM_TEMPERATURE`: The temperature of the model. The default is `0.6`.
