@@ -108,6 +108,18 @@ done
 model="$(parse_arguments -m gpt-4o "hi" >/dev/null 2>&1; printf '%s' "${ELL_LLM_MODEL}")";
 assert_equals "option with value before prompt still parses" "gpt-4o" "${model}";
 
+# --- --api-key does not leak into logs --------------------------------------
+# The key must be set but must never appear in the debug log (it is a secret and
+# logs may be shared/captured). Capture stderr at max log level and assert the
+# value is absent while the variable is still set.
+key_log="$(
+  ELL_LOG_LEVEL=5 TO_TTY=false \
+  parse_arguments --api-key sk-TESTSECRET-XYZ "hi" 2>&1 >/dev/null;
+)";
+assert_not_contains "--api-key value is not logged" "${key_log}" "sk-TESTSECRET-XYZ";
+key_val="$(parse_arguments --api-key sk-TESTSECRET-XYZ "hi" >/dev/null 2>&1; printf '%s' "${ELL_API_KEY}")";
+assert_equals "--api-key still sets ELL_API_KEY" "sk-TESTSECRET-XYZ" "${key_val}";
+
 # --- -o / --output / --output-file ------------------------------------------
 # The help text documents --output while the handler historically only matched
 # --output-file, so the documented long flag was silently treated as the prompt.

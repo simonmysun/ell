@@ -123,7 +123,9 @@ parse_arguments() {
         ;;
       --api-key)
         _require_arg ${#} "--api-key";
-        logging_debug "\"--api-key\" present in args, setting ELL_API_KEY to ${2}";
+        # Never log the key value, even at debug level: it is a secret and the
+        # log may be shared or captured. Log only that it was set.
+        logging_debug "\"--api-key\" present in args, setting ELL_API_KEY (value redacted)";
         export ELL_API_KEY="${2}";
         shift 2;
         ;;
