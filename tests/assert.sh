@@ -54,6 +54,24 @@ _assert_show() {
   printf '%s' "${1}" | cat -v;
 }
 
+# assert_files_equal <name> <file-a> <file-b>: byte-exact comparison of two
+# files without depending on cmp(1)/diff (diffutils), which is absent in some
+# environments (e.g. a minimal MSYS2). Appending a sentinel 'x' before the
+# command substitution preserves any trailing newlines that "$(...)" would
+# strip, keeping the comparison byte-exact.
+assert_files_equal() {
+  local name="${1}" a b;
+  a="$(cat "${2}"; printf x)";
+  b="$(cat "${3}"; printf x)";
+  if [ "${a}" = "${b}" ]; then
+    _assert_pass "${name}";
+  else
+    _assert_fail "${name}";
+    echo "  expected: $(_assert_show "$(cat "${2}")")";
+    echo "  actual  : $(_assert_show "$(cat "${3}")")";
+  fi
+}
+
 # _assert_pass / _assert_fail: record a result and print one status line.
 _assert_pass() {
   _ASSERT_PASS=$((_ASSERT_PASS + 1));

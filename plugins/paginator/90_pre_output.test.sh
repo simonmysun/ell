@@ -42,19 +42,14 @@ assert_equals "ANSI content preserved" "${ansi}" "$(page "${ansi}")";
 spaced="$(printf '  a\tb  ')";
 assert_equals "whitespace/tabs preserved" "${spaced}" "$(page "${spaced}")";
 
-# Byte-exact check over mixed content including blank lines, using cmp so any
-# difference (including a lost/added newline) is caught.
+# Byte-exact check over mixed content including blank lines, so any difference
+# (including a lost/added newline) is caught. assert_files_equal does the
+# byte-exact comparison without depending on cmp (see tests/assert.sh).
 WORK="$(mktemp -d)";
 trap 'rm -rf "${WORK}"' EXIT;
 printf 'a\tb\n\n  spaced  \nunicode: 世界 😀\n' > "${WORK}/in";
 TO_TTY=false bash "${PAGINATOR}" < "${WORK}/in" > "${WORK}/out";
-if cmp -s "${WORK}/in" "${WORK}/out"; then
-  _assert_pass "passthrough is byte-identical";
-else
-  _assert_fail "passthrough is byte-identical";
-  echo "  expected: $(_assert_show "$(cat "${WORK}/in")")";
-  echo "  actual  : $(_assert_show "$(cat "${WORK}/out")")";
-fi
+assert_files_equal "passthrough is byte-identical" "${WORK}/in" "${WORK}/out";
 
 # Empty input yields empty output (no hang, no extra bytes).
 assert_equals "empty input yields empty output" "" "$(printf '' | TO_TTY=false bash "${PAGINATOR}")";

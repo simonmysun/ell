@@ -20,11 +20,22 @@ render() {
 fail=0;
 pass=0;
 
+# Byte-exact file comparison without depending on cmp(1) (diffutils), which is
+# not present in every environment (e.g. a minimal MSYS2). Appending a sentinel
+# 'x' before the command substitution protects any trailing newlines that
+# "$(...)" would otherwise strip, so the comparison stays byte-exact.
+bytes_equal() {
+  local a b;
+  a="$(cat "${1}"; printf x)";
+  b="$(cat "${2}"; printf x)";
+  [ "${a}" = "${b}" ];
+}
+
 assert_render() {
   local name="${1}" in="${2}" exp="${3}" got;
   got="$(mktemp)";
   render < "${in}" > "${got}";
-  if cmp -s "${got}" "${exp}"; then
+  if bytes_equal "${got}" "${exp}"; then
     echo "PASS: ${name}";
     pass=$((pass + 1));
   else

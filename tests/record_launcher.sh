@@ -53,7 +53,11 @@ _missing_tool="";
 for t in bash script env mktemp dirname chmod cat rm cp tail head grep awk sed printf date stty tr cut; do
   tp="$(command -v "${t}" 2>/dev/null)";
   if [ -n "${tp}" ]; then
-    ln -sf "${tp}" "${SAFE_BIN}/${t}";
+    # Best-effort: symlink the tool into the isolated bin. `ln -s` can fail on
+    # platforms without real symlinks (e.g. MSYS2), so fall back to a copy and
+    # silence the error; the runnability probe below is the real gate.
+    ln -sf "${tp}" "${SAFE_BIN}/${t}" 2>/dev/null \
+      || cp -f "${tp}" "${SAFE_BIN}/${t}" 2>/dev/null || :;
   fi
 done
 SAFE_PATH="${SAFE_BIN}";
@@ -61,6 +65,16 @@ SAFE_PATH="${SAFE_BIN}";
 # skipped above (script) or cannot proceed.
 if [ ! -e "${SAFE_BIN}/bash" ]; then
   echo "SKIP: record_launcher (bash not resolvable for isolated PATH)";
+  assert_summary;
+  return 0 2>/dev/null || exit 0;
+fi
+# The isolated PATH must actually be able to run bash. On some platforms a
+# copied/symlinked bash cannot start (e.g. MSYS2, where bash.exe needs
+# msys-2.0.dll resolved relative to its original location: "cannot open shared
+# object file"). In that case this isolation technique is not viable, so SKIP
+# rather than report a false failure.
+if ! PATH="${SAFE_PATH}" bash -c 'exit 0' >/dev/null 2>&1; then
+  echo "SKIP: record_launcher (isolated bash not runnable in this environment)";
   assert_summary;
   return 0 2>/dev/null || exit 0;
 fi
