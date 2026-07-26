@@ -102,6 +102,7 @@ run_test tests/parse_output.sh;
 run_test tests/interactive.sh;
 run_test tests/output_redirect.sh;
 run_test tests/record_launcher.sh;
+run_test tests/record_pty.sh;
 run_test tests/error_paths.sh;
 run_test tests/launcher.sh;
 run_test tests/hooks.sh;
