@@ -47,4 +47,24 @@ status="${?}";
 assert_not_equals "empty-payload exits non-zero" "0" "${status}";
 assert_contains   "empty-payload reports the cause" "${err}" "Failed to build request payload";
 
+# --- Missing ELL_API_URL preflight ------------------------------------------
+# A network backend with no ELL_API_URL must fail early with a clear, actionable
+# message rather than an opaque curl error later. Run in an isolated env so the
+# developer's own ~/.ellrc / XDG config cannot supply a URL.
+err="$(env -i PATH="${PATH}" HOME="${WORK}/empty_home" \
+  XDG_CONFIG_HOME="${WORK}/empty_cfg" XDG_DATA_HOME="${WORK}/empty_data" \
+  TO_TTY=false ELL_TEMPLATE_PATH="${DIR}/../templates/" \
+  timeout 8 "${DIR}/../ell" --api-style openai -m gpt-4o "hi" </dev/null 2>&1 >/dev/null)";
+status="${?}";
+assert_not_equals "missing ELL_API_URL exits non-zero" "0" "${status}";
+assert_contains   "missing ELL_API_URL names the variable" "${err}" "ELL_API_URL is not set";
+
+# The ell_echo backend needs no URL, so the preflight must NOT block it.
+echo_status="$(env -i PATH="${PATH}" HOME="${WORK}/empty_home" \
+  XDG_CONFIG_HOME="${WORK}/empty_cfg" XDG_DATA_HOME="${WORK}/empty_data" \
+  TO_TTY=false ELL_TEMPLATE_PATH="${DIR}/../templates/" \
+  timeout 8 "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming "hi" \
+  </dev/null >/dev/null 2>&1; printf '%s' "${?}")";
+assert_equals "ell_echo is exempt from the URL preflight" "0" "${echo_status}";
+
 assert_summary;

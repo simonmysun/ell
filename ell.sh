@@ -68,6 +68,21 @@ parse_arguments "${@}";
 
 . "${BASE_DIR}/llm_backends/generate_completion.sh";
 
+# Preflight the essential API config so a first-run misconfiguration produces a
+# clear, actionable message instead of an opaque curl error later. The ell_echo
+# backend talks to no network, so it needs neither URL nor key.
+if [ "x${ELL_API_STYLE}" != "xell_echo" ]; then
+  if [ -z "${ELL_API_URL}" ]; then
+    logging_fatal "ELL_API_URL is not set. Configure it (e.g. in \$XDG_CONFIG_HOME/ell/config or ~/.ellrc), pass --api-url, or set the ELL_API_URL environment variable. See docs/Configuration.md.";
+    exit 78; # EX_CONFIG
+  fi
+  if [ -z "${ELL_API_KEY}" ]; then
+    # An empty key is valid for some local/proxy endpoints, so warn rather than
+    # fail; the request will still be attempted.
+    logging_warn "ELL_API_KEY is not set; sending the request without an Authorization header. Set --api-key or ELL_API_KEY if your endpoint requires one.";
+  fi
+fi
+
 # Deciding where to output. Redirect stdout to ELL_OUTPUT_FILE only when an
 # output file other than "-" was requested AND we are not in record or
 # interactive mode (in those modes stdout must stay on the terminal for the

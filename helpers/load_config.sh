@@ -25,14 +25,18 @@ _config_is_trusted() {
   owner="$(stat -c '%u' "${file}" 2>/dev/null || stat -f '%u' "${file}" 2>/dev/null)";
   perms="$(stat -c '%a' "${file}" 2>/dev/null || stat -f '%Lp' "${file}" 2>/dev/null)";
 
+  # These refusals mean a config file the user created is being ignored, which
+  # otherwise looks like "my settings don't work" with no explanation. Report
+  # them at error level so they are visible at the default log level (a missing
+  # config, by contrast, is silent and normal).
   if [ -z "${owner}" ] || [ -z "${perms}" ]; then
-    logging_warn "Cannot verify ownership/permissions of ${file}; refusing to source it";
+    logging_error "Cannot verify ownership/permissions of ${file}; refusing to source it";
     return 1;
   fi
 
   # Must be owned by us or by root (root-owned system config is trusted).
   if [ "${owner}" != "$(id -u)" ] && [ "${owner}" != "0" ]; then
-    logging_warn "Ignoring ${file}: not owned by the current user or root";
+    logging_error "Ignoring config ${file}: not owned by the current user or root";
     return 1;
   fi
 
@@ -41,7 +45,7 @@ _config_is_trusted() {
   # Each is a single octal digit, so its write bit is the 2's place.
   local group_bit="${perms: -2:1}" other_bit="${perms: -1:1}";
   if [ "$(( 8#${group_bit:-0} & 2 ))" -ne 0 ] || [ "$(( 8#${other_bit:-0} & 2 ))" -ne 0 ]; then
-    logging_warn "Ignoring ${file}: writable by group or others (insecure permissions)";
+    logging_error "Ignoring config ${file}: writable by group or others (insecure permissions); run 'chmod 600 ${file}'";
     return 1;
   fi
 

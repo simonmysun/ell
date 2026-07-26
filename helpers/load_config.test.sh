@@ -59,6 +59,17 @@ chmod 666 "${WORK}/evil_cfg";
 skipped="$(_load_config_file "${WORK}/evil_cfg" "" >/dev/null 2>&1; printf '%s' "${ELL_TEST_EVIL-unset}")";
 assert_equals "untrusted config is not sourced" "unset" "${skipped}";
 
+# Refusing an insecure config must be visible at the DEFAULT log level (2):
+# otherwise the user's config is silently ignored and looks broken. The refusal
+# is logged at error level, so it appears at level 2 (unlike a warn at >=3).
+reject_msg="$(
+  ELL_LOG_LEVEL=2 _config_is_trusted "${WORK}/evil_cfg" 2>&1 >/dev/null;
+)";
+assert_contains "insecure config refusal is visible at level 2" \
+  "${reject_msg}" "Ignoring config";
+assert_contains "insecure config refusal suggests chmod" \
+  "${reject_msg}" "chmod 600";
+
 # A missing file is a silent no-op (returns success, sources nothing).
 assert_success "missing file is a no-op" _load_config_file "${WORK}/does_not_exist" "";
 
