@@ -44,6 +44,50 @@ _ell_curl_fail_opt() {
   printf '%s' "${_ELL_CURL_FAIL_OPT}";
 }
 
+# _ell_on_windows: return 0 when running under a Windows bash (Git Bash / MSYS2
+# / Cygwin), where filesystem paths are POSIX-style (e.g. /c/Users/...) but the
+# native curl expects Windows paths (C:/Users/...). Detected from $OSTYPE, which
+# is "msys" for Git Bash, "cygwin" for Cygwin, and "win32" in rare setups.
+_ell_on_windows() {
+  case "${OSTYPE:-}" in
+    msys|cygwin|win32) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# _ell_fixup_file_url <url>: on Windows bash, rewrite a file:// URL whose path is
+# a POSIX/MSYS path (/c/Users/... or /tmp/...) into the file:///C:/... form the
+# native curl understands, using cygpath. On every other platform, and for any
+# non-file:// URL, the input is printed back unchanged. Any optional "#fragment"
+# ell appends to force curl's URL parsing is preserved.
+_ell_fixup_file_url() {
+  local url="${1}" path frag win;
+  # Only file:// URLs on Windows bash need fixing; everything else is verbatim.
+  if ! _ell_on_windows || ! command -v cygpath >/dev/null 2>&1; then
+    printf '%s' "${url}";
+    return 0;
+  fi
+  case "${url}" in
+    file://*|FILE://*) ;;
+    *) printf '%s' "${url}"; return 0 ;;
+  esac
+  # Strip the scheme (and an authority-less "//") to get the raw path, then split
+  # off any trailing "#fragment" so it is not passed through cygpath.
+  path="${url#*://}";
+  path="${path#/}";              # tolerate file:///path (leading extra slash)
+  case "${path}" in
+    *#*) frag="#${path#*#}"; path="${path%%#*}" ;;
+    *)   frag="" ;;
+  esac
+  path="/${path}";              # restore a leading slash for cygpath
+  # cygpath -m yields a Windows path with forward slashes (C:/Users/...), which
+  # is exactly what a file:// URL wants. If conversion fails, fall back to the
+  # original URL rather than emitting something broken.
+  win="$(cygpath -m -- "${path}" 2>/dev/null)" || { printf '%s' "${url}"; return 0; };
+  if [ -z "${win}" ]; then printf '%s' "${url}"; return 0; fi
+  printf 'file:///%s%s' "${win}" "${frag}";
+}
+
 # _ell_url_is_secure <url>: return 0 if it is safe to send a credential to
 # <url>. https:// and file:// are safe; http:// is only safe for loopback hosts
 # (localhost / 127.0.0.1 / ::1). Any other scheme is treated as safe so this
@@ -85,6 +129,9 @@ _ell_url_is_secure() {
 ell_curl() {
   local url="${1}";
   shift;
+  # On Windows bash a file:// URL carries a POSIX path the native curl cannot
+  # read; rewrite it to file:///C:/... there. A no-op everywhere else.
+  url="$(_ell_fixup_file_url "${url}")";
   # Populate the fail-option cache in this (non-subshell) scope so it is probed
   # at most once per process, then read the cached value.
   _ell_curl_fail_opt >/dev/null;
@@ -161,6 +208,8 @@ ell_curl_strerror() {
 }
 
 export -f _ell_curl_fail_opt;
+export -f _ell_on_windows;
+export -f _ell_fixup_file_url;
 export -f _ell_url_is_secure;
 export -f ell_curl;
 export -f ell_curl_strerror;
