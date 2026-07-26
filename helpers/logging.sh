@@ -3,12 +3,16 @@
 # logging functions
 # the logs are written to stderr so that they don't interfere with pipes
 
-ELL_LOG_LEVEL="${ELL_LOG_LEVEL:-4}";
+# Default log level. ell.sh sets this to 2 before sourcing this file, so this
+# ":-2" only applies when logging.sh is sourced on its own (e.g. in tests). Keep
+# both defaults at 2 so the level is the same regardless of entry point.
+# Levels: 1 fatal, 2 error, 3 warn, 4 info, 5 debug.
+ELL_LOG_LEVEL="${ELL_LOG_LEVEL:-2}";
 # ELL_LOG_LEVEL is compared numerically with `-ge`; a non-integer value (e.g.
 # from `-l abc`) would make every comparison error out. Fall back to the default
 # if it is not a plain non-negative integer.
 case "${ELL_LOG_LEVEL}" in
-  ''|*[!0-9]*) ELL_LOG_LEVEL=4;;
+  ''|*[!0-9]*) ELL_LOG_LEVEL=2;;
 esac
 
 TO_TTY="${TO_TTY:-true}";

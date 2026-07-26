@@ -96,15 +96,51 @@ else
 fi
 
 # A non-integer ELL_LOG_LEVEL must not break comparisons: it falls back to the
-# default (4), so info is shown and no "integer expression" error is emitted.
-# The fallback happens when logging.sh is sourced, so re-source it in a subshell
-# with a bad value and check info still appears.
+# default (2), so error is shown, info (needs >=4) is not, and no "integer
+# expression" error is emitted. The fallback happens when logging.sh is sourced,
+# so re-source it in a subshell with a bad value.
 bad_out="$(
   export TO_TTY=false ELL_LOG_LEVEL="not-a-number";
   . "${DIR}/logging.sh";
-  { logging_info "AFTER_BAD_LEVEL" >/dev/null; } 2>&1;
+  { logging_error "ERR_AFTER_BAD"; logging_info "INFO_AFTER_BAD"; } >/dev/null 2>&1 \
+    || true;
+  { logging_error "ERR_AFTER_BAD"; logging_info "INFO_AFTER_BAD"; } 2>&1 >/dev/null;
 )";
-assert_contains "invalid log level falls back (info shown)" "${bad_out}" "INFO AFTER_BAD_LEVEL";
+assert_contains     "invalid log level falls back to 2 (error shown)" "${bad_out}" "ERROR ERR_AFTER_BAD";
+assert_not_contains "invalid log level falls back to 2 (info hidden)" "${bad_out}" "INFO_AFTER_BAD";
 assert_not_contains "invalid log level does not error" "${bad_out}" "integer expression";
+
+# --- Timestamp prefix is verbose-only (>= 4), by design ---------------------
+# The timestamp/prog prefix is intentionally shown only at high verbosity
+# (level >= 4): at lower levels error/fatal print a clean "ERROR: ..."/"FATAL:
+# ..." message without timestamp noise, which is friendlier for a CLI. These
+# tests pin that intended behaviour.
+ts_re='\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\]';
+
+has_prefix() {
+  printf '%s' "${1}" | grep -qE "^${ts_re}";
+}
+
+# At level 2 (default), an error message is shown but WITHOUT the prefix.
+export ELL_LOG_LEVEL=2;
+err2="$({ logging_error "E2"; } 2>&1)";
+assert_contains "error message shown at level 2" "${err2}" "ERROR E2";
+if has_prefix "${err2}"; then
+  _assert_fail "error has no timestamp prefix at level 2";
+  echo "  line: $(_assert_show "${err2}")";
+else
+  _assert_pass "error has no timestamp prefix at level 2";
+fi
+
+# At level 4+ the prefix accompanies the message.
+export ELL_LOG_LEVEL=4;
+err4="$({ logging_error "E4"; } 2>&1)";
+assert_contains "error message shown at level 4" "${err4}" "ERROR E4";
+if has_prefix "${err4}"; then
+  _assert_pass "error carries timestamp prefix at level 4";
+else
+  _assert_fail "error carries timestamp prefix at level 4";
+  echo "  line: $(_assert_show "${err4}")";
+fi
 
 assert_summary;
