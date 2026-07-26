@@ -33,6 +33,7 @@ fi
 . "${BASE_DIR}/helpers/resolve_paths.sh";
 . "${BASE_DIR}/helpers/render_template.sh";
 . "${BASE_DIR}/helpers/http.sh";
+. "${BASE_DIR}/helpers/backend_common.sh";
 
 logging_debug "Starting ${0}";
 
