@@ -59,7 +59,7 @@ The following variables can be set in the command line arguments:
 - `--api-url`: `ELL_API_URL`
 - `--api-disable-streaming`: sets `ELL_API_STREAM` to **false**
 - `-c, --config`: `ELL_CONFIG`
-- `-O, --option`: Other options. The format is `A=b` or `C=d,E=f`. They will be accessible in the templates.
+- `-O, --option`: Set extra environment variables for the run. The format is `A=b` or `C=d,E=f`. The key must be a valid shell variable name. These variables are exported into ell's environment (so plugins and backends can read them), but note that **they are not substituted into templates**: the template renderer only substitutes a fixed allowlist of placeholders (see [Templates](Templates.md)). Under the previous `eval`-based renderer arbitrary `-O` variables did appear in templates; that behavior was removed with the switch to safe, allowlist-only rendering.
 
 OpenAI and Gemini style APIs are supported out of the box (plus an `ell_echo`
 debugging backend). You can add your own — see [Backends](Backends.md).

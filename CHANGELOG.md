@@ -17,6 +17,10 @@ This is a large hardening pass focused on security, robustness, and testing.
   evaluation.
 - `-O KEY=VALUE` no longer runs through `eval`. It is assigned directly and the
   key is validated, closing a command-injection hole (`-O 'X=$(cmd)'`).
+  Note: as a consequence of the safe, allowlist-only template renderer, variables
+  set via `-O` are exported into the environment but are **no longer substituted
+  into templates** (the old `eval` renderer did expand them). Only the fixed
+  placeholder allowlist is rendered.
 - Config files are only sourced when trusted: owned by the current user (or
   root) and not group-/world-writable. This blocks the "hostile `.ellrc` in the
   current directory" arbitrary-code-execution vector. Refusals are now reported
