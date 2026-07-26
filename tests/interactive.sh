@@ -73,4 +73,27 @@ run_status "no newline at end";
 status="${?}";
 assert_equals "unterminated line then EOF exits (no hang)" "0" "${status}";
 
+# The entry hint is an info-level message: quiet at the default log level, but
+# shown at info (>= 4). When shown, it must name the correct exit key -- Ctrl-D,
+# since the loop exits on EOF, not Ctrl-C.
+hint="$(
+  printf '' | timeout 10 \
+    env ELL_TEMPLATE_PATH="${DIR}/../templates/" TO_TTY=false ELL_LOG_LEVEL=4 \
+    ELL_TMP_SHELL_LOG="${SHELL_LOG}" \
+    "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming -i \
+    2>&1 >/dev/null;
+)";
+assert_contains     "entry hint names Ctrl-D at info level" "${hint}" "Ctrl-D";
+assert_not_contains "entry hint does not say ^C"            "${hint}" "^C";
+
+# It stays quiet at the default log level (info is not shown there).
+hint_default="$(
+  printf '' | timeout 10 \
+    env ELL_TEMPLATE_PATH="${DIR}/../templates/" TO_TTY=false \
+    ELL_TMP_SHELL_LOG="${SHELL_LOG}" \
+    "${DIR}/../ell" --api-style ell_echo -m gpt-4o --api-disable-streaming -i \
+    2>&1 >/dev/null;
+)";
+assert_not_contains "entry hint is quiet at default level" "${hint_default}" "Interactive mode enabled";
+
 assert_summary;

@@ -215,7 +215,9 @@ fi
 
 # Logging_debug "Checking if we are going to enter interactive mode";
 if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
-  logging_info "Interactive mode enabled. ^C to exit";
+  # Debug/info-level hint only (kept quiet at the default log level). The loop
+  # exits cleanly on Ctrl-D (EOF), so name that key rather than Ctrl-C.
+  logging_info "Interactive mode enabled. Press Ctrl-D to exit";
   while true; do
     echo -ne "${ELL_PS1}";
     # Capture read's status. On EOF (Ctrl-D) read returns non-zero; without
