@@ -129,15 +129,19 @@ jobs:
           msystem: MSYS
           update: true
           # bash comes with MSYS2; add the tools the suite uses. coreutils
-          # provides `timeout`; util-linux provides `script` for record tests.
+          # provides `timeout`; diffutils provides `cmp` (byte-exact test
+          # comparisons); util-linux provides `script` for record tests;
+          # python is used by the real-PTY record test.
           install: >-
             bash
             coreutils
+            diffutils
             curl
             gawk
             sed
             grep
             util-linux
+            python
 
       - name: Show tool versions
         run: |
