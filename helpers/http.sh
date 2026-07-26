@@ -162,7 +162,7 @@ ell_curl() {
     logging_warn "Sending credentials over an insecure URL (ELL_ALLOW_INSECURE_URL=true): ${url}";
   fi
 
-  local auth_cfg="" status;
+  local auth_cfg="" status _ell_auth_val;
   if [ -n "${ELL_CURL_AUTH_HEADER}" ]; then
     auth_cfg="$(mktemp)" || {
       logging_error "Failed to create temp file for auth header";
@@ -170,9 +170,13 @@ ell_curl() {
     };
     # chmod 600 before writing so the secret is never briefly world-readable.
     chmod 600 "${auth_cfg}";
-    # curl config syntax: header = "NAME: value". Quote and escape the value so
-    # a header containing quotes/backslashes is passed intact.
-    printf 'header = "%s"\n' "${ELL_CURL_AUTH_HEADER//\"/\\\"}" > "${auth_cfg}";
+    # curl config syntax: header = "NAME: value". Inside double quotes curl
+    # treats backslash as an escape introducer (\\, \", \t, \n, \r, \v), so a
+    # header value must have its backslashes escaped BEFORE its double quotes
+    # (escaping quotes first would then double-escape the added backslashes).
+    _ell_auth_val="${ELL_CURL_AUTH_HEADER//\\/\\\\}";   # \ -> \\
+    _ell_auth_val="${_ell_auth_val//\"/\\\"}";          # " -> \"
+    printf 'header = "%s"\n' "${_ell_auth_val}" > "${auth_cfg}";
     opts+=(--config "${auth_cfg}");
   fi
 

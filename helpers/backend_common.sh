@@ -39,7 +39,10 @@ ell_backend_nonstreaming() {
   if [ "${curl_status}" -ne 0 ]; then
     logging_fatal "Failed to generate completion: $(ell_curl_strerror "${curl_status}") (curl exit ${curl_status})";
     logging_debug "Response: ${response}";
-    return 1;
+    # Propagate curl's real exit code (as-is), matching the streaming path
+    # (ell_backend_check_pipestatus) and the contract in docs/Backends.md, so a
+    # transport failure stays diagnosable instead of collapsing to a bare 1.
+    return "${curl_status}";
   fi
 
   if ! json_parse "${response}"; then

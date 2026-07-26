@@ -147,6 +147,23 @@ if [ -n "${cfg_path}" ] && [ -e "${cfg_path}" ]; then
 else
   _assert_pass "temp auth config is cleaned up";
 fi
+# A header value containing backslashes and double quotes must be escaped for
+# curl's config-file syntax: inside double quotes curl treats "\" as an escape
+# introducer, so both "\" -> "\\" and '"' -> '\"'. Otherwise a value like
+# 'a\tb' would be read back as 'a<TAB>b' and the credential mangled. The stub
+# above captures the written config into CFG_FILE.
+ELL_CURL_AUTH_HEADER='X-Auth: a\tb"c\' \
+  ell_curl "https://example.com" --data-binary @- </dev/null;
+# The config must contain the doubled backslashes and the escaped quote, not the
+# raw single backslashes.
+if grep -qF -- 'header = "X-Auth: a\\tb\"c\\"' "${CFG_FILE}"; then
+  _assert_pass "auth header backslashes and quotes are escaped for curl config";
+else
+  _assert_fail "auth header backslashes and quotes are escaped for curl config";
+  echo "  config: $(cat "${CFG_FILE}" 2>/dev/null)";
+fi
+unset ELL_CURL_AUTH_HEADER;
+
 # curl's exit status must propagate unchanged through the auth-header path,
 # where ell_curl also cleans up the temp --config file after the call. This
 # guards against the cleanup step (or any trap semantics) clobbering the status.
