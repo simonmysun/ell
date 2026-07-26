@@ -54,6 +54,21 @@ assert_failure "rejects '..'" dispatch "..";
 # A syntactically valid but unknown backend name is rejected.
 assert_failure "rejects unknown backend" dispatch "does_not_exist";
 
+# With BASE_DIR unset, the dispatcher must fall back to its own location
+# (dirname of BASH_SOURCE, which already is the backends directory) rather than
+# appending a spurious "/llm_backends" segment. Run from the backends directory
+# so a relative BASH_SOURCE still resolves.
+dispatch_no_base_dir() (
+  unset BASE_DIR;
+  cd "${DIR}" || exit 1;
+  ELL_API_STYLE="${1}";
+  export ELL_API_STYLE;
+  # shellcheck source=/dev/null
+  . "./generate_completion.sh";
+)
+assert_success "falls back to BASH_SOURCE dir when BASE_DIR unset" \
+  dispatch_no_base_dir "ell_echo";
+
 # A traversal attempt pointing at a real attacker-controlled file must NOT
 # source it. Plant a marker-writing "backend" directory and reference it via a
 # "../" traversal from the backends directory; the dispatcher must refuse.

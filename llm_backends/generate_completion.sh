@@ -12,9 +12,16 @@
 # directory rather than the outer script's ${0}.
 
 # Directory that contains this dispatcher and the per-style backend folders.
-# Prefer the caller-provided BASE_DIR (ell.sh), fall back to BASH_SOURCE so the
-# file is also correct when sourced directly (e.g. from tests).
-_ELL_BACKENDS_DIR="${BASE_DIR:-$(dirname "${BASH_SOURCE[0]}")}/llm_backends";
+# When ell.sh sources us it exports BASE_DIR (the repo root), and the backends
+# live in "${BASE_DIR}/llm_backends". When the file is sourced directly (e.g.
+# from tests) BASE_DIR may be unset, in which case this file already lives in
+# the backends directory, so dirname(BASH_SOURCE) is the correct location and
+# must not have "/llm_backends" appended again.
+if [ -n "${BASE_DIR}" ]; then
+  _ELL_BACKENDS_DIR="${BASE_DIR}/llm_backends";
+else
+  _ELL_BACKENDS_DIR="$(dirname "${BASH_SOURCE[0]}")";
+fi
 
 if ! [[ "${ELL_API_STYLE}" =~ ^[A-Za-z0-9._-]+$ ]] \
    || [ "${ELL_API_STYLE}" = "." ] || [ "${ELL_API_STYLE}" = ".." ]; then
