@@ -126,7 +126,29 @@ if [ -n "${cfg_path}" ] && [ -e "${cfg_path}" ]; then
 else
   _assert_pass "temp auth config is cleaned up";
 fi
+# curl's exit status must propagate unchanged through the auth-header path,
+# where ell_curl also cleans up the temp --config file after the call. This
+# guards against the cleanup step (or any trap semantics) clobbering the status.
+curl() {
+  # Still write the config so cleanup has a real file to remove, then fail.
+  local prev="";
+  for a in "${@}"; do
+    if [ "${prev}" = "--config" ]; then cp "${a}" "${CFG_FILE}" 2>/dev/null; fi
+    prev="${a}";
+  done
+  return 22;
+}
+ELL_CURL_AUTH_HEADER="Authorization: Bearer sk-STATUS" \
+  ell_curl "https://example.com" --data-binary @- </dev/null >/dev/null 2>&1;
+auth_status="${?}";
+assert_equals "curl status propagates through auth path" "22" "${auth_status}";
+
 unset ELL_CURL_AUTH_HEADER;
+# Restore the recording stub for subsequent assertions.
+curl() {
+  printf '%s\n' "${@}" > "${ARGS_FILE}";
+  return 0;
+}
 
 # --- Refuse credentials over a plaintext remote URL -------------------------
 # _ell_url_is_secure classifies where it is safe to send a credential.
