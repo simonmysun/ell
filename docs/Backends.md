@@ -1,7 +1,9 @@
 # Backends
 
 A backend adapts ell to one LLM HTTP API "style". The backend to use is
-selected by `ELL_API_STYLE` (or `--api-style`), defaulting to `openai`.
+selected by `ELL_API_STYLE` (or `--api-style`), defaulting to `openai`. For how
+backends fit into the overall request pipeline, see
+[Architecture](Architecture.md).
 
 ## Built-in backends
 

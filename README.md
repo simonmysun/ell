@@ -173,6 +173,12 @@ A backend adapts ell to an LLM API "style" (selected with `--api-style` /
 `ELL_API_STYLE`). OpenAI and Gemini are supported out of the box, and you can
 add your own.
 
+## Architecture
+
+See [Architecture](docs/Architecture.md) for how ell is put together: the
+startup sequence, configuration precedence, the request pipeline and its four
+hook stages, backends, and record mode.
+
 ## Risks to consider
 
 See [Risks Consideration](docs/Risk_Consideration.md).
