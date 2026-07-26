@@ -92,11 +92,16 @@ parse_arguments() {
         ;;
       -r|--record)
         logging_debug "\"-r\" present in args, setting ELL_RECORD to true";
-        if [ "${ELL_RECORD}" = "xtrue" ]; then
+        # The 'x' prefix must be on both sides: ELL_RECORD holds "true"/"false",
+        # never "xtrue", so `"${ELL_RECORD}" = "xtrue"` never matched and this
+        # "already enabled" guard was dead code.
+        if [ "x${ELL_RECORD}" = "xtrue" ]; then
           logging_fatal "Record mode already enabled";
           exit 1;
         fi
-        ELL_RECORD=true;
+        # export for consistency with the other flags (e.g. -i), so record mode
+        # is visible to child processes (notably the script-spawned session).
+        export ELL_RECORD=true;
         shift 1;
         ;;
       -o|--output-file)

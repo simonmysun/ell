@@ -108,4 +108,22 @@ done
 model="$(parse_arguments -m gpt-4o "hi" >/dev/null 2>&1; printf '%s' "${ELL_LLM_MODEL}")";
 assert_equals "option with value before prompt still parses" "gpt-4o" "${model}";
 
+# --- -r / --record ----------------------------------------------------------
+
+# A single -r sets ELL_RECORD=true and exports it (so a child process sees it).
+record_child="$(
+  parse_arguments -r "hi" >/dev/null 2>&1;
+  bash -c 'printf "%s" "${ELL_RECORD}"';
+)";
+assert_equals "-r sets and exports ELL_RECORD" "true" "${record_child}";
+
+# The "already enabled" guard must actually fire (it used to be dead code
+# because it compared against the literal "xtrue"). When ELL_RECORD is already
+# true and -r is given again, parse_arguments must exit non-zero.
+(
+  export ELL_RECORD=true;
+  parse_arguments -r "hi" >/dev/null 2>&1;
+);
+assert_not_equals "duplicate -r is rejected (guard not dead)" "0" "${?}";
+
 assert_summary;
