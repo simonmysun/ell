@@ -102,11 +102,17 @@ _ell_url_is_secure() {
       rest="${url#*://}";
       host="${rest%%[/?]*}";
       # Split off the port. A bracketed IPv6 authority (e.g. "[::1]:8080")
-      # contains ':' inside the brackets, so trim to the closing ']' first and
-      # only then drop a trailing ":port"; otherwise strip at the first ':'.
+      # contains ':' inside the brackets, so it needs a two-step trim that keeps
+      # the brackets: take what is inside "[...]" and rebuild "[inner]", which
+      # drops any trailing ":port". A non-bracketed host just strips at the
+      # first ':'.
       case "${host}" in
-        '['*']'*) host="${host%%]*}]" ;;
-        *)        host="${host%%:*}" ;;
+        '['*']'*)
+          host="${host#\[}";      # drop leading '['
+          host="${host%%]*}";     # keep up to (not including) the first ']'
+          host="[${host}]";       # rebuild the bracketed address, sans :port
+          ;;
+        *) host="${host%%:*}" ;;
       esac
       case "${host}" in
         localhost|127.0.0.1|'[::1]'|::1) return 0 ;;
