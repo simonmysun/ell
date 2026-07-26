@@ -152,9 +152,7 @@ parse_arguments() {
         logging_debug "\"-O\" present in args";
         other_options="${2}";
         other_options_array=();
-        IFS=',' read -r -a other_options_array <<EOF
-${other_options}
-EOF
+        IFS=',' read -r -a other_options_array <<< "${other_options}";
         for option in "${other_options_array[@]}"; do
           # Split only on the first "=", so values may themselves contain "=".
           key="${option%%=*}";

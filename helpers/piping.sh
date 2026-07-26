@@ -11,7 +11,10 @@ piping() {
   else
     # logging_debug "Piping: ${@}";
     pipes="$(printf " | %s" "${@}")";
-    pipes=$(echo "$pipes" | cut -c 4-);
+    # Strip the leading " | " (3 chars) with bash parameter expansion rather
+    # than forking echo|cut. ell requires bash >= 4.1, so substring expansion
+    # is available and is used throughout the codebase.
+    pipes="${pipes:3}";
     bash -c "${pipes}";
   fi
 }
