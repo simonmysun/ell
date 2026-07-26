@@ -8,8 +8,15 @@ generate_completion() {
   local line json_chunk stop_reason;
   # Pass the API key to curl via ELL_CURL_AUTH_HEADER (ell_curl feeds it through
   # a --config file) so it never appears on curl's command line / process table.
-  local ELL_CURL_AUTH_HEADER="Authorization: Bearer ${ELL_API_KEY}";
-  export ELL_CURL_AUTH_HEADER;
+  # Only set the header when a key is actually present: an empty key must send NO
+  # Authorization header (per ell.sh's preflight), not "Bearer " with an empty
+  # value -- which would also trip ell_curl's "refuse credential over http://"
+  # guard since it treats any non-empty auth header as a credential.
+  local ELL_CURL_AUTH_HEADER;
+  if [ -n "${ELL_API_KEY}" ]; then
+    ELL_CURL_AUTH_HEADER="Authorization: Bearer ${ELL_API_KEY}";
+    export ELL_CURL_AUTH_HEADER;
+  fi
 
   if [ "x${ELL_API_STREAM}" != "xtrue" ]; then
     ell_backend_nonstreaming "${ELL_API_URL}" \
