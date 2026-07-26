@@ -10,7 +10,7 @@ print_usage() {
   echo "  -f, --input-file: use file as input prompt, use - for stdin";
   echo "  -r, --record: enter record mode";
   echo "  -i, --interactive: enter interactive mode";
-  echo "  -o, --output: output to file";
+  echo "  -o, --output, --output-file: output to file";
   echo "  --api-style: api style";
   echo "  --api-key: api key (NOT recommended in multi-user environment)";
   echo "  --api-url: api url";
@@ -104,8 +104,8 @@ parse_arguments() {
         export ELL_RECORD=true;
         shift 1;
         ;;
-      -o|--output-file)
-        _require_arg ${#} "-o/--output-file";
+      -o|--output|--output-file)
+        _require_arg ${#} "-o/--output";
         logging_debug "\"-o\" present in args, setting ELL_OUTPUT_FILE to ${2}";
         export ELL_OUTPUT_FILE="${2}";
         shift 2;

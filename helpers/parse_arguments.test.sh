@@ -108,6 +108,15 @@ done
 model="$(parse_arguments -m gpt-4o "hi" >/dev/null 2>&1; printf '%s' "${ELL_LLM_MODEL}")";
 assert_equals "option with value before prompt still parses" "gpt-4o" "${model}";
 
+# --- -o / --output / --output-file ------------------------------------------
+# The help text documents --output while the handler historically only matched
+# --output-file, so the documented long flag was silently treated as the prompt.
+# All three spellings must now set ELL_OUTPUT_FILE.
+for oflag in -o --output --output-file; do
+  ofile="$(parse_arguments "${oflag}" /tmp/ell_out.txt "hi" >/dev/null 2>&1; printf '%s' "${ELL_OUTPUT_FILE}")";
+  assert_equals "${oflag} sets ELL_OUTPUT_FILE" "/tmp/ell_out.txt" "${ofile}";
+done
+
 # --- -r / --record ----------------------------------------------------------
 
 # A single -r sets ELL_RECORD=true and exports it (so a child process sees it).
