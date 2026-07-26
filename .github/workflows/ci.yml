@@ -104,3 +104,33 @@ jobs:
 
       - name: Run test suite
         run: bash tests/entry.sh
+
+  # Run the suite on Windows under Git Bash (the default `shell: bash` on the
+  # windows runner is Git Bash / MSYS2). ell is a bash program with no native
+  # Windows support, so this is an informational probe: it reports what actually
+  # works there rather than blocking the build. Use the results to keep the
+  # README's Windows section honest and to decide what, if anything, to fix.
+  tests-windows:
+    name: Tests (Windows / Git Bash, informational)
+    runs-on: windows-latest
+    continue-on-error: true
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show environment
+        run: |
+          bash --version | head -1
+          uname -a || true
+          for t in curl awk sed stat mktemp script stty tty date chmod; do
+            if command -v "${t}" >/dev/null 2>&1; then
+              printf '%-8s %s\n' "${t}" "$(command -v "${t}")"
+            else
+              printf '%-8s MISSING\n' "${t}"
+            fi
+          done
+
+      - name: Run test suite
+        run: bash tests/entry.sh
