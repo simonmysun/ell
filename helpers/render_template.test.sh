@@ -100,4 +100,26 @@ printf '{"t":${ELL_LLM_TEMPERATURE},"s":${ELL_API_STREAM}}\n' > "${tmpl_n}";
 out="$(ELL_LLM_TEMPERATURE=0.6 ELL_API_STREAM=true render_template "${tmpl_n}")";
 assert_equals "numeric placeholders inserted verbatim" '{"t":0.6,"s":true}' "${out}";
 
+# --- _json_escape control characters (fast path vs \u-escape scan) ----------
+# The short escapes (\b \f \n \r \t) are handled by fast replacements; any other
+# C0 control character is \u-escaped by a per-character scan that only runs when
+# such a character is present. Cover both branches directly.
+
+# Fast path: plain text with no control chars is returned unchanged.
+assert_equals "plain text unchanged" "hello world" "$(_json_escape 'hello world')";
+
+# Short escapes are applied (fast path: no residual C0 remains to scan).
+assert_equals "newline -> backslash-n" 'a\nb' "$(_json_escape "$(printf 'a\nb')")";
+assert_equals "tab -> backslash-t"     'a\tb' "$(_json_escape "$(printf 'a\tb')")";
+
+# Scan path: a residual C0 control char (0x01) is \u-escaped, and surrounding
+# text and short escapes are preserved.
+assert_equals "0x01 -> \\u0001"        'a\u0001b' "$(_json_escape "$(printf 'a\x01b')")";
+assert_equals "ESC 0x1b -> \\u001b"    'x\u001by' "$(_json_escape "$(printf 'x\x1by')")";
+assert_equals "mixed short + \\u"      'a\n\u001bb' "$(_json_escape "$(printf 'a\n\x1bb')")";
+
+# Whatever the path, the result must be valid inside a JSON string.
+esc="$(_json_escape "$(printf 'ctrl \x01 and \x1b end')")";
+assert_success "escaped control chars form valid JSON" json_is_valid "{\"x\":\"${esc}\"}";
+
 assert_summary;

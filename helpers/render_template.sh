@@ -43,8 +43,14 @@ ELL_TEMPLATE_RAW_VARS=(
 # JSON string. Handles backslash, double quote, and the C0 control characters
 # that JSON requires to be escaped (\b \t \n \f \r and \u00XX for the rest).
 # Pure bash: no subprocess is spawned.
+# The C0 control characters (0x01-0x1F) as a single string, used as a bracket
+# expression to detect any that remain after the short escapes below. Computed
+# once at load time. (NUL, 0x00, cannot appear in a bash string, so it is not
+# listed.)
+_JSON_C0=$'\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f';
+
 _json_escape() {
-  local s="${1}" out="" ch rest i code;
+  local s="${1}" out="" ch rest code;
 
   # Escape backslash first, then double quote, so later replacements do not
   # double-escape the backslashes they introduce.
@@ -57,8 +63,16 @@ _json_escape() {
   s="${s//$'\r'/\\r}";
   s="${s//$'\t'/\\t}";
 
-  # Any remaining C0 control characters (0x00-0x1F) must be \u-escaped. Scan for
-  # them; the fast path is that there are none and we return s unchanged.
+  # Any remaining C0 control characters must be \u-escaped. This needs a
+  # per-character scan, which is comparatively expensive, so only do it when at
+  # least one such character is actually present -- the overwhelmingly common
+  # case (plain text, or text whose only controls were the short-escaped ones
+  # above) takes this fast path and returns without scanning.
+  case "${s}" in
+    *[$_JSON_C0]*) ;;
+    *) printf '%s' "${s}"; return 0 ;;
+  esac
+
   rest="${s}";
   out="";
   while [ -n "${rest}" ]; do
