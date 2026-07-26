@@ -61,4 +61,5 @@ The following variables can be set in the command line arguments:
 - `-c, --config`: `ELL_CONFIG`
 - `-O, --option`: Other options. The format is `A=b` or `C=d,E=f`. They will be accessible in the templates.
 
-Currently, only OpenAI and Gemini style API is supported. More API styles are coming soon.
+OpenAI and Gemini style APIs are supported out of the box (plus an `ell_echo`
+debugging backend). You can add your own — see [Backends](Backends.md).
