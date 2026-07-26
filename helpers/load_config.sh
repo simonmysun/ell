@@ -61,6 +61,9 @@ _load_config_file() {
     return 0;
   fi
   logging_debug "Loading config from ${file}${desc:+ }${desc}";
+  # Sourcing a user-provided config path is intentional and dynamic; the trust
+  # check above gates it. shellcheck cannot follow a non-constant source.
+  # shellcheck disable=SC1090
   . "${file}";
 }
 

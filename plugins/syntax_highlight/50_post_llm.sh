@@ -87,7 +87,6 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
       START_OF_LINE=true;
       START_OF_CONTENT=false;
       IN_HEADING=false;
-      IN_LIST=false;
       IN_BLOCKQUOTE=false;
       IN_BOLD=false;
       IN_ITALIC=false;
@@ -132,13 +131,11 @@ if [ "x${TO_TTY}" = "xtrue" ]; then
           # logging_debug "Ordered list";
           printf "%s" "${STYLE_RESET}${STYLE_LIST}${buffer%?}${STYLE_RESET}";
           buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
-          IN_LIST=true;
           START_OF_CONTENT=true;
         elif [ "x${buffer}" = "x* " ] || [ "x${buffer}" = "x- " ] || [ "x${buffer}" = "x+ " ]; then
           # logging_debug "Unordered list";
           printf "%s" "${STYLE_RESET}${STYLE_LIST}${buffer%?}${STYLE_RESET}";
           buffer=$(echo "${buffer}" | awk -F '' '{print $NF}');
-          IN_LIST=true;
           START_OF_CONTENT=true;
         elif [ "x${buffer}" = "x>" ]; then
           # logging_debug "Blockquote mode";

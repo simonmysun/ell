@@ -151,7 +151,9 @@ if { [ "x${ELL_RECORD}" = "xtrue" ] || [ "x${ELL_INTERACTIVE}" = "xtrue" ]; } \
   if [ "x${ELL_OUTPUT_FILE}" != "x-" ]; then
     export ELL_TMP_SHELL_LOG="${ELL_OUTPUT_FILE}";
   else
-    export ELL_TMP_SHELL_LOG="$(mktemp)";
+    # Declare/assign separately so the assignment does not mask mktemp's status.
+    ELL_TMP_SHELL_LOG="$(mktemp)";
+    export ELL_TMP_SHELL_LOG;
   fi
   export ELL_RECORD=true;
   logging_info "Session being recorded to ${ELL_TMP_SHELL_LOG}";
@@ -242,8 +244,9 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
       logging_debug "ELL_TMP_SHELL_LOG not set";
     else
       # Raw text through the post_input hooks (redaction etc.); render_template
-      # handles JSON escaping.
-      export SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | piping "${post_input_hooks[@]}")";
+      # handles JSON escaping. Declare/assign separately (SC2155).
+      SHELL_CONTEXT="$(tail -c 3000 "${ELL_TMP_SHELL_LOG}" | LC_ALL=C awk -f "${BASE_DIR}/helpers/render_to_text.awk" | piping "${post_input_hooks[@]}")";
+      export SHELL_CONTEXT;
     fi
     PAYLOAD="$(render_template "${ELL_TEMPLATE_FILE}")";
     if [ -z "${PAYLOAD}" ]; then

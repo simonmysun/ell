@@ -16,8 +16,6 @@ set -o posix;
 DIR="$(cd "$(dirname "${0}")" && pwd)";
 . "${DIR}/assert.sh";
 
-LAUNCHER="${DIR}/../ell";
-
 WORK="$(mktemp -d)";
 trap 'rm -rf "${WORK}"' EXIT;
 

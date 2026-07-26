@@ -38,7 +38,7 @@ _require_arg() {
 }
 
 parse_arguments() {
-  local other_options other_options_array option option_array key value;
+  local other_options other_options_array option key value;
   if [ ${#} -eq 0 ]; then
     if [ "x${ELL_RECORD}" = "xtrue" ]; then
       logging_debug "Record mode enabled. Context is used.";

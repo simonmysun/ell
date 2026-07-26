@@ -11,10 +11,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Static analysis: shellcheck every shell script. The `error` severity gate
-  # is a hard failure (the repo is clean at this level today). Warnings are
-  # reported separately and do not fail the build, so they can be cleaned up
-  # incrementally without blocking merges.
+  # Static analysis: shellcheck every shell script. The repo is clean at both
+  # `error` and `warning` severity, so both are hard gates -- this ratchets the
+  # warning count at zero, preventing warnings from silently accumulating.
+  # Genuinely-unavoidable findings are silenced locally with a `# shellcheck
+  # disable=SCxxxx` directive (with a justification) rather than by lowering the
+  # gate.
   shellcheck:
     name: ShellCheck
     runs-on: ubuntu-latest
@@ -32,11 +34,7 @@ jobs:
           echo "files=${files}" >> "${GITHUB_OUTPUT}"
           echo "Scripts to check: ${files}"
 
-      - name: ShellCheck (errors, blocking)
-        run: shellcheck -S error ${{ steps.collect.outputs.files }}
-
-      - name: ShellCheck (warnings, non-blocking)
-        continue-on-error: true
+      - name: ShellCheck (warning severity, blocking)
         run: shellcheck -S warning ${{ steps.collect.outputs.files }}
 
   # Run the full test suite across the oldest and current supported bash
