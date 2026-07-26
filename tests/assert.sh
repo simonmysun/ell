@@ -140,6 +140,46 @@ assert_failure() {
   fi
 }
 
+# assert_matches <name> <string> <regex>
+# Succeeds if <string> matches the extended regular expression <regex>. Uses
+# bash's [[ =~ ]], so no external grep is spawned; the regex is unanchored
+# (add ^...$ yourself for a full-string match).
+assert_matches() {
+  local name="${1}" string="${2}" regex="${3}";
+  # The regex must be unquoted for [[ =~ ]] to treat it as a pattern.
+  if [[ "${string}" =~ ${regex} ]]; then
+    _assert_pass "${name}";
+  else
+    _assert_fail "${name}";
+    echo "  regex : $(_assert_show "${regex}")";
+    echo "  string: $(_assert_show "${string}")";
+  fi
+}
+
+# assert_exits <name> <expected-status> -- <command...>
+# Runs <command...> and passes if it exits with <expected-status>. Both stdout
+# and stderr are discarded. This captures the status safely (a hazard when
+# hand-written, since any command before reading $? overwrites it) and removes
+# the repeated `cmd >/dev/null 2>&1; status="${?}"` boilerplate. The literal
+# `--` separates the expected status from the command for readability.
+assert_exits() {
+  local name="${1}" expected="${2}";
+  shift 2;
+  if [ "x${1}" = "x--" ]; then
+    shift;
+  fi
+  local status;
+  "${@}" >/dev/null 2>&1;
+  status="${?}";
+  if [ "${status}" -eq "${expected}" ]; then
+    _assert_pass "${name}";
+  else
+    _assert_fail "${name}";
+    echo "  expected exit: ${expected}";
+    echo "  actual exit  : ${status} (${*})";
+  fi
+}
+
 # assert_summary
 # Prints the pass/fail tally and returns non-zero if any assertion failed.
 # Call this as the final line of a test script and rely on its exit status.

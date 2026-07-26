@@ -94,6 +94,9 @@ if [ -n "${unit_tests}" ]; then
 fi
 
 # --- End-to-end tests (explicit) --------------------------------------------
+# The assertion library's own meta-tests live in tests/ (excluded from unit-test
+# auto-discovery), so register them explicitly.
+run_test tests/assert_lib.test.sh;
 run_test tests/templating.sh;
 run_test tests/parse_output.sh;
 run_test tests/interactive.sh;
