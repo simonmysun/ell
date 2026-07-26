@@ -244,7 +244,10 @@ if [ "x${ELL_INTERACTIVE}" = "xtrue" ]; then
   # exits cleanly on Ctrl-D (EOF), so name that key rather than Ctrl-C.
   logging_info "Interactive mode enabled. Press Ctrl-D to exit";
   while true; do
-    echo -ne "${ELL_PS1}";
+    # ELL_PS1 already holds real escape bytes (built with printf when defaulted),
+    # so print it verbatim. Use printf '%s' rather than `echo -ne`, whose -n/-e
+    # handling varies across shells/echo implementations (and matches ELL_PS2).
+    printf '%s' "${ELL_PS1}";
     # Capture read's status. On EOF (Ctrl-D) read returns non-zero; without
     # handling it the loop spun forever emitting empty completions. read may
     # still have stored a final unterminated line together with EOF, so process
