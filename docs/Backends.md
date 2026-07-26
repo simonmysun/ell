@@ -46,7 +46,7 @@ and a single-response request.
 
 ## HTTP requests: use `ell_curl`
 
-Backends should make requests through `ell_curl` (in `llm_backends/http.sh`)
+Backends should make requests through `ell_curl` (in `helpers/http.sh`)
 rather than calling `curl` directly, so they inherit ell's shared behaviour:
 
 - connection/overall timeouts (`ELL_CONNECT_TIMEOUT`, `ELL_MAX_TIME`);
@@ -64,11 +64,12 @@ Pass the request body with `--data-binary @-` so it is read from stdin.
 
 1. Create `llm_backends/<style>/generate_completion.sh` (under any of the search
    roots — your XDG config dir works too).
-2. Source the HTTP helper and define `generate_completion`:
+2. Define `generate_completion`. The helpers (`ell_curl`, `json_*`,
+   `logging_*`) are already sourced by ell before your backend, so you do not
+   source them yourself:
 
    ```bash
    #!/usr/bin/env bash
-   . "$(dirname "${BASH_SOURCE[0]}")/../http.sh";
 
    generate_completion() {
      local ELL_CURL_AUTH_HEADER="Authorization: Bearer ${ELL_API_KEY}";

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-. "$(dirname "${BASH_SOURCE[0]}")/../http.sh";
+# ell_curl (helpers/http.sh), json_* (helpers/json.sh) and logging_* are
+# provided by ell.sh, which sources the helpers before sourcing this backend.
 
 generate_completion() {
   local response curl_status prompt_tokens completion_tokens total_tokens line json_chunk stop_reason;

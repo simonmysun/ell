@@ -16,7 +16,7 @@ DIR="$(dirname "${0}")";
 
 ELL_LOG_LEVEL=0;
 export ELL_LOG_LEVEL;
-. "${DIR}/../helpers/logging.sh";
+. "${DIR}/logging.sh";
 . "${DIR}/http.sh";
 
 echo "http / ell_curl tests";
