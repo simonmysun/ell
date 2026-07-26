@@ -156,7 +156,13 @@ assert_success "https is secure"           _ell_url_is_secure "https://api.opena
 assert_success "file is secure"            _ell_url_is_secure "file:///tmp/x.json";
 assert_success "http loopback is secure"   _ell_url_is_secure "http://localhost:8080/v1";
 assert_success "http 127.0.0.1 is secure"  _ell_url_is_secure "http://127.0.0.1/v1";
+# Bracketed IPv6 loopback, with and without a port, must be recognised as
+# loopback. The ':' inside "[::1]" must not truncate the host to "[".
+assert_success "http [::1] is secure"       _ell_url_is_secure "http://[::1]/v1";
+assert_success "http [::1]:port is secure"  _ell_url_is_secure "http://[::1]:8080/v1";
 assert_failure "http remote is insecure"   _ell_url_is_secure "http://api.example.com/v1";
+# A non-loopback bracketed IPv6 host is still insecure over plaintext http.
+assert_failure "http remote IPv6 is insecure" _ell_url_is_secure "http://[2001:db8::1]:8080/v1";
 
 # With an auth header and a plaintext remote URL, ell_curl must refuse and NOT
 # invoke curl (so the key is never sent in cleartext).

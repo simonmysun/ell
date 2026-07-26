@@ -54,10 +54,16 @@ _ell_url_is_secure() {
     https://*|HTTPS://*) return 0 ;;
     file://*|FILE://*)   return 0 ;;
     http://*|HTTP://*)
-      # Strip scheme, then take the authority up to the first '/', '?' or ':'.
+      # Strip scheme, then take the authority (up to the first '/' or '?').
       rest="${url#*://}";
       host="${rest%%[/?]*}";
-      host="${host%%:*}";
+      # Split off the port. A bracketed IPv6 authority (e.g. "[::1]:8080")
+      # contains ':' inside the brackets, so trim to the closing ']' first and
+      # only then drop a trailing ":port"; otherwise strip at the first ':'.
+      case "${host}" in
+        '['*']'*) host="${host%%]*}]" ;;
+        *)        host="${host%%:*}" ;;
+      esac
       case "${host}" in
         localhost|127.0.0.1|'[::1]'|::1) return 0 ;;
         *) return 1 ;;
